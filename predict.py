@@ -81,9 +81,17 @@ model.compile(loss='categorical_crossentropy',
               optimizer='adadelta',
               metrics=['accuracy'])
 
-model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
-          verbose=1, validation_data=(X_test, Y_test))
+model.load_weights('mnsit_cnn.h5')
+
 score = model.evaluate(X_test, Y_test, verbose=0)
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
-model.save('mnsit_cnn.h5')
+
+
+def predict(datum):
+	global model
+	return model.predict(datum)
+
+def misclass_rate(datum_X, datum_Y):
+	global model
+	return 1 - model.evaluate(datum_X, datum_Y, verbose=0)[1]
