@@ -71,7 +71,7 @@ def main(argv=None):
 
 	# Define TF model graph (for proxy model)
 	model_p = model_mnist()
-	predictions_p = model(x)
+	predictions_p = model_p(x)
 
 	# Train an MNIST model (proxy model)
 	tf_model_train(sess, x, y, predictions_p, X_train_p, Y_train_p, evaluate=evaluate)
@@ -79,14 +79,14 @@ def main(argv=None):
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = fgsm.fgsm(x, predictions, eps=0.3)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
-	# Evaluate the accuracy of the MNIST model on adversarial examples
+	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
 	print('Misclassification accuracy on adversarial examples (black box): ' + str(1.0 - accuracy))
 
 	# Craft adversarial examples from proxy network and check their accuracy on black box
 	adv_x_p = fgsm.fgsm(x, predictions_p, eps=0.3)
 	X_test_adv_p, = batch_eval(sess, [x], [adv_x_p], [X_test])
-	# Evaluate the accuracy of the MNIST model on adversarial examples
+	# Evaluate the accuracy of the proxy model on adversarial examples
 	accuracy_p = tf_model_eval(sess, x, y, predictions_p, X_test_adv_p, Y_test)
 	print('Misclassification accuracy on adversarial examples (proxy): ' + str(1.0 - accuracy_p))
 
