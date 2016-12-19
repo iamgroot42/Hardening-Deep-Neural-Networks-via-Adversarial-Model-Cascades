@@ -7,10 +7,6 @@ import tensorflow as tf
 
 
 def tf_model_loss(y, model):
-	"""
-	Define loss of TF graph
-	Returns vector with per sample loss
-	"""
 	op = model.op
 	if "softmax" in str(op).lower():
 		logits, = op.inputs
@@ -22,10 +18,6 @@ def tf_model_loss(y, model):
 
 
 def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
-	"""
-	TensorFlow implementation of the Fast Gradient Sign method.
-	Returns a tensor for the adversarial example.
-	"""
 	# Compute loss
 	y = tf.to_float(tf.equal(predictions, tf.reduce_max(predictions, 1, keep_dims=True)))
 	y = y / tf.reduce_sum(y, 1, keep_dims=True)
@@ -38,3 +30,7 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 	if (clip_min is not None) and (clip_max is not None):
 		adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
 	return adv_x
+
+
+def jbda(X_train, Y_train):
+	return X_train[:300,:,:,:], Y_train[:300]

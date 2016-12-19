@@ -29,7 +29,7 @@ def tf_model_loss(y, model, mean=True):
 
 
 def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
-				   predictions_adv=None, evaluate=None):
+				   predictions_adv=None):
 	# Define loss
 	loss = tf_model_loss(y, predictions)
 	if predictions_adv is not None:
@@ -62,9 +62,6 @@ def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
 			cur = time.time()
 			print("\tEpoch took " + str(cur - prev) + " seconds")
 			prev = cur
-			if evaluate is not None:
-				evaluate()
-
 
 		if save:
 			save_path = os.path.join(FLAGS.train_dir, FLAGS.filename)

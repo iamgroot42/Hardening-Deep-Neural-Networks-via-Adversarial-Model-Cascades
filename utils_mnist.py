@@ -6,8 +6,12 @@ from __future__ import unicode_literals
 from keras.datasets import mnist
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Convolution2D
+from keras.layers import Convolution2D, MaxPooling2D
 from keras.utils import np_utils
+
+
+def placeholder_shapes():
+	return (None, 1, 28, 28), (None, 10)
 
 
 def data_mnist():
@@ -29,7 +33,7 @@ def data_mnist():
 	return X_train, Y_train, X_test, Y_test
 
 
-def model_mnist(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+def blackbox_model(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
 	model = Sequential()
 	model.add(Dropout(0.2, input_shape=(1, img_rows, img_cols)))
 	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
@@ -40,6 +44,30 @@ def model_mnist(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters
 	model.add(Activation('relu'))
 	model.add(Dropout(0.5))
 	model.add(Flatten())
+	model.add(Dense(nb_classes))
+	if logits:
+		logits_tensor = model(input_ph)
+	model.add(Activation('softmax'))
+	if logits:
+		return model, logits_tensor
+	else:
+		return model
+
+
+def proxy_model(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+	model = Sequential()
+	model.add(Convolution2D(nb_filters, 3, 3,
+                        border_mode='valid',
+                        input_shape=(1, img_rows, img_cols)))
+	model.add(Activation('relu'))
+	model.add(Convolution2D(nb_filters, 3, 3))
+	model.add(Activation('relu'))
+	model.add(MaxPooling2D(pool_size=(2,2)))
+	model.add(Dropout(0.25))
+	model.add(Flatten())
+	model.add(Dense(128))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.5))
 	model.add(Dense(nb_classes))
 	if logits:
 		logits_tensor = model(input_ph)
