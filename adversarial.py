@@ -16,14 +16,18 @@ from tensorflow.python.platform import flags
 from utils_mnist import data_mnist, model_mnist
 from utils_tf import tf_model_train, tf_model_eval, batch_eval
 import fgsm
+import argparse
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 1, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 2, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
+
+parser = argparse.ArgumentParser(description='Process Polygon Package to Domjudge Package.')
+parser.add_argument('--percent_data', type=str, help='problem color for domjudge (in RRGGBB format)')
 
 
 def main(argv=None):
@@ -53,18 +57,20 @@ def main(argv=None):
 		# Evaluate the accuracy of the MNIST model on legitimate test examples
 		accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
 		print('Test accuracy on legitimate test examples: ' + str(accuracy))
+	
+	def evaluate2():
+		accuracy = tf_model_eval(sess, x, y, predictions_p, X_test, Y_test)
+		print('Test accuracy for proxy model on test examples: ' + str(accuracy))
 
 	# print("Jacobian: ")
 	# J = tf.test.compute_gradient(x, (None, 1, 28, 28), Y_test, Y_test.shape)
 	# print(J)	
 
 	# ToDo: Replace training data for proxy with Jacobian Augmented Data
-	X_train_p = X_train[:100,:,:,:]
-	Y_train_p = Y_train[:100:]
-	X_train = X_train[:500,:,:,:]
-	Y_train = Y_train[:500:]
-	X_test = X_test[:200]
-	Y_test = Y_test[:200]
+	X_train_p = X_train[:40000,:,:,:]
+	Y_train_p = Y_train[:40000]
+	#X_train_p = X_train
+	#Y_train_p = Y_train
 
 	# Train an MNIST model (blackbox model)
 	tf_model_train(sess, x, y, predictions, X_train, Y_train, evaluate=evaluate)
@@ -74,8 +80,8 @@ def main(argv=None):
 	predictions_p = model_p(x)
 
 	# Train an MNIST model (proxy model)
-	tf_model_train(sess, x, y, predictions_p, X_train_p, Y_train_p, evaluate=evaluate)
-
+	tf_model_train(sess, x, y, predictions_p, X_train, Y_train, evaluate=evaluate2)
+	
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = fgsm.fgsm(x, predictions, eps=0.3)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
