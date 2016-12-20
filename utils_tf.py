@@ -38,7 +38,7 @@ def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
 	train_step = tf.train.AdadeltaOptimizer(learning_rate=FLAGS.learning_rate, rho=0.95, epsilon=1e-08).minimize(loss)
 	# train_step = tf.train.GradientDescentOptimizer(FLAGS.learning_rate).minimize(loss)
 	with sess.as_default():
-		init = tf.initialize_all_variables()
+		init = tf.global_variables_initializer()
 		sess.run(init)
 
 		for epoch in six.moves.xrange(FLAGS.nb_epochs):

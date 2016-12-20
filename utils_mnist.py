@@ -76,3 +76,23 @@ def proxy_model(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters
 		return model, logits_tensor
 	else:
 		return model
+
+
+def nn_model(logits=False,input_ph=None, img_rows=28, img_cols=28, hidden_neurons=512, nb_classes=10):
+	model = Sequential()
+	model.add(Dense(hidden_neurons, input_shape=(img_rows * img_cols,)))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(hidden_neurons))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(nb_classes))
+	model.add(Activation('softmax'))
+	if logits:
+		logits_tensor = model(input_ph)
+	model.add(Activation('softmax'))
+	if logits:
+		return model, logits_tensor
+	else:
+		return model
+

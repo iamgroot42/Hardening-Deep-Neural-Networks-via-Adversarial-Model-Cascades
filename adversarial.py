@@ -21,7 +21,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 1, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 
@@ -42,18 +42,12 @@ def main(argv=None):
 	x_shape, y_shape = utils_mnist.placeholder_shapes()
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
-	model = utils_mnist.blackbox_model()
+	model = utils_mnist.proxy_model()
 	predictions = model(x)
-	model_p = utils_mnist.proxy_model()
+	model_p = utils_mnist.blackbox_model()
 	predictions_p = model_p(x)
-	
-	# J = tf.test.compute_gradient(x, (None, 1, 28, 28), Y_test, Y_test.shape)
-	
+
 	X_train_p, Y_train_p = advhelp.jbda(X_train, Y_train)
-	X_train = X_train[:500,:,:,:]
-	Y_train = Y_train[:500]
-	X_test = X_test[:500,:,:,:]
-	Y_test = Y_test[:500]
 	# Train blackbox model
 	tf_model_train(sess, x, y, predictions, X_train, Y_train)
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
