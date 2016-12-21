@@ -33,4 +33,5 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 
 
 def jbda(X_train, Y_train):
-	return X_train[:200,:,:,:], Y_train[:200]
+	# return X_train[:200,:,:,:], Y_train[:200]
+	return X_train[:200,:], Y_train[:200]

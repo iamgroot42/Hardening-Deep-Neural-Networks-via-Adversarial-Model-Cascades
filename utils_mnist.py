@@ -14,6 +14,10 @@ def placeholder_shapes():
 	return (None, 1, 28, 28), (None, 10)
 
 
+def placeholder_shapes_flat():
+	return (None, 28 * 28), (None, 10)
+
+
 def data_mnist():
 	# These values are specific to MNIST
 	img_rows = 28
@@ -33,7 +37,7 @@ def data_mnist():
 	return X_train, Y_train, X_test, Y_test
 
 
-def blackbox_model(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+def modelA(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
 	model = Sequential()
 	model.add(Dropout(0.2, input_shape=(1, img_rows, img_cols)))
 	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
@@ -54,7 +58,7 @@ def blackbox_model(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filt
 		return model
 
 
-def proxy_model(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+def modelB(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
 	model = Sequential()
 	model.add(Convolution2D(nb_filters, 3, 3,
                         border_mode='valid',
@@ -78,7 +82,7 @@ def proxy_model(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters
 		return model
 
 
-def nn_model(logits=False,input_ph=None, img_rows=28, img_cols=28, hidden_neurons=512, nb_classes=10):
+def modelC(logits=False,input_ph=None, img_rows=28, img_cols=28, hidden_neurons=512, nb_classes=10):
 	model = Sequential()
 	model.add(Dense(hidden_neurons, input_shape=(img_rows * img_cols,)))
 	model.add(Activation('relu'))
@@ -95,4 +99,3 @@ def nn_model(logits=False,input_ph=None, img_rows=28, img_cols=28, hidden_neuron
 		return model, logits_tensor
 	else:
 		return model
-
