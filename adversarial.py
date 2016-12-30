@@ -21,13 +21,13 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 1, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 
 
 def main(argv=None):
-	flatten = True
+	flatten = False
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
@@ -53,9 +53,9 @@ def main(argv=None):
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
-	model = utils_mnist.modelC()
+	model = utils_mnist.modelB()
 	predictions = model(x)
-	model_p = utils_mnist.modelC()
+	model_p = utils_mnist.modelA()
 	predictions_p = model_p(x)
 
 	X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
@@ -68,24 +68,28 @@ def main(argv=None):
 	accuracy = tf_model_eval(sess, x, y, predictions_p, X_test, Y_test)
 	print('Test accuracy for proxy model: ' + str(accuracy))
 
+	fgsm_eps = 0.0
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
-	adv_x = helpers.fgsm(x, predictions, eps=0.3)
+	adv_x = helpers.fgsm(x, predictions, eps=fgsm_eps)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
 	print('Misclassification accuracy on adversarial examples (black box): ' + str(1.0 - accuracy))
 
 	# Craft adversarial examples from proxy network and check their accuracy on black box
-	adv_x_p = helpers.fgsm(x, predictions_p, eps=0.3)
+	adv_x_p = helpers.fgsm(x, predictions_p, eps=fgsm_eps)
 	X_test_adv_p, = batch_eval(sess, [x], [adv_x_p], [X_test])
 	# Evaluate the accuracy of the proxy model on adversarial examples
 	accuracy_p = tf_model_eval(sess, x, y, predictions_p, X_test_adv_p, Y_test)
 	print('Misclassification accuracy on adversarial examples (proxy): ' + str(1.0 - accuracy_p))
 
 	# Check classification accuracy of adversarial examples of proxy on black box
-	accuracy_bp = tf_model_eval(sess, x, y, predictions, X_test_adv_p, Y_test)
-	print('Misclassification accuracy_bp on adversarial examples on blackbox from proxy: ' + str(1.0 - accuracy_bp))
-
+	accuracy_bp_normal = tf_model_eval(sess, x, y, predictions, X_test_adv_p, Y_test)
+	accuracy_bp_adv = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
+	print('Misclassification accuracy_bp_adv on adversarial examples on blackbox from proxy: ' + str(1.0 - accuracy_bp_adv))
+	print('Misclassification accuracy_bp_normal on normal examples on blackbox: ' + str(1.0 - accuracy_bp_normal))
+	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
+	print("TH:" + str(accuracy))
 
 if __name__ == '__main__':
 	app.run()
