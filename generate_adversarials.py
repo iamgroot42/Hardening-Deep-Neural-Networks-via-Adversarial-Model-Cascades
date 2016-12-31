@@ -8,14 +8,16 @@ import tensorflow as tf
 tf.python.control_flow_ops = tf
 
 import keras
+import numpy as np
 
 import tensorflow as tf
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
-from utils_tf import tf_model_train, tf_model_eval, batch_eval
+from utils_tf import tf_model_eval, batch_eval
 import utils_mnist
 import helpers
+import utils
 
 FLAGS = flags.FLAGS
 
@@ -24,6 +26,10 @@ flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
 flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
+flags.DEFINE_float('fgsm_eps', 0.0, 'Tunable parameter for FGSM')
+flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
+flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
+flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')
 
 
 def main(argv=None):
@@ -40,7 +46,7 @@ def main(argv=None):
 	X_train, Y_train, X_test, Y_test = utils_mnist.data_mnist()
 
 	if flatten:
-		X_train = X_train.reshape(60000, 784)
+		# X_train = X_train.reshape(60000, 784)
 		X_test = X_test.reshape(10000, 784)
 
 	label_smooth = .1
@@ -53,43 +59,23 @@ def main(argv=None):
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
-	model = utils_mnist.modelB()
+	# model = utils_mnist.modelB()
+	# predictions = model(x)
+
+	model = utils.load_model(FLAGS.model_path)
 	predictions = model(x)
-	model_p = utils_mnist.modelA()
-	predictions_p = model_p(x)
-
-	X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
-	# Train blackbox model
-	tf_model_train(sess, x, y, predictions, X_train, Y_train)
-	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
-	print('Test accuracy for blackbox model: ' + str(accuracy))
-	# Train proxy model
-	tf_model_train(sess, x, y, predictions_p, X_train, Y_train)
-	accuracy = tf_model_eval(sess, x, y, predictions_p, X_test, Y_test)
-	print('Test accuracy for proxy model: ' + str(accuracy))
-
-	fgsm_eps = 0.0
+	# model = utils.load_model(FLAGS.model_path)
+	print("Loaded model")
+	X_test, Y_test = X_test[:200,:,:,:], Y_test[:200]
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
-	adv_x = helpers.fgsm(x, predictions, eps=fgsm_eps)
+	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
-	print('Misclassification accuracy on adversarial examples (black box): ' + str(1.0 - accuracy))
+	print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
+	np.save(FLAGS.adversary_path_x, X_test_adv)
+	np.save(FLAGS.adversary_path_y, Y_test)
 
-	# Craft adversarial examples from proxy network and check their accuracy on black box
-	adv_x_p = helpers.fgsm(x, predictions_p, eps=fgsm_eps)
-	X_test_adv_p, = batch_eval(sess, [x], [adv_x_p], [X_test])
-	# Evaluate the accuracy of the proxy model on adversarial examples
-	accuracy_p = tf_model_eval(sess, x, y, predictions_p, X_test_adv_p, Y_test)
-	print('Misclassification accuracy on adversarial examples (proxy): ' + str(1.0 - accuracy_p))
-
-	# Check classification accuracy of adversarial examples of proxy on black box
-	accuracy_bp_normal = tf_model_eval(sess, x, y, predictions, X_test_adv_p, Y_test)
-	accuracy_bp_adv = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
-	print('Misclassification accuracy_bp_adv on adversarial examples on blackbox from proxy: ' + str(1.0 - accuracy_bp_adv))
-	print('Misclassification accuracy_bp_normal on normal examples on blackbox: ' + str(1.0 - accuracy_bp_normal))
-	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
-	print("TH:" + str(accuracy))
 
 if __name__ == '__main__':
 	app.run()

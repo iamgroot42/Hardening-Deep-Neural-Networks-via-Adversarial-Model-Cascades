@@ -1,2 +1,4 @@
 Papers/*
 *.pyc
+*.npy
+saved_model

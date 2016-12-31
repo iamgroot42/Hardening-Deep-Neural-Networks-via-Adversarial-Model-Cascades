@@ -7,10 +7,7 @@ import os
 import keras
 
 
-def save_model(model, dir, filename, weights_only=False):
-	if not os.path.exists(dir):
-		os.makedirs(dir)
-	filepath = os.path.join(dir, filename)
+def save_model(model, filepath, weights_only=False):
 	if weights_only:
 		# Dump model weights
 		model.save_weights(filepath)
@@ -21,10 +18,9 @@ def save_model(model, dir, filename, weights_only=False):
 		print("Model was saved to: " + filepath)
 
 
-def load_model(directory, filename, weights_only=False, model=None):
+def load_model(filepath, weights_only=False, model=None):
 	if weights_only:
 		assert model is not None
-	filepath = os.path.join(directory, filename)
 	assert os.path.exists(filepath)
 	if weights_only:
 		result = model.load_weights(filepath)
