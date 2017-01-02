@@ -27,6 +27,7 @@ flags.DEFINE_integer('nb_epochs', 1, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
+flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')
 
 
 def main(argv=None):
@@ -36,7 +37,11 @@ def main(argv=None):
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
 	# Create TF session and set as Keras backend session
-	sess = tf.Session()
+	config = tf.ConfigProto(
+		device_count = {'GPU': 0}
+	)
+	sess = tf.Session(config=config)
+	# sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
 	
@@ -56,14 +61,19 @@ def main(argv=None):
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
-	model = utils_mnist.modelB()
-	predictions = model(x)
-	# model = utils_mnist.modelA()
-	# predictions = model(x)
 
-	X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
-	# X_train_p, Y_train_p = X_train, Y_train
-	# Train blackbox model
+	if flags.is_blackbox:
+		model = utils_mnist.modelB()
+		predictions = model(x)
+	else:
+		model = utils_mnist.modelA()
+		predictions = model(x)
+
+	if flags.is_blackbox:
+		X_train_p, Y_train_p = X_train, Y_train
+	else:
+		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
+	# Train model
 	tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
 	print('Test accuracy for blackbox model: ' + str(accuracy))

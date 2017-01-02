@@ -39,7 +39,11 @@ def main(argv=None):
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
 	# Create TF session and set as Keras backend session
-	sess = tf.Session()
+	config = tf.ConfigProto(
+		device_count = {'GPU': 0}
+	)
+	sess = tf.Session(config=config)
+	# sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
 	
