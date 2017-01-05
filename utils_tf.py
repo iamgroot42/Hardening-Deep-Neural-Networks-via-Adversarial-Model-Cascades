@@ -29,7 +29,7 @@ def tf_model_loss(y, model, mean=True):
 
 
 def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
-				   predictions_adv=None):
+				   predictions_adv=None, verbose=False):
 	# Define loss
 	loss = tf_model_loss(y, predictions)
 	if predictions_adv is not None:
@@ -43,7 +43,8 @@ def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
 		sess.run(init)
 
 		for epoch in six.moves.xrange(FLAGS.nb_epochs):
-			print("Epoch " + str(epoch))
+			if verbose:
+				print("Epoch " + str(epoch))
 
 			# Compute number of batches
 			nb_batches = int(math.ceil(float(len(X_train)) / FLAGS.batch_size))
@@ -61,21 +62,24 @@ def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
 										  keras.backend.learning_phase(): 1})
 			assert end >= len(X_train) # Check that all examples were used
 			cur = time.time()
-			print("\tEpoch took " + str(cur - prev) + " seconds")
+			if verbose:
+				print("\tEpoch took " + str(cur - prev) + " seconds")
 			prev = cur
 
 		if save:
 			save_path = os.path.join(FLAGS.train_dir, FLAGS.filename)
 			saver = tf.train.Saver()
 			saver.save(sess, save_path)
-			print("Completed model training and model saved at:" + str(save_path))
+			if verbose:
+				print("Completed model training and model saved at:" + str(save_path))
 		else:
-			print("Completed model training.")
+			if verbose:
+				print("Completed model training.")
 
 	return True
 
 
-def tf_model_eval(sess, x, y, model, X_test, Y_test):
+def tf_model_eval(sess, x, y, model, X_test, Y_test, verbose=False):
 	acc_value = keras.metrics.categorical_accuracy(y, model)
 	accuracy = 0.0
 	with sess.as_default():
@@ -83,7 +87,8 @@ def tf_model_eval(sess, x, y, model, X_test, Y_test):
 		assert nb_batches * FLAGS.batch_size >= len(X_test)
 		for batch in range(nb_batches):
 			if batch % 100 == 0 and batch > 0:
-				print("Batch " + str(batch))
+				if verbose:
+					print("Batch " + str(batch))
 			# Must not use the `batch_indices` function here, because it
 			# repeats some examples.
 			start = batch * FLAGS.batch_size
@@ -106,7 +111,7 @@ def tf_model_load(sess):
 	return True
 
 
-def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs):
+def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=False):
 	n = len(numpy_inputs)
 	assert n > 0
 	assert n == len(tf_inputs)
@@ -120,7 +125,8 @@ def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs):
 		for start in six.moves.xrange(0, m, FLAGS.batch_size):
 			batch = start // FLAGS.batch_size
 			if batch % 100 == 0 and batch > 0:
-				print("Batch " + str(batch+1))
+				if verbose:
+					print("Batch " + str(batch+1))
 
 			start = batch * FLAGS.batch_size
 			end = start + FLAGS.batch_size

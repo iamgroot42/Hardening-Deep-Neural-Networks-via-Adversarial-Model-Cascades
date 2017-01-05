@@ -39,10 +39,10 @@ def main(argv=None):
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
 	# Create TF session and set as Keras backend session
-	#config = tf.ConfigProto(
+	# config = tf.ConfigProto(
 	#	device_count = {'GPU': 0}
-	#)
-	#sess = tf.Session(config=config)
+	# )
+	# sess = tf.Session(config=config)
 	sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
@@ -68,7 +68,7 @@ def main(argv=None):
 	model = utils.load_model(FLAGS.model_path)
 	predictions = model(x)
 	# model = utils.load_model(FLAGS.model_path)
-	print("Loaded model")
+	# print("Loaded model")
 	X_test, Y_test = X_test[:200,:,:,:], Y_test[:200]
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
