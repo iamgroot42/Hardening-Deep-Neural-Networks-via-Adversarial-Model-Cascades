@@ -23,7 +23,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 1, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
@@ -31,17 +31,21 @@ flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox m
 
 
 def main(argv=None):
+	if FLAGS.is_blackbox:
+		print("Starting to train blackbox model")
+	else:
+		print("Starting to train proxy model")
 	flatten = False
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
 	# Create TF session and set as Keras backend session
-	config = tf.ConfigProto(
-		device_count = {'GPU': 0}
-	)
-	sess = tf.Session(config=config)
-	# sess = tf.Session()
+#	config = tf.ConfigProto(
+#		device_count = {'GPU': 0}
+#	)
+	#sess = tf.Session(config=config)
+	sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
 	
@@ -62,14 +66,14 @@ def main(argv=None):
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
-	if flags.is_blackbox:
+	if FLAGS.is_blackbox:
 		model = utils_mnist.modelB()
 		predictions = model(x)
 	else:
 		model = utils_mnist.modelA()
 		predictions = model(x)
 
-	if flags.is_blackbox:
+	if FLAGS.is_blackbox:
 		X_train_p, Y_train_p = X_train, Y_train
 	else:
 		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
