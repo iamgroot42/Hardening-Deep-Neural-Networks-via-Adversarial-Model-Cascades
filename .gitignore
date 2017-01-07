@@ -2,4 +2,5 @@ Papers/*
 *.pyc
 *.npy
 *.png
+Outputs/*
 saved_model
