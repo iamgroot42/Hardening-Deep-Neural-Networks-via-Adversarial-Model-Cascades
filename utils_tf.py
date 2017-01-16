@@ -154,3 +154,54 @@ def model_argmax(sess, x, predictions, sample):
 	feed_dict = {x: sample, keras.backend.learning_phase(): 0}
 	probabilities = sess.run(predictions, feed_dict)
 	return np.argmax(probabilities)
+
+
+def tf_autoencoder_train(sess, x, y, predictions, X_train, Y_train, save=False,
+				   predictions_adv=None, verbose=False):
+	# Define loss
+	loss = tf_model_loss(y, predictions)
+	if predictions_adv is not None:
+		loss = (loss + tf_model_loss(y, predictions_adv)) / 2
+
+	train_step = tf.train.AdadeltaOptimizer(learning_rate=FLAGS.learning_rate, rho=0.95, epsilon=1e-08).minimize(loss)
+	# train_step = tf.train.GradientDescentOptimizer(FLAGS.learning_rate).minimize(loss)
+	with sess.as_default():
+		init = tf.global_variables_initializer()
+		# init = tf.initialize_all_variables()
+		sess.run(init)
+
+		for epoch in six.moves.xrange(FLAGS.nb_epochs):
+			if verbose:
+				print("Epoch " + str(epoch))
+
+			# Compute number of batches
+			nb_batches = int(math.ceil(float(len(X_train)) / FLAGS.batch_size))
+			assert nb_batches * FLAGS.batch_size >= len(X_train)
+
+			prev = time.time()
+			for batch in range(nb_batches):
+
+				# Compute batch start and end indices
+				start, end = batch_indices(batch, len(X_train), FLAGS.batch_size)
+
+				# Perform one training step
+				train_step.run(feed_dict={x: X_train[start:end],
+										  y: Y_train[start:end],
+										  keras.backend.learning_phase(): 1})
+			assert end >= len(X_train) # Check that all examples were used
+			cur = time.time()
+			if verbose:
+				print("\tEpoch took " + str(cur - prev) + " seconds")
+			prev = cur
+
+		if save:
+			save_path = os.path.join(FLAGS.train_dir, FLAGS.filename)
+			saver = tf.train.Saver()
+			saver.save(sess, save_path)
+			if verbose:
+				print("Completed model training and model saved at:" + str(save_path))
+		else:
+			if verbose:
+				print("Completed model training.")
+
+	return True

@@ -28,6 +28,7 @@ flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')
+flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2) or none(0)')
 
 
 def main(argv=None):
@@ -61,22 +62,34 @@ def main(argv=None):
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
-	if FLAGS.is_blackbox:
-		model = utils_mnist.modelB()
-		predictions = model(x)
-	else:
-		model = utils_mnist.modelA()
-		predictions = model(x)
 
 	if FLAGS.is_blackbox:
 		X_train_p, Y_train_p = X_train, Y_train
 	else:
 		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
-	# Train model
-	tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
+
+
+	if FLAGS.is_autoencoder == 0:
+		if FLAGS.is_blackbox:
+			model = utils_mnist.modelB()
+			predictions = model(x)
+		else:
+			model = utils_mnist.modelA()
+			predictions = model(x)
+	elif FLAGS.is_autoencoder == 1:
+		if FLAGS.is_blackbox:
+			model = autoencoder.learn_encoding(X_train, X_test)
+			predictions = model(x)
+		else:
+			model = autoencoder.modelD()
+			predictions = model(x)
+
+	if not( FLAGS.is_autoencoder == 1 and FLAGS.is_blackbox == 1):
+		tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
+	
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
 	print('Test accuracy for blackbox model: ' + str(accuracy))
-	utils.save_model(model, FLAGS.save_here)	
+	utils.save_model(model, FLAGS.save_here)
 
 
 if __name__ == '__main__':
