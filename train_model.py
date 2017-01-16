@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import tensorflow as tf
 tf.python.control_flow_ops = tf
 
+import numpy as np
 import keras
 import sys
 
@@ -55,10 +56,13 @@ def main(argv=None):
 	label_smooth = .1
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
-	if flatten:
-		x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
+	if FLAGS.is_autoencoder == 1:
+		x_shape, y_shape = utils_cifar.encoded_placeholder_shapes()
 	else:
-		x_shape, y_shape = utils_cifar.placeholder_shapes()
+		if flatten:
+			x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
+		else:
+			x_shape, y_shape = utils_cifar.placeholder_shapes()
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
@@ -82,15 +86,15 @@ def main(argv=None):
 			encoder = autoencoder.learn_encoding(X_train_p, X_test)
 			X_train_p = encoder.predict(X_train_p) # Get encoded version of data
 			X_test = encoder.predict(X_test) # Get encoded version of data
+			X_train_p = np.reshape(X_train_p, (X_train_p.shape[0], np.prod(X_train_p.shape[1:])))
+			X_test = np.reshape(X_test, (X_test.shape[0], np.prod(X_test.shape[1:])))
 			model = autoencoder.modelD()
 			predictions = model(x)
 		else:
 			model = autoencoder.modelE()
 			predictions = model(x)
 
-	if not( FLAGS.is_autoencoder == 1 and FLAGS.is_blackbox == 1):
-		tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
-
+	tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
 	print('Test accuracy for model: ' + str(accuracy))
 	utils.save_model(model, FLAGS.save_here)
