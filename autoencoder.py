@@ -3,16 +3,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
-from keras.layers import Convolution2D, MaxPooling2D
+from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.utils import np_utils
 
 import numpy as np
 
 
 def learn_encoding(X_train, X_test, ne=10, bs=128, learning_rate=0.1):
-	input_img = Input(shape=((3, img_rows, img_cols),))
+	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
 	x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(x)
@@ -24,9 +24,9 @@ def learn_encoding(X_train, X_test, ne=10, bs=128, learning_rate=0.1):
 	x = UpSampling2D((2, 2))(x)
 	x = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(x)
 	x = UpSampling2D((2, 2))(x)
-	x = Convolution2D(16, 3, 3, activation='relu')(x)
+	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(x)
 	x = UpSampling2D((2, 2))(x)
-	decoded = Convolution2D(1, 3, 3, activation='sigmoid', border_mode='same')(x)
+	decoded = Convolution2D(3, 3, 3, activation='sigmoid', border_mode='same')(x)
 	encoder = Model(input=input_img, output=encoded)
 	autoencoder = Model(input=input_img, output=decoded)
 	# Configure autoencoder
@@ -35,8 +35,6 @@ def learn_encoding(X_train, X_test, ne=10, bs=128, learning_rate=0.1):
 				nb_epoch=ne,
 				batch_size=bs,
 				validation_data=(X_test, X_test))
-	loss_and_metrics = model.evaluate(X_test_comp, y_test, batch_size=bs)
-	print(loss_and_metrics)
 	return encoder
 
 

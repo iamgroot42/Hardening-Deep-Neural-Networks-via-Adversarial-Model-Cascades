@@ -97,7 +97,7 @@ def learn_encoding(learning_rate, aune, ne, bs, autoencoder_weight_file):
 				callbacks=[TensorBoard(log_dir='/tmp/autoencoder')])
 	# Evaluate performance
 	loss_and_metrics = model.evaluate(X_test_comp, y_test, batch_size=bs)
-	print "\n"
-	print "Classification accuracy:", loss_and_metrics[1]
+	print("\n")
+	print("Classification accuracy:", loss_and_metrics[1])
 
 

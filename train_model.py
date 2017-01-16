@@ -15,9 +15,10 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 from utils_tf import tf_model_train, tf_model_eval
-import utils_mnist
+import utils_mnist, utils_cifar
 import utils
-import helpers
+import helpers, autoencoder
+
 
 FLAGS = flags.FLAGS
 
@@ -45,7 +46,7 @@ def main(argv=None):
 	sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
-	X_train, Y_train, X_test, Y_test = utils_mnist.data_mnist()
+	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 	if flatten:
 		X_train = X_train.reshape(60000, 784)
@@ -57,7 +58,7 @@ def main(argv=None):
 	if flatten:
 		x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
 	else:
-		x_shape, y_shape = utils_mnist.placeholder_shapes()
+		x_shape, y_shape = utils_cifar.placeholder_shapes()
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
