@@ -79,17 +79,20 @@ def main(argv=None):
 			predictions = model(x)
 	elif FLAGS.is_autoencoder == 1:
 		if FLAGS.is_blackbox:
-			model = autoencoder.learn_encoding(X_train, X_test)
+			encoder = autoencoder.learn_encoding(X_train_p, X_test)
+			X_train_p = encoder.predict(X_train_p) # Get encoded version of data
+			X_test = encoder.predict(X_test) # Get encoded version of data
+			model = autoencoder.modelD()
 			predictions = model(x)
 		else:
-			model = autoencoder.modelD()
+			model = autoencoder.modelE()
 			predictions = model(x)
 
 	if not( FLAGS.is_autoencoder == 1 and FLAGS.is_blackbox == 1):
 		tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
-	
+
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
-	print('Test accuracy for blackbox model: ' + str(accuracy))
+	print('Test accuracy for model: ' + str(accuracy))
 	utils.save_model(model, FLAGS.save_here)
 
 

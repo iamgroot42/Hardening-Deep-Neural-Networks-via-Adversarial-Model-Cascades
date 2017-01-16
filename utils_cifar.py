@@ -77,27 +77,3 @@ def learn_encoding(learning_rate, aune, ne, bs, autoencoder_weight_file):
 				batch_size=bs,
 				validation_data=(X_test, X_test))
 	return autoencoder
-	# Compress input data according to learnt auto-encoder
-	X_train_comp = encoder.predict(X_train, batch_size=bs)
-	X_test_comp = encoder.predict(X_test, batch_size=bs)
-	# Create ffnn
-	model = Sequential()
-	model.add(Dense(output_dim=50, input_dim=100))
-	model.add(Activation("sigmoid"))
-	model.add(Dense(output_dim=10))
-	model.add(Activation("softmax"))
-	# Configure model
-	model.compile(loss='categorical_crossentropy',
-		optimizer=Adadelta(lr=learning_rate),
-		metrics=['accuracy'])
-	# Fit model
-	model.fit(X_train_comp,y_train,
-				nb_epoch=ne,
-				batch_size=bs,
-				callbacks=[TensorBoard(log_dir='/tmp/autoencoder')])
-	# Evaluate performance
-	loss_and_metrics = model.evaluate(X_test_comp, y_test, batch_size=bs)
-	print("\n")
-	print("Classification accuracy:", loss_and_metrics[1])
-
-

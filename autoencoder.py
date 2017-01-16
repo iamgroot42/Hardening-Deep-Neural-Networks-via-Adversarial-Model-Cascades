@@ -55,3 +55,24 @@ def modelD(logits=False,input_ph=None, compressed_shape=(8,4,4), hidden_neurons=
 		return model, logits_tensor
 	else:
 		return model
+
+
+def modelE(logits=False,input_ph=None, img_rows=32, img_cols=32, nb_filters=64, nb_classes=10):
+	model = Sequential()
+	model.add(Dropout(0.2, input_shape=(3, img_rows, img_cols)))
+	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
+	model.add(Activation('relu'))
+	model.add(Convolution2D(nb_filters * 2, 6, 6, subsample=(2, 2),border_mode="valid"))
+	model.add(Activation('relu'))
+	model.add(Convolution2D(nb_filters *2, 5, 5, subsample=(1, 1)))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.5))
+	model.add(Flatten())
+	model.add(Dense(nb_classes))
+	if logits:
+		logits_tensor = model(input_ph)
+	model.add(Activation('softmax'))
+	if logits:
+		return model, logits_tensor
+	else:
+		return model
