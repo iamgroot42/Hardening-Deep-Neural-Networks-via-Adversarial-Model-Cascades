@@ -11,7 +11,7 @@ from keras.utils import np_utils
 import numpy as np
 
 
-def learn_encoding(X_train, X_test, ne=1, bs=128, learning_rate=0.1):
+def learn_encoding(X_train, X_test, ne=3, bs=128, learning_rate=0.2):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -35,12 +35,17 @@ def learn_encoding(X_train, X_test, ne=1, bs=128, learning_rate=0.1):
 				nb_epoch=ne,
 				batch_size=bs,
 				validation_data=(X_test, X_test))
+	score = autoencoder.evaluate(X_test, X_test)
+	print("Autoencoder accuracy: " + str(score))
 	return encoder
 
 
 def modelD(logits=False,input_ph=None, compressed_shape=(8,4,4), hidden_neurons=512, nb_classes=10):
 	model = Sequential()
 	model.add(Dense(hidden_neurons, input_shape=(np.prod(compressed_shape),)))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(hidden_neurons))
 	model.add(Activation('relu'))
 	model.add(Dropout(0.2))
 	model.add(Dense(hidden_neurons))
