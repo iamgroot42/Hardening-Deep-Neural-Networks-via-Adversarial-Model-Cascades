@@ -56,13 +56,10 @@ def main(argv=None):
 	label_smooth = .1
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
-	if FLAGS.is_autoencoder == 1:
-		x_shape, y_shape = utils_cifar.encoded_placeholder_shapes()
+	if flatten:
+		x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
 	else:
-		if flatten:
-			x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
-		else:
-			x_shape, y_shape = utils_cifar.placeholder_shapes()
+		x_shape, y_shape = utils_cifar.placeholder_shapes()
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
@@ -83,12 +80,7 @@ def main(argv=None):
 			predictions = model(x)
 	elif FLAGS.is_autoencoder == 1:
 		if FLAGS.is_blackbox:
-			encoder = autoencoder.learn_encoding(X_train_p, X_test)
-			X_train_p = encoder.predict(X_train_p) # Get encoded version of data
-			X_test = encoder.predict(X_test) # Get encoded version of data
-			X_train_p = np.reshape(X_train_p, (X_train_p.shape[0], np.prod(X_train_p.shape[1:])))
-			X_test = np.reshape(X_test, (X_test.shape[0], np.prod(X_test.shape[1:])))
-			model = autoencoder.modelD()
+			model = autoencoder.modelD(X_train_p, X_test)
 			predictions = model(x)
 		else:
 			model = autoencoder.modelE()

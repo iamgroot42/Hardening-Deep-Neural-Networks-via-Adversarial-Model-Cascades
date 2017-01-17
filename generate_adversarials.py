@@ -30,6 +30,7 @@ flags.DEFINE_float('fgsm_eps', 0.0, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2) or none(0)')
 
 
 def main(argv=None):

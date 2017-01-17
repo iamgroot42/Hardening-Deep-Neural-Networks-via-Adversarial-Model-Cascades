@@ -11,7 +11,7 @@ from keras.utils import np_utils
 import numpy as np
 
 
-def learn_encoding(X_train, X_test, ne=3, bs=128, learning_rate=0.2):
+def modelD(X_train, X_test, logits=False,input_ph=None, ne=3, bs=128, learning_rate=0.2):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -36,8 +36,30 @@ def learn_encoding(X_train, X_test, ne=3, bs=128, learning_rate=0.2):
 				batch_size=bs,
 				validation_data=(X_test, X_test))
 	score = autoencoder.evaluate(X_test, X_test)
-	print("Autoencoder accuracy: " + str(score))
-	return encoder
+	print("\nAutoencoder accuracy: " + str(score))
+	# Build ultimate model
+	for i in encoder.layers:
+		i.trainable = False
+	hidden_neurons = 512
+	y = Dense(hidden_neurons)(encoder)
+	y = Activation('relu')(y)
+	y = Dropout(0.2)(y)
+	y = Dense(hidden_neurons)(y)
+	y = Activation('relu')(y)
+	y = Dropout(0.2)(y)
+	y = Dense(hidden_neurons)(y)
+	y = Activation('relu')(y)
+	y = Dropout(0.2)(y)
+	y = Dense(10)(y)
+	compressed_learner = Activation('softmax')(y)
+	final_model = Model(input=input_img, output=compressed_learner)
+	if logits:
+		logits_tensor = final_model(input_ph)
+	final_model.add(Activation('softmax'))
+	if logits:
+		return final_model, logits_tensor
+	else:
+		return final_model
 
 
 def modelD(logits=False,input_ph=None, compressed_shape=(8,4,4), hidden_neurons=512, nb_classes=10):

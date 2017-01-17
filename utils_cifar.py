@@ -14,10 +14,6 @@ def placeholder_shapes():
 	return (None, 3, 32, 32), (None, 10)
 
 
-def encoded_placeholder_shapes():
-	return (None, 8 * 4 * 4), (None, 10)
-
-
 def data_cifar():
 	# These values are specific to CIFAR
 	img_rows = 32
