@@ -11,7 +11,7 @@ from keras.utils import np_utils
 import numpy as np
 
 
-def modelD(X_train, X_test, logits=False,input_ph=None, ne=3, bs=128, learning_rate=0.2):
+def modelD(X_train, X_test, logits=False,input_ph=None, ne=1, bs=128, learning_rate=0.2):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -41,18 +41,20 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=3, bs=128, learning_r
 	for i in encoder.layers:
 		i.trainable = False
 	hidden_neurons = 512
-	y = Dense(hidden_neurons)(encoder)
-	y = Activation('relu')(y)
-	y = Dropout(0.2)(y)
-	y = Dense(hidden_neurons)(y)
-	y = Activation('relu')(y)
-	y = Dropout(0.2)(y)
-	y = Dense(hidden_neurons)(y)
-	y = Activation('relu')(y)
-	y = Dropout(0.2)(y)
-	y = Dense(10)(y)
-	compressed_learner = Activation('softmax')(y)
-	final_model = Model(input=input_img, output=compressed_learner)
+	final_model = Sequential()
+        final_model.add(encoder)
+	final_model.add(Flatten())
+	final_model.add(Dense(hidden_neurons))
+        final_model.add(Activation('relu'))
+        final_model.add(Dropout(0.2))
+        final_model.add(Dense(hidden_neurons))
+        final_model.add(Activation('relu'))
+        final_model.add(Dropout(0.2))
+        final_model.add(Dense(hidden_neurons))
+        final_model.add(Activation('relu'))
+        final_model.add(Dropout(0.2))
+        final_model.add(Dense(10))
+        final_model.add(Activation('softmax'))
 	if logits:
 		logits_tensor = final_model(input_ph)
 	final_model.add(Activation('softmax'))
@@ -60,28 +62,6 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=3, bs=128, learning_r
 		return final_model, logits_tensor
 	else:
 		return final_model
-
-
-def modelD(logits=False,input_ph=None, compressed_shape=(8,4,4), hidden_neurons=512, nb_classes=10):
-	model = Sequential()
-	model.add(Dense(hidden_neurons, input_shape=(np.prod(compressed_shape),)))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.2))
-	model.add(Dense(hidden_neurons))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.2))
-	model.add(Dense(hidden_neurons))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.2))
-	model.add(Dense(nb_classes))
-	model.add(Activation('softmax'))
-	if logits:
-		logits_tensor = model(input_ph)
-	model.add(Activation('softmax'))
-	if logits:
-		return model, logits_tensor
-	else:
-		return model
 
 
 def modelE(logits=False,input_ph=None, img_rows=32, img_cols=32, nb_filters=64, nb_classes=10):
