@@ -15,7 +15,7 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 from utils_tf import tf_model_eval
-import utils_mnist
+import utils_mnist, utils_cifar
 import utils
 
 FLAGS = flags.FLAGS
@@ -28,6 +28,7 @@ flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2) or none(0)')
 
 
 def main(argv=None):
@@ -43,7 +44,7 @@ def main(argv=None):
 	if flatten:
 		x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
 	else:
-		x_shape, y_shape = utils_mnist.placeholder_shapes()
+		x_shape, y_shape = utils_cifar.placeholder_shapes()
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)

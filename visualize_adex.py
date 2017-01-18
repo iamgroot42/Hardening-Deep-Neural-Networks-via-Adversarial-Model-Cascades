@@ -18,7 +18,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('example_index', 0, 'Which index do you want to visualize?')
-
+flags.DEFINE_integer('dataset', 0 , 'MNIST(0), CIFAR10(1)')
 
 def main(argv=None):
 
@@ -28,8 +28,11 @@ def main(argv=None):
 	X_test_adv = X_test_adv[FLAGS.example_index]
 	Y_test = Y_test[FLAGS.example_index]
 
-	X_test_adv = X_test_adv.reshape((28, 28))
-	plt.matshow(X_test_adv,  cmap='gray')
+	if FLAGS.dataset == 0:
+		X_test_adv = X_test_adv.reshape((28, 28))
+		plt.matshow(X_test_adv,  cmap='gray')
+	else:
+		plt.matshow(X_test_adv)
 	plt.savefig('adv_example.png')
 
 
