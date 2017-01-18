@@ -47,7 +47,7 @@ def main(argv=None):
 	sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
-	X_train, Y_train, X_test, Y_test = utils_cifar.data_mnist()
+	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 	if flatten:
 		# X_train = X_train.reshape(60000, 784)

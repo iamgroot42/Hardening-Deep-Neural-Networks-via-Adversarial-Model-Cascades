@@ -5,4 +5,5 @@ BM
 *.npy
 *.png
 Outputs/*
+AdvOutputs/*
 saved_model
