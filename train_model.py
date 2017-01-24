@@ -29,6 +29,7 @@ flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
 flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
+flags.DEFINE_integer('num_clusters', 10, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')
@@ -51,7 +52,7 @@ def main(argv=None):
 	# Get MNIST test data
 	if FLAGS.is_autoencoder == 2:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
-	else:	
+	else:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 	if flatten:
@@ -63,7 +64,7 @@ def main(argv=None):
 
 
 	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
-		x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(10)
+		x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(FLAGS.num_clusters)
 	else:
 		if flatten:
 			x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
@@ -96,14 +97,14 @@ def main(argv=None):
 			predictions = model(x)
 	elif FLAGS.is_autoencoder == 2:
 		if FLAGS.is_blackbox:
-			transformed_data, clustering = KMeans(n_clusters=10, random_state=0)
-			X_train =  vbow.gen_sift_features(X_train) 
+			clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0)
+			X_train_p =  vbow.cluster_features(X_train_p[:100], clustering)
+			X_test =  vbow.cluster_features(X_test, clustering)
 			model = handpicked.modelF()
 			predictions = model(x)
 		else:
 			model = autoencoder.modelE()
 			predictions = model(x)
-
 	tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
 	print('Test accuracy for model: ' + str(accuracy))

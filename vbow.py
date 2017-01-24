@@ -13,12 +13,12 @@ def sift_vector(x):
 def gen_sift_features(X):
 	img_descs = []
 	for data_point in X:
-		img_descs.append(sift_vector(desc))
-	img_descs = np.array(img_descs)
-	return img_descs
+		img_descs.append(sift_vector(data_point))
+	return np.array(img_descs)
 
 
 def cluster_features(img_descs, cluster_model):
+	img_descs = gen_sift_features(img_descs)
 	all_train_descriptors = []
 	for desc_list in img_descs:
 		try:
@@ -33,16 +33,11 @@ def cluster_features(img_descs, cluster_model):
 	return img_bow_hist
 
 
-def img_to_vect(data_point, cluster_model):
-	desc = sift_vector(data_point)
-	clustered_desc = cluster_model.predict(desc)
-	img_bow_hist = np.bincount(clustered_desc, minlength=cluster_model.n_clusters)
-	print img_bow_hist
-
-
-# if __name__ == "__main__":
-# 	(X_train, Y_train, X_test, Y_test) = utils_cifar.data_cifar_raw()
-# 	transformed_train = gen_sift_features(X_train)
-# 	kmeans = KMeans(n_clusters=10, random_state=0)
-# 	cluster_features(transformed_train[:100], kmeans)
-# 	print img_to_vect(X_test[0], kmeans)
+def img_to_vect(X, cluster_model):
+	img_descs = []
+	for data_point in X:
+		desc = sift_vector(data_point)
+		clustered_desc = cluster_model.predict(desc)
+		img_bow_hist = np.bincount(clustered_desc, minlength=cluster_model.n_clusters)
+		img_descs.append(img_bow_hist)
+	return np.array(img_descs)
