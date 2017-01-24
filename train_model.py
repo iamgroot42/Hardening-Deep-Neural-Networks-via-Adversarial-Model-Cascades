@@ -18,7 +18,9 @@ from tensorflow.python.platform import flags
 from utils_tf import tf_model_train, tf_model_eval
 import utils_mnist, utils_cifar
 import utils
-import helpers, autoencoder
+import helpers, autoencoder, handpicked
+import vbow
+from sklearn.cluster import KMeans
 
 
 FLAGS = flags.FLAGS
@@ -47,7 +49,10 @@ def main(argv=None):
 	sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
-	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
+	if FLAGS.is_autoencoder == 2:
+		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
+	else:	
+		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 	if flatten:
 		X_train = X_train.reshape(60000, 784)
@@ -56,10 +61,14 @@ def main(argv=None):
 	label_smooth = .1
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
-	if flatten:
-		x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
+
+	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
+		x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(10)
 	else:
-		x_shape, y_shape = utils_cifar.placeholder_shapes()
+		if flatten:
+			x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
+		else:
+			x_shape, y_shape = utils_cifar.placeholder_shapes()
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
@@ -81,6 +90,15 @@ def main(argv=None):
 	elif FLAGS.is_autoencoder == 1:
 		if FLAGS.is_blackbox:
 			model = autoencoder.modelD(X_train_p, X_test)
+			predictions = model(x)
+		else:
+			model = autoencoder.modelE()
+			predictions = model(x)
+	elif FLAGS.is_autoencoder == 2:
+		if FLAGS.is_blackbox:
+			transformed_data, clustering = KMeans(n_clusters=10, random_state=0)
+			X_train =  vbow.gen_sift_features(X_train) 
+			model = handpicked.modelF()
 			predictions = model(x)
 		else:
 			model = autoencoder.modelE()

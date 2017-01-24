@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from sklearn.cluster import KMeans
 import utils_cifar
 
 
@@ -20,7 +19,6 @@ def gen_sift_features(X):
 
 
 def cluster_features(img_descs, cluster_model):
-	# Concatenate all descriptors in the training set together
 	all_train_descriptors = []
 	for desc_list in img_descs:
 		try:
@@ -42,9 +40,9 @@ def img_to_vect(data_point, cluster_model):
 	print img_bow_hist
 
 
-if __name__ == "__main__":
-	(X_train, Y_train, X_test, Y_test) = utils_cifar.data_cifar_raw()
-	transformed_train = gen_sift_features(X_train)
-	kmeans = KMeans(n_clusters=10, random_state=0)
-	cluster_features(transformed_train[:100], kmeans)
-	print img_to_vect(X_test[0], kmeans)
+# if __name__ == "__main__":
+# 	(X_train, Y_train, X_test, Y_test) = utils_cifar.data_cifar_raw()
+# 	transformed_train = gen_sift_features(X_train)
+# 	kmeans = KMeans(n_clusters=10, random_state=0)
+# 	cluster_features(transformed_train[:100], kmeans)
+# 	print img_to_vect(X_test[0], kmeans)
