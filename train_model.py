@@ -50,7 +50,7 @@ def main(argv=None):
 	sess = tf.Session()
 	keras.backend.set_session(sess)
 	# Get MNIST test data
-	if FLAGS.is_autoencoder == 2:
+	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
 	else:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
@@ -77,6 +77,7 @@ def main(argv=None):
 
 	if FLAGS.is_blackbox:
 		X_train_p, Y_train_p = X_train, Y_train
+		X_test, Y_test = X_test, Y_test
 	else:
 		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
 
@@ -97,14 +98,17 @@ def main(argv=None):
 			predictions = model(x)
 	elif FLAGS.is_autoencoder == 2:
 		if FLAGS.is_blackbox:
+			print("started clustering")
 			clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0)
-			X_train_p =  vbow.cluster_features(X_train_p[:100], clustering)
-			X_test =  vbow.cluster_features(X_test, clustering)
-			model = handpicked.modelF()
+			X_train_p =  vbow.cluster_features(X_train_p, clustering)
+			print("ended clustering")
+			X_test =  vbow.img_to_vect(X_test, clustering)
+			model = handpicked.modelF(features=FLAGS.num_clusters)
 			predictions = model(x)
 		else:
 			model = autoencoder.modelE()
 			predictions = model(x)
+	print("training started")
 	tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
 	print('Test accuracy for model: ' + str(accuracy))
