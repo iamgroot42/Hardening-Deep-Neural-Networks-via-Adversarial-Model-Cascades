@@ -4,9 +4,9 @@ import utils_cifar
 
 
 def sift_vector(x):
-	gray = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY)
+	gray = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY).astype('uint8')
 	sift = cv2.xfeatures2d.SIFT_create()
-	kp, desc = sift.detectAndCompute(gray, None)
+	kp, desc = sift.detectAndCompute(gray.astype('uint8'), None)
 	return desc
 
 
@@ -32,7 +32,7 @@ def cluster_features(img_descs, cluster_model):
 	cluster_model.fit(all_train_descriptors)
 	img_clustered_words = [cluster_model.predict(raw_words) for raw_words in img_descs_temp]
 	img_bow_hist = np.array([np.bincount(clustered_words, minlength=cluster_model.n_clusters) for clustered_words in img_clustered_words])
-	return img_bow_hist
+	return img_bow_hist, cluster_model
 
 
 def img_to_vect(X, cluster_model):

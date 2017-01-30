@@ -21,6 +21,7 @@ import utils
 import helpers, autoencoder, handpicked
 import vbow
 from sklearn.cluster import KMeans
+from sklearn.externals import joblib
 
 
 FLAGS = flags.FLAGS
@@ -32,6 +33,7 @@ flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_integer('num_clusters', 10, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
+flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster model is to be saved')
 flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2) or none(0)')
 
@@ -76,8 +78,8 @@ def main(argv=None):
 
 
 	if FLAGS.is_blackbox:
-		X_train_p, Y_train_p = X_train, Y_train
-		X_test, Y_test = X_test, Y_test
+		X_train_p, Y_train_p = X_train[:5000], Y_train[:5000]
+		X_test, Y_test = X_test[:1000], Y_test[:1000]
 	else:
 		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
 
@@ -100,7 +102,8 @@ def main(argv=None):
 		if FLAGS.is_blackbox:
 			print("started clustering")
 			clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0)
-			X_train_p =  vbow.cluster_features(X_train_p, clustering)
+			X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
+			joblib.dump(clustering, FLAGS.cluster)
 			print("ended clustering")
 			X_test =  vbow.img_to_vect(X_test, clustering)
 			model = handpicked.modelF(features=FLAGS.num_clusters)

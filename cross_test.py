@@ -17,6 +17,8 @@ from tensorflow.python.platform import flags
 from utils_tf import tf_model_eval
 import utils_mnist, utils_cifar
 import utils
+from sklearn.externals import joblib
+import vbow
 
 FLAGS = flags.FLAGS
 
@@ -29,6 +31,7 @@ flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2) or none(0)')
+flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster model is to be saved')
 
 
 def main(argv=None):
@@ -46,16 +49,21 @@ def main(argv=None):
 	else:
 		x_shape, y_shape = utils_cifar.placeholder_shapes()
 
+	X_test_adv = np.load(FLAGS.adversary_path_x)
+	Y_test = np.load(FLAGS.adversary_path_y)
+
+	if FLAGS.is_autoencoder == 2:
+		cluster = joblib.load(FLAGS.cluster)
+		x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
+		X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
+		X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
+
 	x = tf.placeholder(tf.float32, shape=x_shape)
-	y = tf.placeholder(tf.float32, shape=y_shape)
+        y = tf.placeholder(tf.float32, shape=y_shape)
 
 	model = utils.load_model(FLAGS.model_path)
 	predictions = model(x)
 
-	X_test_adv = np.load(FLAGS.adversary_path_x)
-	Y_test = np.load(FLAGS.adversary_path_y)
-
-	# Check classification accuracy of adversarial examples of proxy on black box
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
 	print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
 

@@ -11,15 +11,16 @@ python train_model.py --is_blackbox False --save_here PM --is_autoencoder 2 >> H
 echo "proxy"
 # # Generate adversarial examples for proxy model
 python generate_adversarials.py --model_path PM --adversary_path_x ADX --adversary_path_y ADY --fgsm_eps $epsilon >> HPE/$K/log
-exho "advgen"
+echo "advgen"
 # # Test misclassification accuracy of proxy adversarial examples on blackbox model
-python cross_test.py --model_path BM --adversary_path_x ADX.npy --adversary_path_y ADY.npy >> HPE/$K/log
-print "test_acc"
+python cross_test.py --is_autoencoder 2 --model_path BM --adversary_path_x ADX.npy --adversary_path_y ADY.npy #>> HPE/$K/log
+echo "test_acc"
 # # Sample an adversarial image for visualization
 # python visualize_adex.py --dataset 1
 
-# mv BM HPE/$K/
-# mv PM HPE/$K/
-# mv ADX.npy HPE/$K/
-# mv ADY.npy HPE/$K/
-# mv adv_example.png HPE/$K/
+mv BM HPE/$K/
+mv PM HPE/$K/
+mv ADX.npy HPE/$K/
+mv ADY.npy HPE/$K/
+mv C.pkl /HPE/$K/
+mv adv_example.png HPE/$K/

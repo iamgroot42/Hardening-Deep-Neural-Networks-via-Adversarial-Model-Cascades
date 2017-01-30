@@ -1,9 +1,11 @@
 Papers/*
 AM
 BM
+PM
 *.pyc
 *.npy
 *.png
+*.pkl
 Outputs/*
 AdvOutputs/*
 HPE/*
