@@ -13,6 +13,8 @@
 ### Progress
 - For CNN (on MNIST), using Fast Gradient Sign Method for creating adversary.
 - Using Jacobian based data augmentation to create synthetic dataset.
+- Using handpicked features (visual bag of words using SIFT/HOG features) to create networks.
+- Use features from CNN to be passed on to a SVM
 
 
 ### Note
