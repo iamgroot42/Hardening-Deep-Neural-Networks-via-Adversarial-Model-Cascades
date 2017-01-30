@@ -6,8 +6,8 @@
 # bash pipeline.sh 0.135
 # bash pipeline.sh 0.145
 
-bash pipeline_hp.sh 0.10
-bash pipeline_hp.sh 0.20
-bash pipeline_hp.sh 0.30
-bash pipeline_hp.sh 0.40
-bash pipeline_hp.sh 0.50
+bash pipeline_hp.sh 0.10 5
+bash pipeline_hp.sh 0.10 10
+bash pipeline_hp.sh 0.10 20
+bash pipeline_hp.sh 0.10 40
+bash pipeline_hp.sh 0.10 80

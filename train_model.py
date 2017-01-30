@@ -78,8 +78,8 @@ def main(argv=None):
 
 
 	if FLAGS.is_blackbox:
-		X_train_p, Y_train_p = X_train[:5000], Y_train[:5000]
-		X_test, Y_test = X_test[:1000], Y_test[:1000]
+		X_train_p, Y_train_p = X_train, Y_train
+		X_test, Y_test = X_test, Y_test
 	else:
 		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
 
