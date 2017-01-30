@@ -43,19 +43,21 @@ def modelD(X_train, Y_train, X_test, Y_test, logits=False,input_ph=None, ne=1, b
 				nb_epoch=ne,
 				batch_size=bs,
 				validation_data=(X_test, Y_test))
-	score = autoencoder.evaluate(X_test, Y_test)
+	score = final_model.evaluate(X_test, Y_test)
 	print("NN-only accuracy: " + str(score))
 	# Remove last layers to get encoding for SVM
 	final_model.pop()
 	final_model.pop()
-	X_train_SVM = final_model.fit(X_train)
-	X_test_SVM = final_model.fit(X_test)
+	X_train_SVM = final_model.predict(X_train)
+	X_test_SVM = final_model.predict(X_test)
 	clf = svm.SVC(kernel='rbf')
-	clf.fit(X_test_SVM, Y_train)
-	print clf.predict(X_test_SVM[0])
+	clf.fit(X_train_SVM, np.argmax(Y_train, axis=1))
+	return clf.predict(X_test_SVM)
 
 
 if __name__ == "__main__":
 	import utils_cifar
 	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
-	modelD(X_train, Y_train, X_test, Y_test)
+	Y_fin = np_utils.to_categorical(modelD(X_train, Y_train, X_test, Y_test))
+	acc =  100 * np.multiply(Y_test, Y_fin).sum() / Y_test.shape[0]
+	print("testing accuracy " + str(acc))
