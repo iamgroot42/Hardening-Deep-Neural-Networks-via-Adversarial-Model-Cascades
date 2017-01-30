@@ -105,7 +105,7 @@ def main(argv=None):
 			X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
 			joblib.dump(clustering, FLAGS.cluster)
 			print("ended clustering")
-			X_test =  vbow.img_to_vect(X_test, clustering)
+			X_test = vbow.img_to_vect(X_test, clustering)
 			model = handpicked.modelF(features=FLAGS.num_clusters)
 			predictions = model(x)
 		else:
