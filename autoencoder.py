@@ -11,7 +11,7 @@ from keras.utils import np_utils
 import numpy as np
 
 
-def modelD(X_train, X_test, logits=False,input_ph=None, ne=1, bs=128, learning_rate=0.2):
+def modelD(X_train, X_test, logits=False,input_ph=None, ne=10, bs=128, learning_rate=0.2):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)

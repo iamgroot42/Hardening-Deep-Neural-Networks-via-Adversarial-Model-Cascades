@@ -19,6 +19,7 @@ import utils_mnist, utils_cifar
 import utils
 from sklearn.externals import joblib
 import vbow
+import nn_svm
 
 FLAGS = flags.FLAGS
 
@@ -30,8 +31,9 @@ flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')
-flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2) or none(0)')
-flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster model is to be saved')
+flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
+ a CNN with an attached SVM(3), or none(0)')
+flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is saved')
 
 
 def main(argv=None):
@@ -52,20 +54,25 @@ def main(argv=None):
 	X_test_adv = np.load(FLAGS.adversary_path_x)
 	Y_test = np.load(FLAGS.adversary_path_y)
 
-	if FLAGS.is_autoencoder == 2:
+	if FLAGS.is_autoencoder == 3:
 		cluster = joblib.load(FLAGS.cluster)
-		x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
-		X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
-		X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
+		model = utils.load_model(FLAGS.model_path)
+		nn_svm(X_test_adv, Y_test, model, cluster)
+	else:
+		if FLAGS.is_autoencoder == 2:
+			cluster = joblib.load(FLAGS.cluster)
+			x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
+			X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
+			X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
 
-	x = tf.placeholder(tf.float32, shape=x_shape)
-        y = tf.placeholder(tf.float32, shape=y_shape)
+		x = tf.placeholder(tf.float32, shape=x_shape)
+		y = tf.placeholder(tf.float32, shape=y_shape)
 
-	model = utils.load_model(FLAGS.model_path)
-	predictions = model(x)
+		model = utils.load_model(FLAGS.model_path)
+		predictions = model(x)
 
-	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
-	print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
+		accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
+		print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
 
 
 if __name__ == '__main__':

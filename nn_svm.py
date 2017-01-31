@@ -12,7 +12,7 @@ import numpy as np
 from sklearn import svm
 
 
-def modelD(X_train, Y_train, X_test, Y_test, logits=False,input_ph=None, ne=1, bs=128, learning_rate=0.2):
+def modelCS(X_train, Y_train, X_test, Y_test, logits=False,input_ph=None, ne=10, bs=128, learning_rate=0.2):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -44,20 +44,25 @@ def modelD(X_train, Y_train, X_test, Y_test, logits=False,input_ph=None, ne=1, b
 				batch_size=bs,
 				validation_data=(X_test, Y_test))
 	score = final_model.evaluate(X_test, Y_test)
-	print("NN-only accuracy: " + str(score))
+	print("\nNN-only accuracy: " + str(score))
 	# Remove last layers to get encoding for SVM
 	final_model.pop()
 	final_model.pop()
 	X_train_SVM = final_model.predict(X_train)
-	X_test_SVM = final_model.predict(X_test)
 	clf = svm.SVC(kernel='rbf')
 	clf.fit(X_train_SVM, np.argmax(Y_train, axis=1))
-	return clf.predict(X_test_SVM)
+	hybrid_error(X_test, Y_test, final_model, clf)
+	return final_model, clf
+
+
+def hybrid_error(X_test, Y_test, CNN, SVM):
+	X_test_SVM = CNN.predict(X_test)
+	Y_fin = np_utils.to_categorical(SVM.predict(X_test_SVM))
+	accuracy =  np.multiply(Y_test, Y_fin).sum() / float(Y_test.shape[0])
+	print('Test accuracy for model: ' + str(accuracy))
 
 
 if __name__ == "__main__":
 	import utils_cifar
 	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
-	Y_fin = np_utils.to_categorical(modelD(X_train, Y_train, X_test, Y_test))
-	acc =  100 * np.multiply(Y_test, Y_fin).sum() / Y_test.shape[0]
-	print("testing accuracy " + str(acc))
+	CNN, SVM = modelCS(X_train, Y_train, X_test, Y_test)
