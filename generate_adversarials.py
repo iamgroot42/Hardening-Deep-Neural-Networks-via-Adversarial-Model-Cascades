@@ -23,10 +23,10 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
-flags.DEFINE_float('fgsm_eps', 0.0, 'Tunable parameter for FGSM')
+flags.DEFINE_float('fgsm_eps', 0.1, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')

@@ -8,6 +8,8 @@ import tensorflow as tf
 tf.python.control_flow_ops = tf
 
 import keras
+import json
+from keras.models import model_from_json
 import numpy as np
 
 import tensorflow as tf
@@ -25,7 +27,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
@@ -34,6 +36,7 @@ flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversa
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is saved')
+flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be saved')
 
 
 def main(argv=None):
@@ -55,12 +58,12 @@ def main(argv=None):
 	Y_test = np.load(FLAGS.adversary_path_y)
 
 	if FLAGS.is_autoencoder == 3:
-		print("got in")
+		with open(FLAGS.arch) as data_file:
+			model = model_from_json(json.load(data_file))
 		cluster = joblib.load(FLAGS.cluster)
-		print("loaded svm")
-		model = utils.load_model(FLAGS.model_path)
-		print("loaded cnn")
-		nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
+		model.load_weights(FLAGS.model_path)
+		err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
+		print('Misclassification accuracy on adversarial examples: ' + str(1-err))
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)
@@ -80,3 +83,4 @@ def main(argv=None):
 
 if __name__ == '__main__':
 	app.run()
+

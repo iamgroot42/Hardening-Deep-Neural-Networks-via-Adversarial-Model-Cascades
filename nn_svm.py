@@ -13,29 +13,40 @@ from sklearn import svm
 from helpers import pop_layer
 
 
-def modelCS(X_train, Y_train, X_test, Y_test, input_ph=None, ne=1, bs=128, learning_rate=0.2):
-	final_model = Sequential()
-	final_model.add(Convolution2D(16, 3, 3, activation='relu', border_mode='same', input_shape=(3, 32, 32)))
-	final_model.add(MaxPooling2D((2, 2), border_mode='same'))
-	final_model.add(Convolution2D(8, 3, 3, activation='relu', border_mode='same'))
-	final_model.add(MaxPooling2D((2, 2), border_mode='same'))
-	final_model.add(Convolution2D(8, 3, 3, activation='relu', border_mode='same'))
-	final_model.add(MaxPooling2D((2, 2), border_mode='same'))
-	final_model.add(Flatten())
-	hidden_neurons = 512
-	final_model.add(Dense(hidden_neurons))
-	final_model.add(Activation('relu'))
-	final_model.add(Dropout(0.2))
-	final_model.add(Dense(hidden_neurons/2))
-	final_model.add(Activation('relu'))
-	final_model.add(Dropout(0.2))
-	final_model.add(Dense(hidden_neurons/4))
-	final_model.add(Activation('relu'))
-	final_model.add(Dropout(0.2))
-	final_model.add(Dense(10))
-	final_model.add(Activation('softmax'))
-	final_model.compile(loss='binary_crossentropy',optimizer='Adadelta')
-	before = final_model.to_json()
+def internal_model(hidden_neurons = 512, ne=50, bs=128, learning_rate=0.1):
+	model = Sequential()
+	model.add(Convolution2D(16, 3, 3, activation='relu', border_mode='same', input_shape=(3, 32, 32)))
+	model.add(MaxPooling2D((2, 2), border_mode='same'))
+	model.add(Convolution2D(8, 3, 3, activation='relu', border_mode='same'))
+	model.add(MaxPooling2D((2, 2), border_mode='same'))
+	model.add(Convolution2D(8, 3, 3, activation='relu', border_mode='same'))
+	model.add(MaxPooling2D((2, 2), border_mode='same'))
+	model.add(Flatten())
+	model.add(Dense(hidden_neurons))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(hidden_neurons/2))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(hidden_neurons/4))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(10))
+	model.add(Activation('softmax'))
+	model.compile(loss='binary_crossentropy',optimizer='Adadelta')
+	return model
+
+
+def hybrid_error(X_test, Y_test, model, cluster):
+	X_test_SVM = model.predict(X_test)
+	Y_svm = cluster.predict(X_test_SVM)
+	numerator = (1*(Y_svm==np.argmax(Y_test,axis=1))).sum()
+	acc = numerator / float(Y_test.shape[0])
+	return acc
+
+
+def modelCS(X_train, Y_train, X_test, Y_test, hidden_neurons = 512, input_ph=None, ne=50, bs=128, learning_rate=0.1):
+	final_model = internal_model(hidden_neurons, ne, bs, learning_rate)
 	final_model.fit(X_train, Y_train,
 				nb_epoch=ne,
 				batch_size=bs,
@@ -43,26 +54,11 @@ def modelCS(X_train, Y_train, X_test, Y_test, input_ph=None, ne=1, bs=128, learn
 	score = final_model.evaluate(X_test, Y_test)
 	print("\nNN-only accuracy: " + str(score))
 	# Remove last layers to get encoding for SVM
-	final_model.pop()
-	final_model.pop()
-	final_model.pop()
-	after = final_model.to_json()
-	X_train_SVM = final_model.predict(X_train)
-	X_test_SVM = final_model.predict(X_test)
-	#clf = svm.SVC(kernel='rbf')
-	#clf.fit(X_train_SVM, np.argmax(Y_train, axis=1))
-	import json
-	with open('before', 'w') as outfile:
-		json.dump(before, outfile)
-	with open('after','w') as outfile:
-		json.dump(after, outfile)
-	final_model.save("ohhok")
-	return final_model, clf
+	interm_l = Model(input=final_model.input,
+                                 output=final_model.layers[-4].output)
+	X_train_SVM = interm_l.predict(X_train)
+	X_test_SVM = interm_l.predict(X_test)
+	clf = svm.SVC(kernel='rbf')
+	clf.fit(X_train_SVM, np.argmax(Y_train, axis=1))
+	return interm_l, clf
 
-
-if __name__ == "__main__":
-	import utils_cifar
-	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
-	Y_fin = np_utils.to_categorical(modelCS(X_train, Y_train, X_test, Y_test))
-	acc =  100 * np.multiply(Y_test, Y_fin).sum() / Y_test.shape[0]
-	print("testing accuracy " + str(acc))

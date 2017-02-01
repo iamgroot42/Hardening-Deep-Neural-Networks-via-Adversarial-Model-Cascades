@@ -11,3 +11,4 @@ AdvOutputs/*
 HPE/*
 CNNSVM/*
 saved_model
+arch.json
