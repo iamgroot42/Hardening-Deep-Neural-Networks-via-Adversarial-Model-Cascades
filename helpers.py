@@ -35,3 +35,15 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 def jbda(X_train, Y_train):
 	# return X_train[:200,:,:,:], Y_train[:200]
 	return X_train[:20000,:], Y_train[:20000]
+
+
+def pop_layer(model):
+    model.layers.pop()
+    if not model.layers:
+        model.outputs = []
+        model.inbound_nodes = []
+        model.outbound_nodes = []
+    else:
+        model.layers[-1].outbound_nodes = []
+        model.outputs = [model.layers[-1].output]
+    model.built = False

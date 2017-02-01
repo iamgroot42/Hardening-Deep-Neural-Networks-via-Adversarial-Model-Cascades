@@ -3,9 +3,16 @@ import numpy as np
 import utils_cifar
 
 
-def sift_vector(x):
+def sift_vector2(x):
 	gray = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY).astype('uint8')
 	sift = cv2.xfeatures2d.SIFT_create()
+	kp, desc = sift.detectAndCompute(gray.astype('uint8'), None)
+	return desc
+
+
+def sift_vector(x):
+	gray = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY).astype('uint8')
+	sift = cv2.ORB_create()
 	kp, desc = sift.detectAndCompute(gray.astype('uint8'), None)
 	return desc
 

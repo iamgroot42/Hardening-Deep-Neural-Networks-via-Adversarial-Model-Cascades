@@ -28,16 +28,19 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 1, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_integer('num_clusters', 10, 'Number of clusters in vbow')
-flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
+flags.DEFINE_float('learning_rate', 0.15, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is to be saved')
 flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 
+
+CNN_OHHO = None
+SVM_OHHO = None
 
 def main(argv=None):
 	if FLAGS.is_blackbox:
@@ -118,9 +121,26 @@ def main(argv=None):
 		print('Test accuracy for model: ' + str(accuracy))
 		utils.save_model(model, FLAGS.save_here)
 	else:
-		NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test)
-		utils.save_model(NN, FLAGS.save_here)
-		joblib.dump(SVM, FLAGS.cluster)
+		if FLAGS.is_blackbox:
+			print("Before running model")
+			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test)
+			global CNN_OHHO
+			global SVM_OHHO
+			CNN_OHHO = NN
+			SVM_OHHO = SVM
+			print("About to save CNN model")
+			utils.save_model(NN, FLAGS.save_here)
+			print("About to save SVM")
+			joblib.dump(SVM, FLAGS.cluster)
+			print("All done, ahoy!")
+		else:
+			model = autoencoder.modelE()
+			predictions = model(x)
+			print("training started")
+			tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
+			accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
+			print('Test accuracy for model: ' + str(accuracy))
+			utils.save_model(model, FLAGS.save_here)
 
 if __name__ == '__main__':
 	app.run()

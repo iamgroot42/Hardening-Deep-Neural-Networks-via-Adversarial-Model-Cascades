@@ -11,3 +11,4 @@ bash pipeline_hp.sh 0.10 10
 bash pipeline_hp.sh 0.10 20
 bash pipeline_hp.sh 0.10 40
 bash pipeline_hp.sh 0.10 80
+bash pipeline_hp.sh 0.10 160

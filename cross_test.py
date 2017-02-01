@@ -55,9 +55,12 @@ def main(argv=None):
 	Y_test = np.load(FLAGS.adversary_path_y)
 
 	if FLAGS.is_autoencoder == 3:
+		print("got in")
 		cluster = joblib.load(FLAGS.cluster)
+		print("loaded svm")
 		model = utils.load_model(FLAGS.model_path)
-		nn_svm(X_test_adv, Y_test, model, cluster)
+		print("loaded cnn")
+		nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)
