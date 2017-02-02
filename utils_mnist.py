@@ -39,7 +39,7 @@ def data_mnist():
 
 def modelA(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
 	model = Sequential()
-	model.add(Dropout(0.2, input_shape=(1, img_rows, img_cols)))
+	model.add(Dropout(0.2, input_shape=(3, img_rows, img_cols)))
 	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
 	model.add(Activation('relu'))
 	model.add(Convolution2D(nb_filters * 2, 6, 6, subsample=(2, 2),border_mode="valid"))
@@ -62,7 +62,7 @@ def modelB(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, 
 	model = Sequential()
 	model.add(Convolution2D(nb_filters, 3, 3,
                         border_mode='valid',
-                        input_shape=(1, img_rows, img_cols)))
+                        input_shape=(3, img_rows, img_cols)))
 	model.add(Activation('relu'))
 	model.add(Convolution2D(nb_filters, 3, 3))
 	model.add(Activation('relu'))

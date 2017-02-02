@@ -89,10 +89,10 @@ def main(argv=None):
 	if FLAGS.is_autoencoder != 3:
 		if FLAGS.is_autoencoder == 0:
 			if FLAGS.is_blackbox:
-				model = utils_mnist.modelB()
+				model = utils_mnist.modelB(img_rows=32,img_cols=32)
 				predictions = model(x)
 			else:
-				model = utils_mnist.modelA()
+				model = utils_mnist.modelA(img_rows=32,img_cols=32)
 				predictions = model(x)
 		elif FLAGS.is_autoencoder == 1:
 			if FLAGS.is_blackbox:
@@ -103,18 +103,15 @@ def main(argv=None):
 				predictions = model(x)
 		elif FLAGS.is_autoencoder == 2:
 			if FLAGS.is_blackbox:
-				print("started clustering")
 				clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0)
 				X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
 				joblib.dump(clustering, FLAGS.cluster)
-				print("ended clustering")
 				X_test = vbow.img_to_vect(X_test, clustering)
 				model = handpicked.modelF(features=FLAGS.num_clusters)
 				predictions = model(x)
 			else:
 				model = autoencoder.modelE()
 				predictions = model(x)
-		print("training started")
 		tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
 		accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
 		print('Test accuracy for model: ' + str(accuracy))
