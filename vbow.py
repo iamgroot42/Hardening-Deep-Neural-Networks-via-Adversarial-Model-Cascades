@@ -10,13 +10,6 @@ def sift_vector(x):
 	return desc
 
 
-def sift_vector2(x):
-	gray = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY).astype('uint8')
-	sift = cv2.ORB_create()
-	kp, desc = sift.detectAndCompute(gray.astype('uint8'), None)
-	return desc
-
-
 def gen_sift_features(X):
 	img_descs = []
 	for data_point in X:

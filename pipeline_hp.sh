@@ -4,7 +4,8 @@ epsilon=$1
 
 mkdir -p HPE/$1
 # Train blackbox model
-python train_model.py --is_blackbox True --save_here BM --is_autoencoder 2 >> HPE/$1/log
+python train_model.py --is_blackbox True --save_here BM --is_autoencoder 2 --num_clusters 64 #>> HPE/$1/log
+exit
 echo "blackbox"
 # Train proxy model
 python train_model.py --is_blackbox False --save_here PM --is_autoencoder 2 >> HPE/$1/log

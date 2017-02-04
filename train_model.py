@@ -29,10 +29,10 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
-flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
+flags.DEFINE_integer('nb_epochs', 20, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_integer('num_clusters', 10, 'Number of clusters in vbow')
-flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
+flags.DEFINE_float('learning_rate', 0.01, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is to be saved')
 flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')
@@ -103,7 +103,7 @@ def main(argv=None):
 				predictions = model(x)
 		elif FLAGS.is_autoencoder == 2:
 			if FLAGS.is_blackbox:
-				clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0)
+				clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0, max_iter=150, verbose=1, n_init=3)
 				X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
 				joblib.dump(clustering, FLAGS.cluster)
 				X_test = vbow.img_to_vect(X_test, clustering)
