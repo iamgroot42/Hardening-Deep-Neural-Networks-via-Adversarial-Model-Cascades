@@ -13,27 +13,23 @@ from sklearn import svm
 from helpers import pop_layer
 
 
-def internal_model(hidden_neurons = 512, ne=50, bs=128, learning_rate=0.001):
+def internal_model(ne=50, bs=128, learning_rate=0.001):
 	model = Sequential()
-	model.add(Convolution2D(16, 3, 3, activation='relu', border_mode='same', input_shape=(3, 32, 32)))
-	model.add(MaxPooling2D((2, 2), border_mode='same'))
-	model.add(Convolution2D(8, 3, 3, activation='relu', border_mode='same'))
-	model.add(MaxPooling2D((2, 2), border_mode='same'))
-	model.add(Convolution2D(8, 3, 3, activation='relu', border_mode='same'))
-	model.add(MaxPooling2D((2, 2), border_mode='same'))
+	model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same', input_shape=(3, 32, 32)))
+	model.add(Convolution2D(32, 3, 3, activation='relu'))
+	model.add(MaxPooling2D((2, 2)))
+	model.add(Dropout(0.25))
+	model.add(Convolution2D(64, 3, 3, activation='relu', border_mode='same'))
+	model.add(Convolution2D(64, 3, 3, activation='relu'))
+	model.add(MaxPooling2D((2, 2)))
+	model.add(Dropout(0.25))
 	model.add(Flatten())
-	model.add(Dense(hidden_neurons))
+	model.add(Dense(512))
 	model.add(Activation('relu'))
-	model.add(Dropout(0.2))
-	model.add(Dense(hidden_neurons/2))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.2))
-	model.add(Dense(hidden_neurons/4))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.2))
+	model.add(Dropout(0.5))
 	model.add(Dense(10))
 	model.add(Activation('softmax'))
-	model.compile(loss='binary_crossentropy',optimizer='Adadelta')
+	model.compile(loss='categorical_crossentropy',optimizer='rmsprop')
 	return model
 
 
@@ -45,8 +41,8 @@ def hybrid_error(X_test, Y_test, model, cluster):
 	return acc
 
 
-def modelCS(X_train, Y_train, X_test, Y_test, hidden_neurons = 512, input_ph=None, ne=50, bs=128, learning_rate=0.001):
-	final_model = internal_model(hidden_neurons, ne, bs, learning_rate)
+def modelCS(X_train, Y_train, X_test, Y_test, input_ph=None, ne=50, bs=128, learning_rate=0.01):
+	final_model = internal_model(ne, bs, learning_rate)
 	final_model.fit(X_train, Y_train,
 				nb_epoch=ne,
 				batch_size=bs,

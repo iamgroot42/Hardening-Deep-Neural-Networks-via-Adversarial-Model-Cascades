@@ -12,13 +12,16 @@ import numpy as np
 import vbow
 
 
-def modelF(logits=False,input_ph=None, features=10, hidden_neurons=512, nb_classes=10):
+def modelF(logits=False,input_ph=None, features=10, hidden_neurons=64, nb_classes=10):
 	model = Sequential()
 	model.add(Dense(hidden_neurons, input_shape=(features,)))
-	model.add(Activation('relu'))
+	model.add(Activation('sigmoid'))
 	model.add(Dropout(0.2))
 	model.add(Dense(hidden_neurons))
-	model.add(Activation('relu'))
+	model.add(Activation('sigmoid'))
+	model.add(Dropout(0.2))
+	model.add(Dense(hidden_neurons/2))
+	model.add(Activation('sigmoid'))
 	model.add(Dropout(0.2))
 	model.add(Dense(nb_classes))
 	model.add(Activation('softmax'))

@@ -10,5 +10,6 @@ Outputs/*
 AdvOutputs/*
 HPE/*
 CNNSVM/*
+CNNSVML/*
 saved_model
 arch.json
