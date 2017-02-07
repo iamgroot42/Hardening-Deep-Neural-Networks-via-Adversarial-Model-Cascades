@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
+flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
@@ -38,6 +38,19 @@ flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoen
  a CNN with an attached SVM(3), or none(0)')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is saved')
 flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be saved')
+
+
+def visualize_path(model, point):
+	for layer in model.layers[1:-1]:
+		if layer.name.split('_')[0] in ["dropout"]:
+			continue
+		partial = Model(input=model.inputs, output=layer.output)
+		partial.compile(loss='binary_crossentropy',optimizer='Adadelta')
+		output = partial.predict(point)[0]
+		output = np.reshape(output, (output.shape[0], 1))
+		# print(output)
+		plt.matshow(output)
+		plt.show()
 
 
 def main(argv=None):
@@ -79,24 +92,23 @@ def main(argv=None):
 		model = utils.load_model(FLAGS.model_path)
 		predictions = model(x)
 
-		point = X_test_adv.astype('float32')[:1]
-		orig_point = X_test.astype('float32')[:1]
-		point = X_test.astype('float32')[:1]
-		label = np.argmax(Y_test[0])
-		print("Actual label: ", label)
-		# exit()
+		counter = 0
+		while True:
+			orig_point = X_test.astype('float32')[counter:counter+1]
+			point = X_test_adv.astype('float32')[counter:counter+1]
+			if np.argmax(model.predict(orig_point)) != np.argmax(model.predict(point)):
+				break
+			counter += 1
 
-		for layer in model.layers[1:-1]:
-			if layer.name.split('_')[0] in ["dropout"]:
-				continue
-			partial = Model(input=model.inputs, output=layer.output)
-			partial.compile(loss='binary_crossentropy',optimizer='Adadelta')
-			output = partial.predict(point)[0]
-			output = np.reshape(output, (output.shape[0], 1))
-			plt.matshow(output)
-			plt.show()
-			# exit()
-		print("Misclassified label: ", np.argmax(output))
+		print("Path taken for original sample")
+		visualize_path(model, orig_point)
+		print("Path taken for moisy sample")
+		visualize_path(model, point)
+
+		print("Model's output:",np.argmax(model.predict(orig_point)))
+		print("Adversarial output:",np.argmax(model.predict(point)))
+		print("Actual label:", np.argmax(Y_test[counter]))
+		# print("Misclassified label: ", np.argmax(output))
 
 
 if __name__ == '__main__':

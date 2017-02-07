@@ -25,12 +25,10 @@ import nn_svm
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
-flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
-flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
+flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \

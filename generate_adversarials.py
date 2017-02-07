@@ -21,12 +21,11 @@ import utils
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_float('fgsm_eps', 0.1, 'Tunable parameter for FGSM')
-flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
+flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
@@ -69,8 +68,6 @@ def main(argv=None):
 
 	model = utils.load_model(FLAGS.model_path)
 	predictions = model(x)
-	# model = utils.load_model(FLAGS.model_path)
-	# print("Loaded model")
 	X_test, Y_test = X_test[:200,:,:,:], Y_test[:200]
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
@@ -78,9 +75,9 @@ def main(argv=None):
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
 	print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
-	# np.save(FLAGS.adversary_path_x, X_test_adv)
+	np.save(FLAGS.adversary_path_x, X_test_adv)
 	np.save(FLAGS.adversary_path_xo, X_test)
-	# np.save(FLAGS.adversary_path_y, Y_test)
+	np.save(FLAGS.adversary_path_y, Y_test)
 
 
 if __name__ == '__main__':
