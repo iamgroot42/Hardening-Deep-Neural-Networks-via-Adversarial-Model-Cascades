@@ -21,15 +21,15 @@ import utils
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('train_dir', '/tmp', 'Directory storing the saved model.')
 flags.DEFINE_string('filename', 'mnist.ckpt', 'Filename to save model under.')
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_float('fgsm_eps', 0.1, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
-flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
-flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
+flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
+flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 
@@ -78,8 +78,9 @@ def main(argv=None):
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
 	print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
-	np.save(FLAGS.adversary_path_x, X_test_adv)
-	np.save(FLAGS.adversary_path_y, Y_test)
+	# np.save(FLAGS.adversary_path_x, X_test_adv)
+	np.save(FLAGS.adversary_path_xo, X_test)
+	# np.save(FLAGS.adversary_path_y, Y_test)
 
 
 if __name__ == '__main__':

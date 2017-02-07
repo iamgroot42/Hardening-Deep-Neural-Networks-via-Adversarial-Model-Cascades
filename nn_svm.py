@@ -10,7 +10,6 @@ from keras.utils import np_utils
 
 import numpy as np
 from sklearn import svm
-from helpers import pop_layer
 
 
 def internal_model(ne=50, bs=128, learning_rate=0.001):

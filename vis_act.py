@@ -31,8 +31,9 @@ import matplotlib.pyplot as plt
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('model_path', 'saved_model', 'Path where model is stored')
-flags.DEFINE_string('adversary_path_x', 'adversaries_x.npy', 'Path where adversarial examples are to be saved')
-flags.DEFINE_string('adversary_path_y', 'adversaries_y.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
+flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
+flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is saved')
@@ -54,6 +55,7 @@ def main(argv=None):
 	else:
 		x_shape, y_shape = utils_cifar.placeholder_shapes()
 
+	X_test = np.load(FLAGS.adversary_path_xo)
 	X_test_adv = np.load(FLAGS.adversary_path_x)
 	Y_test = np.load(FLAGS.adversary_path_y)
 
@@ -78,6 +80,8 @@ def main(argv=None):
 		predictions = model(x)
 
 		point = X_test_adv.astype('float32')[:1]
+		orig_point = X_test.astype('float32')[:1]
+		point = X_test.astype('float32')[:1]
 		label = np.argmax(Y_test[0])
 		print("Actual label: ", label)
 		# exit()
