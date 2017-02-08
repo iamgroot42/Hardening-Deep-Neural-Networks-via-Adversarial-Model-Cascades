@@ -21,7 +21,6 @@ import utils_mnist, utils_cifar
 import utils
 from sklearn.externals import joblib
 import vbow
-import nn_svm
 
 from keras import backend as K
 from keras.models import Model
@@ -47,10 +46,19 @@ def visualize_path(model, point):
 		partial = Model(input=model.inputs, output=layer.output)
 		partial.compile(loss='binary_crossentropy',optimizer='Adadelta')
 		output = partial.predict(point)[0]
-		output = np.reshape(output, (output.shape[0], 1))
-		# print(output)
-		plt.matshow(output)
-		plt.show()
+		if len(output.shape) is 1:
+			print(output.shape)
+			output = np.reshape(output, (output.shape[0]/32, 32))
+			plt.matshow(output)
+			plt.show()
+		else:
+			print(output.shape)
+			# for filter_index in range(output.shape[0]):
+			for filter_index in range(1):
+				show_this = output[filter_index,:,:]
+				plt.matshow(show_this)
+				plt.show()
+		
 
 
 def main(argv=None):
@@ -77,8 +85,29 @@ def main(argv=None):
 			model = model_from_json(json.load(data_file))
 		cluster = joblib.load(FLAGS.cluster)
 		model.load_weights(FLAGS.model_path)
-		err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
-		print('Misclassification accuracy on adversarial examples: ' + str(1-err))
+
+		counter = 1 #1, 25, 
+		orig_point = X_test.astype('float32')[counter:counter+1]
+		point = X_test_adv.astype('float32')[counter:counter+1]
+		while True:
+			orig_point = X_test.astype('float32')[counter:counter+1]
+			point = X_test_adv.astype('float32')[counter:counter+1]
+			if cluster.predict(model.predict(orig_point))[0] != cluster.predict(model.predict(point)):
+				break
+			# if cluster.predict(model.predict(orig_point))[0] == cluster.predict(model.predict(point)):
+			# 	if cluster.predict(model.predict(orig_point))[0] == np.argmax(Y_test[counter]):
+			# 		break
+			counter += 1
+		
+		print("Path taken for original sample")
+		visualize_path(model, originalrig_point)
+		print("Path taken for moisy sample")
+		visualize_path(model, point)
+
+		print("Model's output:",cluster.predict(model.predict(orig_point))[0])
+		print("Adversarial output:",cluster.predict(model.predict(point))[0])
+		print("Actual label:", np.argmax(Y_test[counter]))
+
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)
@@ -108,7 +137,6 @@ def main(argv=None):
 		print("Model's output:",np.argmax(model.predict(orig_point)))
 		print("Adversarial output:",np.argmax(model.predict(point)))
 		print("Actual label:", np.argmax(Y_test[counter]))
-		# print("Misclassified label: ", np.argmax(output))
 
 
 if __name__ == '__main__':
