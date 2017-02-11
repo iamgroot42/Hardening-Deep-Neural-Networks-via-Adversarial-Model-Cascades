@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import tensorflow as tf
-
+import numpy as np
 
 def tf_model_loss(y, model):
 	op = model.op
@@ -35,7 +35,7 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 def jbda(X_train, Y_train, n_points=200):
 	n_classes = 10
 	distr = {}
-	for i in n_classes:
+	for i in range(n_classes):
 		distr[i] = []
 	if Y_train.shape[1] == n_classes:
 		for i in range(len(Y_train)):

@@ -7,9 +7,12 @@ PM
 *.png
 *.pkl
 Outputs/*
+Outputs_OLD/*
 AdvOutputs/*
+AdvOutputs_OLD/*
 HPE/*
 CNNSVM/*
 CNNSVML/*
+CNNSVML_OLD/*
 saved_model
 arch.json
