@@ -47,17 +47,16 @@ def visualize_path(model, point):
 		partial.compile(loss='binary_crossentropy',optimizer='Adadelta')
 		output = partial.predict(point)[0]
 		if len(output.shape) is 1:
-			print(output.shape)
 			output = np.reshape(output, (output.shape[0]/32, 32))
 			plt.matshow(output)
 			plt.show()
 		else:
-			print(output.shape)
 			# for filter_index in range(output.shape[0]):
 			for filter_index in range(1):
 				show_this = output[filter_index,:,:]
 				plt.matshow(show_this)
 				plt.show()
+	return output
 		
 
 
@@ -100,9 +99,9 @@ def main(argv=None):
 			counter += 1
 		
 		print("Path taken for original sample")
-		visualize_path(model, originalrig_point)
+		orig = visualize_path(model, orig_point)
 		print("Path taken for moisy sample")
-		visualize_path(model, point)
+		noisy = visualize_path(model, point)
 
 		print("Model's output:",cluster.predict(model.predict(orig_point))[0])
 		print("Adversarial output:",cluster.predict(model.predict(point))[0])

@@ -31,6 +31,7 @@ flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original exampl
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
+flags.DEFINE_integer('per_class_adv', 20 , 'Number of adversarial examples to be picked per class')
 
 
 def main(argv=None):
@@ -50,7 +51,6 @@ def main(argv=None):
 	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 	if flatten:
-		# X_train = X_train.reshape(60000, 784)
 		X_test = X_test.reshape(10000, 784)
 
 	label_smooth = .1
@@ -63,12 +63,10 @@ def main(argv=None):
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
-	# model = utils_mnist.modelB()
-	# predictions = model(x)
 
 	model = utils.load_model(FLAGS.model_path)
 	predictions = model(x)
-	X_test, Y_test = X_test[:200,:,:,:], Y_test[:200]
+	X_test, Y_test = helpers.jbda(X_test, Y_test, FLAGS.per_class_adv)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
