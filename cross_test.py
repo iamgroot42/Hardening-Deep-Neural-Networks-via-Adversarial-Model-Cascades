@@ -22,6 +22,7 @@ import utils
 from sklearn.externals import joblib
 import vbow
 import nn_svm
+import helpers
 
 FLAGS = flags.FLAGS
 
@@ -29,12 +30,16 @@ flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
-flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
-flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are saved')
+flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is saved')
 flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be saved')
+flags.DEFINE_boolean('proxy_data', False , 'If this is being used to generate training data for proxy model')
+flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
+flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
+flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
 
 
 def main(argv=None):
@@ -52,20 +57,31 @@ def main(argv=None):
 	else:
 		x_shape, y_shape = utils_cifar.placeholder_shapes()
 
-	X_test_adv = np.load(FLAGS.adversary_path_x)
-	Y_test = np.load(FLAGS.adversary_path_y)
+	if not FLAGS.proxy_data:
+		X_test_adv = np.load(FLAGS.adversary_path_x)
+		Y_test = np.load(FLAGS.adversary_path_y)
 
 	if FLAGS.is_autoencoder == 3:
 		with open(FLAGS.arch) as data_file:
 			model = model_from_json(json.load(data_file))
 		cluster = joblib.load(FLAGS.cluster)
 		model.load_weights(FLAGS.model_path)
-		err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
-		print('Misclassification accuracy on adversarial examples: ' + str(1-err))
+		if FLAGS.proxy_data:
+			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, FLAGS.per_class_adv)
+			Y_train_p = nn_svm.get_output(X_train_p, model, cluster)
+			np.save(FLAGS.proxy_x, X_train_p)
+			np.save(FLAGS.proxy_y, Y_train_p)
+			print('Proxy dataset created')
+		else:
+			err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
+			print('Misclassification accuracy on adversarial examples: ' + str(1-err))
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)
 			x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
+			if FLAGS.proxy_data:
+				X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, FLAGS.per_class_adv)
+				X_test_adv = X_train_p
 			X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
 			X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
 
@@ -75,10 +91,15 @@ def main(argv=None):
 		model = utils.load_model(FLAGS.model_path)
 		predictions = model(x)
 
-		accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
-		print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
+		if FLAGS.proxy_data:
+			Y_train_p = model.predict(X_test_adv)
+			np.save(FLAGS.proxy_x, X_train_p)
+			np.save(FLAGS.proxy_y, Y_train_p)
+			print('Proxy dataset created')
+		else:
+			accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
+			print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
 
 
 if __name__ == '__main__':
 	app.run()
-

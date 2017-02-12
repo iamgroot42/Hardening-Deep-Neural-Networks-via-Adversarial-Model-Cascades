@@ -1,9 +1,13 @@
 #!/bin/bash
 
 epsilon=$1
+perclass=$2
+
 mkdir -p AdvOutputs/$epsilon
 # Train blackbox model
 python train_model.py --is_blackbox True --save_here BM --is_autoencoder 1 >> AdvOutputs/$epsilon/log
+# Generate training data for proxy network
+python cross_test.py --model_path BM --proxy_data True --per_class_adv $perclass >> AdvOutputs/$epsilon/log
 # Train proxy model
 python train_model.py --is_blackbox False --save_here PM --is_autoencoder 1 >> AdvOutputs/$epsilon/log
 # Generate adversarial examples for proxy model
@@ -18,5 +22,7 @@ mv PM AdvOutputs/$epsilon/
 mv ADX.npy AdvOutputs/$epsilon/
 mv ADXO.npy AdvOutputs/$epsilon/
 mv ADY.npy AdvOutputs/$epsilon/
+mv PX.npy AdvOutputs/$epsilon/
+mv PY.npy AdvOutputs/$epsilon/
 mv adv_example.png AdvOutputs/$epsilon/
 mv example.png AdvOutputs/$epsilon/

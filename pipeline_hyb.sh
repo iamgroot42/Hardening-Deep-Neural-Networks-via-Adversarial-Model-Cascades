@@ -1,9 +1,13 @@
 #!/bin/bash
 
 epsilon=$1
+perclass=$2
+
 mkdir -p CNNSVM/$epsilon
 # Train blackbox model
 python train_model.py --is_blackbox True --save_here BM --is_autoencoder 3 >> CNNSVM/$epsilon/log
+# Generate training data for proxy network
+python cross_test.py --model_path BM --proxy_data True --per_class_adv $perclass --is_autoencoder 3 >> CNNSVM/$epsilon/log
 # Train proxy model
 python train_model.py --is_blackbox False --save_here PM --is_autoencoder 3 >> CNNSVM/$epsilon/log
 # Generate adversarial examples for proxy model
@@ -18,6 +22,8 @@ mv PM CNNSVM/$epsilon/
 mv ADX.npy CNNSVM/$epsilon/
 mv ADXO.npy CNNSVM/$epsilon/
 mv ADY.npy CNNSVM/$epsilon/
+mv PX.npy CNNSVM/$epsilon/
+mv PY.npy CNNSVM/$epsilon/
 mv C.pkl CNNSVM/$epsilon/
 mv arch.json CNNSVM/$epsilon/
 mv adv_example.png CNNSVM/$epsilon/
