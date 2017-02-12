@@ -19,7 +19,6 @@ def placeholder_shapes_handpicked(K):
 
 
 def data_cifar():
-	# These values are specific to CIFAR
 	img_rows = 32
 	img_cols = 32
 	nb_classes = 10
@@ -38,7 +37,6 @@ def data_cifar():
 
 
 def data_cifar_raw():
-	# These values are specific to CIFAR
 	img_rows = 32
 	img_cols = 32
 	nb_classes = 10

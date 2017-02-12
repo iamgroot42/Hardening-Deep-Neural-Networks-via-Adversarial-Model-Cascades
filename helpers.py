@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import tensorflow as tf
 import numpy as np
 
+
 def tf_model_loss(y, model):
 	op = model.op
 	if "softmax" in str(op).lower():

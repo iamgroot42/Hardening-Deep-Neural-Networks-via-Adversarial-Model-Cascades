@@ -11,10 +11,12 @@ python generate_adversarials.py --model_path PM --adversary_path_x ADX --adversa
 # Test misclassification accuracy of proxy adversarial examples on blackbox model
 python cross_test.py --model_path BM --adversary_path_x ADX.npy --adversary_path_y ADY.npy >> Outputs/$epsilon/log
 # Sample an adversarial image for visualization
-#python visualize_adex.py
+python visualize_adex.py --dataset 1
 
 mv BM Outputs/$epsilon/
 mv PM Outputs/$epsilon/
 mv ADX.npy Outputs/$epsilon/
+mv ADXO.npy Outputs/$epsilon/
 mv ADY.npy Outputs/$epsilon/
-#mv adv_example.png Outputs/$epsilon/
+mv adv_example.png Outputs/$epsilon/
+mv example.png Outputs/$epsilon/

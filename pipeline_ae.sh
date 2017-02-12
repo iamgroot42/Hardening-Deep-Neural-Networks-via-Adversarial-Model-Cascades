@@ -16,5 +16,7 @@ python cross_test.py --model_path BM --adversary_path_x ADX.npy --adversary_path
 mv BM AdvOutputs/$epsilon/
 mv PM AdvOutputs/$epsilon/
 mv ADX.npy AdvOutputs/$epsilon/
+mv ADXO.npy AdvOutputs/$epsilon/
 mv ADY.npy AdvOutputs/$epsilon/
-#mv adv_example.png AdvOutputs/$epsilon/
+mv adv_example.png AdvOutputs/$epsilon/
+mv example.png AdvOutputs/$epsilon/

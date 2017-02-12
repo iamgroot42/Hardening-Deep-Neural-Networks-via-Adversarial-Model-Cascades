@@ -31,7 +31,7 @@ flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original exampl
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
-flags.DEFINE_integer('per_class_adv', 20 , 'Number of adversarial examples to be picked per class')
+flags.DEFINE_integer('per_class_adv', 200 , 'Number of adversarial examples to be picked per class')
 
 
 def main(argv=None):

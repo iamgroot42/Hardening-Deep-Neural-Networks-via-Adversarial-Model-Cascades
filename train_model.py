@@ -37,6 +37,7 @@ flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox m
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be saved')
+flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
 
 
 def main(argv=None):
@@ -80,9 +81,8 @@ def main(argv=None):
 
 	if FLAGS.is_blackbox:
 		X_train_p, Y_train_p = X_train, Y_train
-		X_test, Y_test = X_test, Y_test
 	else:
-		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train)
+		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, FLAGS.per_class_adv)
 
 	if FLAGS.is_autoencoder != 3:
 		if FLAGS.is_autoencoder == 0:
@@ -131,6 +131,6 @@ def main(argv=None):
 			print('Test accuracy for model: ' + str(accuracy))
 			utils.save_model(model, FLAGS.save_here)
 
+
 if __name__ == '__main__':
 	app.run()
-
