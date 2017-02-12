@@ -39,7 +39,7 @@ flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be 
 flags.DEFINE_boolean('proxy_data', False , 'If this is being used to generate training data for proxy model')
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
-flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
+flags.DEFINE_integer('per_class_adv', 10 , 'Number of adversarial examples to be picked per class')
 
 
 def main(argv=None):
@@ -57,6 +57,12 @@ def main(argv=None):
 	else:
 		x_shape, y_shape = utils_cifar.placeholder_shapes()
 
+	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
+		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
+	else:
+		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
+
+	X_test_adv = None
 	if not FLAGS.proxy_data:
 		X_test_adv = np.load(FLAGS.adversary_path_x)
 		Y_test = np.load(FLAGS.adversary_path_y)
@@ -84,6 +90,9 @@ def main(argv=None):
 				X_test_adv = X_train_p
 			X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
 			X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
+		elif FLAGS.proxy_data:
+			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, FLAGS.per_class_adv)
+			X_test_adv = X_train_p
 
 		x = tf.placeholder(tf.float32, shape=x_shape)
 		y = tf.placeholder(tf.float32, shape=y_shape)
