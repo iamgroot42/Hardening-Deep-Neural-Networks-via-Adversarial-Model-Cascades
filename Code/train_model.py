@@ -9,7 +9,6 @@ tf.python.control_flow_ops = tf
 
 import numpy as np
 import keras
-import sys
 import json
 
 import tensorflow as tf
@@ -19,7 +18,7 @@ from tensorflow.python.platform import flags
 from utils_tf import tf_model_train, tf_model_eval
 import utils_mnist, utils_cifar
 import utils
-import helpers, autoencoder, handpicked, nn_svm
+import autoencoder, handpicked, nn_svm
 import vbow
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
@@ -55,7 +54,7 @@ def main(argv=None):
 	# Create TF session and set as Keras backend session
 	sess = tf.Session()
 	keras.backend.set_session(sess)
-	# Get MNIST test data
+	
 	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
 	else:

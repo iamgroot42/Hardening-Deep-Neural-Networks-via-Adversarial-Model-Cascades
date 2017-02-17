@@ -1,4 +1,5 @@
 Papers/*
+Data/*
 AM
 BM
 PM
@@ -6,19 +7,5 @@ PM
 *.npy
 *.png
 *.pkl
-Outputs/*
-Outputs_OLD/*
-AdvOutputs/*
-AdvOutputs_OLD/*
-HPE/*
-CNNSVM/*
-CNNSVML/*
-CNNSVML_OLD/*
-Outputs100/*
-Outputs1000/*
-Outputs500/*
-Outputs2500/*
-AdvOutputs100/*
-Frequencies/*
 saved_model
 arch.json

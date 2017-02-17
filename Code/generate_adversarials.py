@@ -16,8 +16,7 @@ from tensorflow.python.platform import flags
 
 from utils_tf import tf_model_eval, batch_eval
 import utils_mnist, utils_cifar
-import helpers
-import utils
+import helpers, utils
 
 FLAGS = flags.FLAGS
 
@@ -31,7 +30,7 @@ flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original exampl
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
-flags.DEFINE_integer('per_class_adv', 200 , 'Number of adversarial examples to be picked per class')
+flags.DEFINE_integer('per_class_adv', 1000 , 'Number of adversarial examples to be picked per class')
 
 
 def main(argv=None):
@@ -41,13 +40,9 @@ def main(argv=None):
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
 	# Create TF session and set as Keras backend session
-	# config = tf.ConfigProto(
-	#	device_count = {'GPU': 0}
-	# )
-	# sess = tf.Session(config=config)
 	sess = tf.Session()
 	keras.backend.set_session(sess)
-	# Get MNIST test data
+
 	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 	if flatten:

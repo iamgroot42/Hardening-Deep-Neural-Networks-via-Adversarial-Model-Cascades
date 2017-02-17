@@ -20,9 +20,7 @@ from utils_tf import tf_model_eval
 import utils_mnist, utils_cifar
 import utils
 from sklearn.externals import joblib
-import vbow
-import nn_svm
-import helpers
+import vbow, nn_svm, helpers
 
 FLAGS = flags.FLAGS
 
