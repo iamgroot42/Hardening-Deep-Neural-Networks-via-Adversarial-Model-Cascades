@@ -22,7 +22,6 @@ import utils
 from sklearn.externals import joblib
 import vbow
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
@@ -64,10 +63,6 @@ def main(argv=None):
 		points = cluster.predict(model.predict(X_test_adv.astype('float32')))
 
 		for counter in range(len(X_test)):
-			# print("Model's output:",orig_points[counter])
-			# print("Adversarial output:",points[counter])
-			# print("Actual label:", np.argmax(Y_test[counter]))
-			# print()
 			print(orig_points[counter],",",points[counter],",",np.argmax(Y_test[counter]))
 
 	else:
@@ -87,24 +82,8 @@ def main(argv=None):
 		points = model.predict(X_test_adv.astype('float32'))
 
 		for counter in range(len(X_test)):
-			# print("Model's output:",orig_points[counter])
-			# print("Adversarial output:",points[counter])
-			# print("Actual label:", np.argmax(Y_test[counter]))
 			print(np.argmax(orig_points[counter]),",",np.argmax(points[counter]),",",np.argmax(Y_test[counter]))
 
 
 if __name__ == '__main__':
 	app.run()
-
-
-#flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
-#flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
-#flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
-#flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
-#flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
-# a CNN with an attached SVM(3), or none(0)')
-#flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is saved')
-#flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be saved')
-
-
-# python behaviour.py --model_path $1/BM --adversary_path_x $1/ADX.npy --adversary_path_xo $1/ADXO.npy --adversary_path_y $1/ADY.npy --is_autoencoder 3 --cluster $1/C.pkl --arch $1/arch.json
