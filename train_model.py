@@ -37,7 +37,7 @@ flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox m
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be saved')
-flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
+flags.DEFINE_integer('per_class_adv', 2500 , 'Number of adversarial examples to be picked per class')
 
 
 def main(argv=None):
