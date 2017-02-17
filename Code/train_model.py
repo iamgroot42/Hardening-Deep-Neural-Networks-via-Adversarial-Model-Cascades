@@ -37,7 +37,9 @@ flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox m
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be saved')
-flags.DEFINE_integer('per_class_adv', 2500 , 'Number of adversarial examples to be picked per class')
+flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
+flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
+flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 
 
 def main(argv=None):
@@ -82,7 +84,8 @@ def main(argv=None):
 	if FLAGS.is_blackbox:
 		X_train_p, Y_train_p = X_train, Y_train
 	else:
-		X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, FLAGS.per_class_adv)
+		X_train_p = np.load(FLAGS.proxy_x)
+		Y_train_p = np.load(FLAGS.proxy_y)
 
 	if FLAGS.is_autoencoder != 3:
 		if FLAGS.is_autoencoder == 0:

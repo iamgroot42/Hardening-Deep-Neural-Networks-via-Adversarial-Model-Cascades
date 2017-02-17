@@ -32,9 +32,14 @@ def internal_model(ne=50, bs=128, learning_rate=0.001):
 	return model
 
 
-def hybrid_error(X_test, Y_test, model, cluster):
+def get_output(X_test, model, cluster):
 	X_test_SVM = model.predict(X_test)
 	Y_svm = cluster.predict(X_test_SVM)
+	return Y_svm
+
+
+def hybrid_error(X_test, Y_test, model, cluster):
+	Y_svm = get_output(X_test, model, cluster)
 	numerator = (1*(Y_svm==np.argmax(Y_test,axis=1))).sum()
 	acc = numerator / float(Y_test.shape[0])
 	return acc
