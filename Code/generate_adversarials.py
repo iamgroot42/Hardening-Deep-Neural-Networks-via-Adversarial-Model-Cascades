@@ -61,7 +61,7 @@ def main(argv=None):
 
 	model = utils.load_model(FLAGS.model_path)
 	predictions = model(x)
-	X_test, Y_test = helpers.jbda(X_test, Y_test, FLAGS.per_class_adv)
+	X_test, Y_test = helpers.jbda(X_test, Y_test, "adv", FLAGS.per_class_adv)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])

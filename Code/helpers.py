@@ -33,21 +33,32 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 	return adv_x
 
 
-def jbda(X_train, Y_train, n_points=200):
-	n_classes = 10
-	distr = {}
-	for i in range(n_classes):
-		distr[i] = []
-	if Y_train.shape[1] == n_classes:
-		for i in range(len(Y_train)):
-			distr[np.argmax(Y_train[i])].append(i)
-	else:
-		for i in range(len(Y_train)):
-			distr[Y_train[i][0]].append(i)
-	X_train_ret = []
-	Y_train_ret = []
-	for key in distr.keys():
-		for i in distr[key]:
-			X_train_ret.append(X_train[i])
-			Y_train_ret.append(Y_train[i])
-	return np.array(X_train_ret), np.array(Y_train_ret)
+def jbda(X_train, Y_train, prefix, n_points=200):
+	# Try loading cached copy, if available
+	try:
+		X_train = np.load("__" + prefix + str(n_points) + "_x.npy")
+		Y_train = np.load("__" + prefix + str(n_points) + "_y.npy")
+		return X_train, Y_train
+	except:
+		n_classes = 10
+		distr = {}
+		for i in range(n_classes):
+			distr[i] = []
+		if Y_train.shape[1] == n_classes:
+			for i in range(len(Y_train)):
+				distr[np.argmax(Y_train[i])].append(i)
+		else:
+			for i in range(len(Y_train)):
+				distr[Y_train[i][0]].append(i)
+		X_train_ret = []
+		Y_train_ret = []
+		for key in distr.keys():
+			for i in distr[key]:
+				X_train_ret.append(X_train[i])
+				Y_train_ret.append(Y_train[i])
+		X_train_ret = np.array(X_train_ret)
+		Y_train_ret = np.array(Y_train_ret)
+		# Cache data for later use
+		np.save("__" + prefix + str(n_points) + "_x.npy", X_train_ret)
+		np.save("__" + prefix + str(n_points) + "_y.npy", Y_train_ret)
+		return X_train_ret, Y_train_ret

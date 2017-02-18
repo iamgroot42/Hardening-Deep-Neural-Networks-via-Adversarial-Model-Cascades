@@ -11,7 +11,7 @@ python ../Code/cross_test.py --model_path BM  --is_autoencoder 2 --proxy_data Tr
 # Train proxy model
 python ../Code/train_model.py --is_blackbox False --save_here PM --is_autoencoder 2 >> ../Data/HPE/$epsilon/log
 # # Generate adversarial examples for proxy model
-python ../Code/generate_adversarials.py --model_path PM --adversary_path_x ADX --adversary_path_y ADY --fgsm_eps $epsilon >> ../Data/HPE/$epsilon/log
+python ../Code/generate_adversarials.py --model_path PM --adversary_path_x ADX.npy --adversary_path_y ADY.npy --fgsm_eps $epsilon >> ../Data/HPE/$epsilon/log
 # # Test misclassification accuracy of proxy adversarial examples on blackbox model
 python ../Code/cross_test.py --is_autoencoder 2 --model_path BM --adversary_path_x ADX.npy --adversary_path_y ADY.npy >> ../Data/HPE/$epsilon/log
 python ../Code/visualize_adex.py --dataset 1

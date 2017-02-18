@@ -118,7 +118,7 @@ def main(argv=None):
 		utils.save_model(model, FLAGS.save_here)
 	else:
 		if FLAGS.is_blackbox:
-			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test)
+			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate)
 			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
 			print('Overall accuracy: ' + str(acc))
 			NN.save(FLAGS.save_here)

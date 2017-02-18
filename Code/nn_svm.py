@@ -12,7 +12,7 @@ import numpy as np
 from sklearn import svm
 
 
-def internal_model(ne=50, bs=128, learning_rate=0.001):
+def internal_model(ne, bs, learning_rate):
 	model = Sequential()
 	model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same', input_shape=(3, 32, 32)))
 	model.add(Convolution2D(32, 3, 3, activation='relu'))
@@ -45,7 +45,7 @@ def hybrid_error(X_test, Y_test, model, cluster):
 	return acc
 
 
-def modelCS(X_train, Y_train, X_test, Y_test, input_ph=None, ne=50, bs=128, learning_rate=0.01):
+def modelCS(X_train, Y_train, X_test, Y_test, ne, bs, learning_rate, input_ph=None):
 	final_model = internal_model(ne, bs, learning_rate)
 	final_model.fit(X_train, Y_train,
 				nb_epoch=ne,
