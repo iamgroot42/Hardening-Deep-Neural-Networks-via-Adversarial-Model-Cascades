@@ -17,14 +17,14 @@ python ../Code/cross_test.py --model_path BM --adversary_path_x ADX.npy --advers
 # Sample an adversarial image for visualization
 python ../Code/visualize_adex.py --dataset 1
 
-mv ../Code/BM CNNSVM/$epsilon/
-mv ../Code/PM CNNSVM/$epsilon/
-mv ../Code/ADX.npy CNNSVM/$epsilon/
-mv ../Code/ADXO.npy CNNSVM/$epsilon/
-mv ../Code/ADY.npy CNNSVM/$epsilon/
-mv ../Code/PX.npy CNNSVM/$epsilon/
-mv ../Code/PY.npy CNNSVM/$epsilon/
-mv ../Code/C.pkl CNNSVM/$epsilon/
-mv ../Code/arch.json CNNSVM/$epsilon/
-mv ../Code/adv_example.png CNNSVM/$epsilon/
-mv ../Code/example.png CNNSVM/$epsilon/
+mv BM CNNSVM/$epsilon/
+mv PM CNNSVM/$epsilon/
+mv ADX.npy CNNSVM/$epsilon/
+mv ADXO.npy CNNSVM/$epsilon/
+mv ADY.npy CNNSVM/$epsilon/
+mv PX.npy CNNSVM/$epsilon/
+mv PY.npy CNNSVM/$epsilon/
+mv C.pkl CNNSVM/$epsilon/
+mv arch.json CNNSVM/$epsilon/
+mv adv_example.png CNNSVM/$epsilon/
+mv example.png CNNSVM/$epsilon/

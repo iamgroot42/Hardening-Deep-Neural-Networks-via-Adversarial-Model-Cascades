@@ -16,13 +16,13 @@ python ../Code/generate_adversarials.py --model_path PM --adversary_path_x ADX -
 python ../Code/cross_test.py --is_autoencoder 2 --model_path BM --adversary_path_x ADX.npy --adversary_path_y ADY.npy >> ../Data/HPE/$epsilon/log
 python ../Code/visualize_adex.py --dataset 1
 
-mv ../Code/BM ../Data/HPE/$epsilon/
-mv ../Code/PM ../Data/HPE/$epsilon/
-mv ../Code/ADX.npy ../Data/HPE/$epsilon/
-mv ../Code/ADXO.npy ../Data/HPE/$epsilon/
-mv ../Code/ADY.npy ../Data/HPE/$epsilon/
-mv ../Code/PX.npy ../Data/HPE/$epsilon/
-mv ../Code/PY.npy ../Data/HPE/$epsilon/
-mv ../Code/C.pkl ../Data/HPE/$epsilon/
-mv ../Code/adv_example.png ../Data/HPE/$epsilon/
-mv ../Code/example.png ../Data/HPE/$epsilon/
+mv BM ../Data/HPE/$epsilon/
+mv PM ../Data/HPE/$epsilon/
+mv ADX.npy ../Data/HPE/$epsilon/
+mv ADXO.npy ../Data/HPE/$epsilon/
+mv ADY.npy ../Data/HPE/$epsilon/
+mv PX.npy ../Data/HPE/$epsilon/
+mv PY.npy ../Data/HPE/$epsilon/
+mv C.pkl ../Data/HPE/$epsilon/
+mv adv_example.png ../Data/HPE/$epsilon/
+mv example.png ../Data/HPE/$epsilon/
