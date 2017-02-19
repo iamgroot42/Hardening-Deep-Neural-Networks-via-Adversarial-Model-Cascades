@@ -29,7 +29,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_integer('num_clusters', 10, 'Number of clusters in vbow')
-flags.DEFINE_float('learning_rate', 0.01, 'Learning rate for training')
+flags.DEFINE_float('learning_rate', 0.02, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is to be saved')
 flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')

@@ -28,7 +28,7 @@ def internal_model(ne, bs, learning_rate):
 	model.add(Dropout(0.5))
 	model.add(Dense(10))
 	model.add(Activation('softmax'))
-	model.compile(loss='categorical_crossentropy',optimizer='rmsprop')
+	model.compile(loss='categorical_crossentropy',optimizer='rmsprop', metrics=['accuracy'])
 	return model
 
 
@@ -50,14 +50,13 @@ def modelCS(X_train, Y_train, X_test, Y_test, ne, bs, learning_rate, input_ph=No
 	final_model.fit(X_train, Y_train,
 				nb_epoch=ne,
 				batch_size=bs,
-				validation_data=(X_test, Y_test))
+				validation_split=0.2)
 	score = final_model.evaluate(X_test, Y_test)
-	print("\nNN-only accuracy: " + str(score))
+	print("\nNN-only accuracy: " + str(score[1]))
 	# Remove last layers to get encoding for SVM
 	interm_l = Model(input=final_model.input,
                                  output=final_model.layers[-4].output)
 	X_train_SVM = interm_l.predict(X_train)
-	X_test_SVM = interm_l.predict(X_test)
 	clf = svm.SVC(kernel='rbf')
 	clf.fit(X_train_SVM, np.argmax(Y_train, axis=1))
 	return interm_l, clf

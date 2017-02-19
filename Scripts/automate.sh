@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ns=$2
+ns=$1
 
 for i in $(cat epsilon_values)
 do
