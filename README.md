@@ -12,11 +12,15 @@
 
 ### Progress
 - For CNN (on MNIST), using Fast Gradient Sign Method for creating adversary.
-- Using Jacobian based data augmentation to create synthetic dataset.
 - Using handpicked features (visual bag of words using SIFT/HOG features) to create networks.
+- Using an autoencoder to summarize the image and then pass it to an MLP.
 - Use features from CNN to be passed on to a SVM
 
 
+### Using it
+
+- ` cd Scripts`
+- `bash automate.sh <EXAMPLES_PER_CLASS>`
+
 ### Note
 FGSM and model training for CNN base code from : https://github.com/openai/cleverhans
-
