@@ -3,6 +3,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+
+from keras.optimizers import Adadelta
 from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
@@ -11,7 +13,7 @@ from keras.utils import np_utils
 import numpy as np
 
 
-def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_rate=0.1):
+def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_rate=2.0):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -30,12 +32,13 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_
 	encoder = Model(input=input_img, output=encoded)
 	autoencoder = Model(input=input_img, output=decoded)
 	# Configure autoencoder
-	autoencoder.compile(loss='binary_crossentropy',optimizer='Adadelta')
+	autoencoder.compile(loss='binary_crossentropy',optimizer=Adadelta(lr=learning_rate, rho=0.95, epsilon=1e-08, decay=0.0)
+, metrics=['accuracy'])
 	autoencoder.fit(X_train, X_train,
 				nb_epoch=ne,
 				batch_size=bs,
 				validation_data=(X_test, X_test))
-	score = autoencoder.evaluate(X_test, X_test)
+	score = autoencoder.evaluate(X_test, X_test)[1]
 	print("\nAutoencoder accuracy: " + str(score))
 	# Build ultimate model
 	for i in encoder.layers:
@@ -83,3 +86,4 @@ def modelE(logits=False,input_ph=None, img_rows=32, img_cols=32, nb_filters=64, 
 		return model, logits_tensor
 	else:
 		return model
+
