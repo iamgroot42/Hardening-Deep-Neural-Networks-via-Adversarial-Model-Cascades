@@ -13,7 +13,7 @@ from keras.utils import np_utils
 import numpy as np
 
 
-def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_rate=2.0):
+def modelD(X_train, X_test, logits=False,input_ph=None, ne=100, bs=128, learning_rate=2.0):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -28,11 +28,11 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_
 	x = UpSampling2D((2, 2))(x)
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(x)
 	x = UpSampling2D((2, 2))(x)
-	decoded = Convolution2D(3, 3, 3, activation='sigmoid', border_mode='same')(x)
+	decoded = Convolution2D(3, 3, 3, activation='relu', border_mode='same')(x)
 	encoder = Model(input=input_img, output=encoded)
 	autoencoder = Model(input=input_img, output=decoded)
 	# Configure autoencoder
-	autoencoder.compile(loss='binary_crossentropy',optimizer=Adadelta(lr=learning_rate, rho=0.95, epsilon=1e-08, decay=0.0)
+	autoencoder.compile(loss='mean_squared_error',optimizer=Adadelta(lr=learning_rate, rho=0.95, epsilon=1e-08, decay=0.0)
 , metrics=['accuracy'])
 	autoencoder.fit(X_train, X_train,
 				nb_epoch=ne,
@@ -50,10 +50,10 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_
 	final_model.add(Dense(hidden_neurons))
 	final_model.add(Activation('relu'))
 	final_model.add(Dropout(0.2))
-	final_model.add(Dense(hidden_neurons))
+	final_model.add(Dense(hidden_neurons/2))
 	final_model.add(Activation('relu'))
 	final_model.add(Dropout(0.2))
-	final_model.add(Dense(hidden_neurons))
+	final_model.add(Dense(hidden_neurons/4))
 	final_model.add(Activation('relu'))
 	final_model.add(Dropout(0.2))
 	final_model.add(Dense(10))
