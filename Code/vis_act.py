@@ -9,6 +9,7 @@ tf.python.control_flow_ops = tf
 
 import keras
 import json
+from keras.optimizers import Adadelta
 from keras.models import model_from_json
 import numpy as np
 
@@ -44,7 +45,7 @@ def visualize_path(model, point):
 		if layer.name.split('_')[0] in ["dropout"]:
 			continue
 		partial = Model(input=model.inputs, output=layer.output)
-		partial.compile(loss='binary_crossentropy',optimizer='Adadelta')
+		partial.compile(loss='binary_crossentropy',optimizer=Adadelta())
 		output = partial.predict(point)[0]
 		if len(output.shape) is 1:
 			output = np.reshape(output, (output.shape[0]/32, 32))

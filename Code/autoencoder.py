@@ -32,8 +32,7 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_
 	encoder = Model(input=input_img, output=encoded)
 	autoencoder = Model(input=input_img, output=decoded)
 	# Configure autoencoder
-	autoencoder.compile(loss='binary_crossentropy',optimizer=Adadelta(lr=learning_rate, rho=0.95, epsilon=1e-08, decay=0.0)
-, metrics=['accuracy'])
+	autoencoder.compile(loss='binary_crossentropy',optimizer=Adadelta(lr=learning_rate), metrics=['accuracy'])
 	autoencoder.fit(X_train, X_train,
 				nb_epoch=ne,
 				batch_size=bs,

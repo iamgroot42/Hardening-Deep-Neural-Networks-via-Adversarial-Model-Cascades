@@ -97,7 +97,7 @@ def main(argv=None):
 				predictions = model(x)
 		elif FLAGS.is_autoencoder == 1:
 			if FLAGS.is_blackbox:
-				model = autoencoder.modelD(X_train_p, X_test, learning_rate=FLAGS.learning_rate, ne=FLAGS.nb_epochs, bs=FLAGS.batch_size)
+				model = autoencoder.modelD(X_train_p, X_test ne=FLAGS.nb_epochs, bs=FLAGS.batch_size)
 				predictions = model(x)
 			else:
 				model = autoencoder.modelE()
