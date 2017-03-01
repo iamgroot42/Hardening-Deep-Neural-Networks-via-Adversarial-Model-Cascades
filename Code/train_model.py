@@ -39,6 +39,7 @@ flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be 
 flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
+flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be normal, have atrous or separable')
 
 
 def main(argv=None):
@@ -90,18 +91,19 @@ def main(argv=None):
 	if FLAGS.is_autoencoder != 3:
 		if FLAGS.is_autoencoder == 0:
 			if FLAGS.is_blackbox:
-				model = utils_mnist.modelB(img_rows=32,img_cols=32)
+				if FLAGS.specialCNN == 'atrous':
+					model = utils_mnist.model_atrous(img_rows=32,img_cols=32)
+				elif FLAGS.specialCNN == 'separable':
+					model = utils_mnist.model_separable(img_rows=32,img_cols=32)
+				else:
+					model = utils_mnist.modelB(img_rows=32,img_cols=32)
 				predictions = model(x)
 			else:
 				model = utils_mnist.modelA(img_rows=32,img_cols=32)
 				predictions = model(x)
 		elif FLAGS.is_autoencoder == 1:
 			if FLAGS.is_blackbox:
-<<<<<<< HEAD
 				model = autoencoder.modelD(X_train_p, X_test ne=FLAGS.nb_epochs, bs=FLAGS.batch_size)
-=======
-				model = autoencoder.modelD(X_train_p, X_test, bs=FLAGS.batch_size)
->>>>>>> 9b2ef10ed525509cf4532ed3109ae011c05d87d1
 				predictions = model(x)
 			else:
 				model = autoencoder.modelE()
