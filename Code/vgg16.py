@@ -75,14 +75,19 @@ def process_data(X_train, X_test):
 	except:
 		x_tr = []
 		x_ts = []
+		X_train = X_train[:25000]
 		for x in X_train:
-			x_tr.append(cv2.resize(image, (0,0), fx=7, fy=7))
-		for x in X_test:
-			x_ts.append(cv2.resize(image, (0,0), fx=7, fy=7))
+			x_tr.append(cv2.resize(x, (0,0), fx=7, fy=7))
+			print "yo"
+		#for x in X_test:
+		#	x_ts.append(cv2.resize(x, (0,0), fx=7, fy=7))
+		#	print "lo"
 		x_tr = np.array(x_tr)
-		x_ts = np.array(x_ts)
+		#x_ts = np.array(x_ts)
 		np.save("../Data/upscaled_train.npy", x_tr)
-		np.save("../Data/upscaled_test.npy", x_ts)
+		#np.save("../Data/upscaled_test.npy", x_ts)
+		print("Saved")
+		exit()
 	return X_train, X_test
 
 

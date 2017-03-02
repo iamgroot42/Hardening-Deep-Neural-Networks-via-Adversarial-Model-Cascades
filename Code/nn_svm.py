@@ -7,7 +7,7 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.utils import np_utils
-from keras.optimizers import RMSProp
+from keras.optimizers import RMSprop
 
 import numpy as np
 from sklearn import svm
@@ -29,7 +29,7 @@ def internal_model(ne, bs, learning_rate):
 	model.add(Dropout(0.5))
 	model.add(Dense(10))
 	model.add(Activation('softmax'))
-	model.compile(loss='categorical_crossentropy',optimizer=RMSProp(lr=0.002), metrics=['accuracy'])
+	model.compile(loss='categorical_crossentropy',optimizer=RMSprop(lr=0.002), metrics=['accuracy'])
 	return model
 
 
