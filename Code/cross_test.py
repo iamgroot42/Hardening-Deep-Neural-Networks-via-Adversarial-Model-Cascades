@@ -40,6 +40,7 @@ flags.DEFINE_integer('per_class_adv', 10 , 'Number of adversarial examples to be
 
 def main(argv=None):
 	flatten = False
+	nb_classes = 10
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
@@ -70,7 +71,7 @@ def main(argv=None):
 		model.load_weights(FLAGS.model_path)
 		if FLAGS.proxy_data:
 			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv)
-			Y_train_p = np_utils.to_categorical(nn_svm.get_output(X_train_p, model, cluster),10)
+			Y_train_p = np_utils.to_categorical(nn_svm.get_output(X_train_p, model, cluster),nb_classes)
 			np.save(FLAGS.proxy_x, X_train_p)
 			np.save(FLAGS.proxy_y, Y_train_p)
 			print('Proxy dataset created')

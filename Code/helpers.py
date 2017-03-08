@@ -30,14 +30,13 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 	return adv_x
 
 
-def jbda(X_train, Y_train, prefix, n_points=200):
+def jbda(X_train, Y_train, prefix, n_classes = 10, n_points=200):
 	# Try loading cached copy, if available
 	try:
 		X_train = np.load("__" + prefix + str(n_points) + "_x.npy")
 		Y_train = np.load("__" + prefix + str(n_points) + "_y.npy")
 		return X_train, Y_train
 	except:
-		n_classes = 10
 		distr = {}
 		for i in range(n_classes):
 			distr[i] = []

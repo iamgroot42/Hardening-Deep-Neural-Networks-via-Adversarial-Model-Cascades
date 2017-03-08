@@ -40,6 +40,7 @@ flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be nor
 
 
 def main(argv=None):
+	n_classes=10
 	if FLAGS.is_blackbox:
 		print("Starting to train blackbox model")
 	else:
@@ -89,21 +90,21 @@ def main(argv=None):
 		if FLAGS.is_autoencoder == 0:
 			if FLAGS.is_blackbox:
 				if FLAGS.specialCNN == 'atrous':
-					model = utils_mnist.model_atrous(img_rows=32,img_cols=32)
+					model = utils_mnist.model_atrous(img_rows=32,img_cols=32,nb_classes=n_classes)
 				elif FLAGS.specialCNN == 'separable':
-					model = utils_mnist.model_separable(img_rows=32,img_cols=32)
+					model = utils_mnist.model_separable(img_rows=32,img_cols=32,nb_classes=n_classes)
 				else:
-					model = utils_mnist.modelB(img_rows=32,img_cols=32)
+					model = utils_mnist.modelB(img_rows=32,img_cols=32,nb_classes=n_classes)
 				predictions = model(x)
 			else:
-				model = utils_mnist.modelA(img_rows=32,img_cols=32)
+				model = utils_mnist.modelA(img_rows=32,img_cols=32,nb_classes=n_classes)
 				predictions = model(x)
 		elif FLAGS.is_autoencoder == 1:
 			if FLAGS.is_blackbox:
-				model = autoencoder.modelD(X_train_p, X_test, ne=FLAGS.nb_epochs, bs=FLAGS.batch_size)
+				model = autoencoder.modelD(X_train_p, X_test, ne=FLAGS.nb_epochs, bs=FLAGS.batch_size, nb_classes=n_classes)
 				predictions = model(x)
 			else:
-				model = autoencoder.modelE()
+				model = autoencoder.modelE(nb_classes=n_classes)
 				predictions = model(x)
 		elif FLAGS.is_autoencoder == 2:
 			if FLAGS.is_blackbox:
@@ -111,10 +112,10 @@ def main(argv=None):
 				X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
 				joblib.dump(clustering, FLAGS.cluster)
 				X_test = vbow.img_to_vect(X_test, clustering)
-				model = handpicked.modelF(features=FLAGS.num_clusters)
+				model = handpicked.modelF(features=FLAGS.num_clusters,nb_classes=n_classes)
 				predictions = model(x)
 			else:
-				model = autoencoder.modelE()
+				model = autoencoder.modelE(nb_classes=n_classes)
 				predictions = model(x)
 		tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
 		accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
@@ -122,7 +123,7 @@ def main(argv=None):
 		utils.save_model(model, FLAGS.save_here)
 	else:
 		if FLAGS.is_blackbox:
-			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate)
+			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
 			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
 			print('Overall accuracy: ' + str(acc))
 			NN.save(FLAGS.save_here)
@@ -130,7 +131,7 @@ def main(argv=None):
 			with open(FLAGS.arch, 'w') as outfile:
 				json.dump(NN.to_json(), outfile)
 		else:
-			model = autoencoder.modelE()
+			model = autoencoder.modelE(nb_classes=n_classes)
 			predictions = model(x)
 			tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
 			accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)

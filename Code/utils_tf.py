@@ -26,7 +26,7 @@ def tf_model_loss(y, model, mean=True):
 
 
 def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
-				   predictions_adv=None, verbose=False):
+				   predictions_adv=None, verbose=True):
 	# Define loss
 	loss = tf_model_loss(y, predictions)
 	if predictions_adv is not None:
@@ -76,7 +76,7 @@ def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
 	return True
 
 
-def tf_model_eval(sess, x, y, model, X_test, Y_test, verbose=False):
+def tf_model_eval(sess, x, y, model, X_test, Y_test, verbose=True):
 	acc_value = keras.metrics.categorical_accuracy(y, model)
 	accuracy = 0.0
 	with sess.as_default():
@@ -108,7 +108,7 @@ def tf_model_load(sess):
 	return True
 
 
-def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=False):
+def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=True):
 	n = len(numpy_inputs)
 	assert n > 0
 	assert n == len(tf_inputs)

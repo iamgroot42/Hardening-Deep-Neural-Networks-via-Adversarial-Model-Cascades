@@ -21,4 +21,9 @@ def modelCS(X_train, Y_train, X_test, Y_test):
 
 if __name__ == "__main__":
 	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
+	X_test = X_test.reshape(len(X_test),-1)
+	X_train = X_train.reshape(len(X_train),-1)
+	print("Reshaped!")
+	print(X_train.shape)
+	print(Y_train.shape)
 	model = modelCS(X_train, Y_train, X_test, Y_test)

@@ -9,7 +9,7 @@ from keras.utils import np_utils
 import numpy as np
 
 
-def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_rate=0.1):
+def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_rate=0.1, nb_classes=10):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -52,7 +52,7 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_
 	final_model.add(Dense(hidden_neurons))
 	final_model.add(Activation('relu'))
 	final_model.add(Dropout(0.2))
-	final_model.add(Dense(10))
+	final_model.add(Dense(nb_classes))
 	final_model.add(Activation('softmax'))
 	if logits:
 		logits_tensor = final_model(input_ph)

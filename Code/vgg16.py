@@ -11,7 +11,7 @@ import  numpy as np
 import utils_cifar
 
 
-def ready_model(weights_path, learning_rate=0.1):
+def ready_model(weights_path, nb_classes=10, learning_rate=0.1):
 	model = Sequential()
 	model.add(ZeroPadding2D((1,1),input_shape=(3,224,224)))
 	model.add(Convolution2D(64, 3, 3, activation='relu'))
@@ -61,7 +61,7 @@ def ready_model(weights_path, learning_rate=0.1):
 	model.pop()
 	model.pop()
 	model.add(Dropout(0.5))
-	model.add(Dense(10, activation='softmax'))
+	model.add(Dense(nb_classes, activation='softmax'))
 	sgd = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
 	model.compile(optimizer=sgd, loss='categorical_crossentropy',metrics=['accuracy'])
 	return model

@@ -10,7 +10,7 @@ import numpy as np
 from sklearn import svm
 
 
-def internal_model(ne, bs, learning_rate):
+def internal_model(ne, bs, learning_rate, nb_classes=10):
 	model = Sequential()
 	model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same', input_shape=(3, 32, 32)))
 	model.add(Convolution2D(32, 3, 3, activation='relu'))
@@ -24,7 +24,7 @@ def internal_model(ne, bs, learning_rate):
 	model.add(Dense(512))
 	model.add(Activation('relu'))
 	model.add(Dropout(0.5))
-	model.add(Dense(10))
+	model.add(Dense(nb_classes))
 	model.add(Activation('softmax'))
 	model.compile(loss='categorical_crossentropy',optimizer=RMSprop(lr=0.002), metrics=['accuracy'])
 	return model
@@ -43,8 +43,8 @@ def hybrid_error(X_test, Y_test, model, cluster):
 	return acc
 
 
-def modelCS(X_train, Y_train, X_test, Y_test, ne, bs, learning_rate, input_ph=None):
-	final_model = internal_model(ne, bs, learning_rate)
+def modelCS(X_train, Y_train, X_test, Y_test, ne, bs, learning_rate, nb_classes=10, input_ph=None):
+	final_model = internal_model(ne, bs, learning_rate, nb_classes)
 	final_model.fit(X_train, Y_train,
 				nb_epoch=ne,
 				batch_size=bs,
