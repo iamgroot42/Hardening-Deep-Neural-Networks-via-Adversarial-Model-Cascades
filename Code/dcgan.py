@@ -5,6 +5,7 @@ import tensorflow as tf
 tf.python.control_flow_ops = tf
 
 import keras
+from keras.datasets import cifar10
 
 from keras.models import Sequential
 from keras.layers.core import Activation, Flatten, Dense, Reshape
@@ -82,7 +83,6 @@ def combine_images(generated_images):
 
 
 def train(X_train, y_train, X_test, y_test, BATCH_SIZE):
-	X_train = X_train.reshape((X_train.shape[0], 1) + X_train.shape[1:])
 	discriminator = discriminator_model()
 	generator = generator_model()
 	discriminator_on_generator = generator_containing_discriminator(generator, discriminator)
@@ -105,14 +105,11 @@ def train(X_train, y_train, X_test, y_test, BATCH_SIZE):
 
 			for i in range(BATCH_SIZE):
 				noise[i, :] = np.random.uniform(-1, 1, 100)
-
+			
+			print X_train.shape
 			image_batch = X_train[index*BATCH_SIZE:(index+1)*BATCH_SIZE]
 			
 			generated_images = generator.predict(noise, verbose=0)
-			print "\n\n\n\n"
-			print image_batch.shape
-			print generated_images.shape
-			print "\n\n\n"
 			# print(image_batch.shape)
 			# print(generated_images.shape)
 			X = np.concatenate((image_batch, generated_images))
@@ -166,9 +163,9 @@ def generate(BATCH_SIZE, nice=False):
 if __name__ == "__main__":
 
 	import utils_cifar
-
+	
+	(xtr, ytr), (xte, yte) = cifar10.load_data()
 	xtr, ytr, xte, yte = utils_cifar.data_cifar()
-	print xtr.shape
 	
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
@@ -178,3 +175,4 @@ if __name__ == "__main__":
 		train(xtr, yte, xte, yte, FLAGS.batch_size)
 	elif FLAGS.mode == "generate":
 		generate(FLAGS.batch_size, nice=args.nice)
+

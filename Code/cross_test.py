@@ -40,7 +40,7 @@ flags.DEFINE_integer('per_class_adv', 10 , 'Number of adversarial examples to be
 
 def main(argv=None):
 	flatten = False
-	nb_classes = 10
+	nb_classes = 100
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':

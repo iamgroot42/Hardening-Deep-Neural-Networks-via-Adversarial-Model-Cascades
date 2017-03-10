@@ -16,7 +16,7 @@ flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examp
 flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are saved')
 flags.DEFINE_integer('example_index', 6, 'Which index do you want to visualize?')
-flags.DEFINE_integer('dataset', 0 , 'MNIST(0), CIFAR10(1)')
+flags.DEFINE_integer('dataset', 0 , 'MNIST(0), CIFAR10/100(1)')
 
 def main(argv=None):
 

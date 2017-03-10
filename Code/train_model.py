@@ -40,7 +40,7 @@ flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be nor
 
 
 def main(argv=None):
-	n_classes=10
+	n_classes=100
 	if FLAGS.is_blackbox:
 		print("Starting to train blackbox model")
 	else:

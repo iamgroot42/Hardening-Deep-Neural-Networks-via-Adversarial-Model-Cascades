@@ -32,6 +32,7 @@ flags.DEFINE_integer('per_class_adv', 1000 , 'Number of adversarial examples to 
 
 def main(argv=None):
 	flatten = False
+	n_classes = 100
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
@@ -58,7 +59,7 @@ def main(argv=None):
 
 	model = utils.load_model(FLAGS.model_path)
 	predictions = model(x)
-	X_test, Y_test = helpers.jbda(X_test, Y_test, "adv", FLAGS.per_class_adv)
+	X_test, Y_test = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
