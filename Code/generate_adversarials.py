@@ -1,19 +1,16 @@
 import common
 
-# Tensorflow bug fix while importing keras
-import tensorflow as tf
-tf.python.control_flow_ops = tf
-
 import keras
 import numpy as np
 
-import tensorflow as tf
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
-from utils_tf import tf_model_eval, batch_eval
+from utils_tf import batch_eval
 import utils_mnist, utils_cifar
-import helpers, utils
+import helpers
+
+from keras.models import load_model
 
 FLAGS = flags.FLAGS
 
@@ -57,14 +54,14 @@ def main(argv=None):
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
-	model = utils.load_model(FLAGS.model_path)
+	model = load_model(FLAGS.model_path)
 	predictions = model(x)
 	X_test, Y_test = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
 	# Evaluate the accuracy of the blackbox model on adversarial examples
-	accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
+	accuracy = predictions.evaluate(X_test_adv, Y_test, batch_size=FLAGS.batch_size)
 	print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
 	np.save(FLAGS.adversary_path_x, X_test_adv)
 	np.save(FLAGS.adversary_path_xo, X_test)

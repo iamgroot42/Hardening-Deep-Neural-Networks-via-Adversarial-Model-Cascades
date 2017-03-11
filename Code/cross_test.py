@@ -1,24 +1,18 @@
 import common
 
-# Tensorflow bug fix while importing keras
-import tensorflow as tf
-tf.python.control_flow_ops = tf
-
 import keras
 import json
 from keras.models import model_from_json
 from keras.utils import np_utils
 import numpy as np
 
-import tensorflow as tf
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
-from utils_tf import tf_model_eval
 import utils_mnist, utils_cifar
 import utils
 from sklearn.externals import joblib
-import vbow, nn_svm, helpers
+from Models import vbow, nn_svm, helpers
 
 FLAGS = flags.FLAGS
 
@@ -103,7 +97,7 @@ def main(argv=None):
 			np.save(FLAGS.proxy_y, Y_train_p)
 			print('Proxy dataset created')
 		else:
-			accuracy = tf_model_eval(sess, x, y, predictions, X_test_adv, Y_test)
+			accuracy = predictions.evaluate(X_test_adv, Y_test, batch_size=FLAGS.batch_size)
 			print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
 
 

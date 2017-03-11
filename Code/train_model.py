@@ -1,22 +1,15 @@
 import common
 
-# Tensorflow bug fix while importing keras
 import tensorflow as tf
-tf.python.control_flow_ops = tf
-
 import numpy as np
 import keras
 import json
 
-import tensorflow as tf
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
-from utils_tf import tf_model_train, tf_model_eval
 import utils_mnist, utils_cifar
-import utils
-import autoencoder, handpicked, nn_svm
-import vbow
+from Models import autoencoder, handpicked, nn_svm, vbow
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
 
@@ -117,10 +110,13 @@ def main(argv=None):
 			else:
 				model = autoencoder.modelE(nb_classes=n_classes)
 				predictions = model(x)
-		tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
-		accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
+		predictions.train(X_train_p, Y_train_p,
+			batch_size=FLAGS.batch_size,
+			nb_epoch=FLAGS.nb_epochs,
+			validation_split=0.2)
+		accuracy = predictions.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
 		print('Test accuracy for model: ' + str(accuracy))
-		utils.save_model(model, FLAGS.save_here)
+		model.save(FLAGS.save_here)
 	else:
 		if FLAGS.is_blackbox:
 			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
@@ -133,10 +129,13 @@ def main(argv=None):
 		else:
 			model = autoencoder.modelE(nb_classes=n_classes)
 			predictions = model(x)
-			tf_model_train(sess, x, y, predictions, X_train_p, Y_train_p)
-			accuracy = tf_model_eval(sess, x, y, predictions, X_test, Y_test)
+			predictions.train(X_train_p, Y_train_p,
+				batch_size=FLAGS.batch_size,
+				nb_epoch=FLAGS.nb_epochs,
+				validation_split=0.2)
+			accuracy = predictions.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
 			print('Test accuracy for model: ' + str(accuracy))
-			utils.save_model(model, FLAGS.save_here)
+			model.save(FLAGS.save_here)
 
 
 if __name__ == '__main__':
