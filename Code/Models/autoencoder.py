@@ -5,11 +5,12 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.utils import np_utils
+from keras.optimizers import Adadelta
 
 import numpy as np
 
 
-def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_rate=0.1, nb_classes=10):
+def modelD(X_train, X_test, ne=50, bs=128, learning_rate=0.1, nb_classes=10):
 	input_img = Input(shape=(3, 32, 32))
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
@@ -54,16 +55,11 @@ def modelD(X_train, X_test, logits=False,input_ph=None, ne=50, bs=128, learning_
 	final_model.add(Dropout(0.2))
 	final_model.add(Dense(nb_classes))
 	final_model.add(Activation('softmax'))
-	if logits:
-		logits_tensor = final_model(input_ph)
-	final_model.add(Activation('softmax'))
-	if logits:
-		return final_model, logits_tensor
-	else:
-		return final_model
+	final_model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	return final_model
 
 
-def modelE(logits=False,input_ph=None, img_rows=32, img_cols=32, nb_filters=64, nb_classes=10):
+def modelE(img_rows=32, img_cols=32, nb_filters=64, nb_classes=10, learning_rate=1.0):
 	model = Sequential()
 	model.add(Dropout(0.2, input_shape=(3, img_rows, img_cols)))
 	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
@@ -75,11 +71,6 @@ def modelE(logits=False,input_ph=None, img_rows=32, img_cols=32, nb_filters=64, 
 	model.add(Dropout(0.5))
 	model.add(Flatten())
 	model.add(Dense(nb_classes))
-	if logits:
-		logits_tensor = model(input_ph)
 	model.add(Activation('softmax'))
-	if logits:
-		return model, logits_tensor
-	else:
-		return model
-
+	model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	return model

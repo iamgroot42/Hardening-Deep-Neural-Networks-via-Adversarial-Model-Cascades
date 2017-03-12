@@ -1,9 +1,10 @@
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Convolution2D, MaxPooling2D, AtrousConvolution2D, SeparableConvolution2D, AveragePooling2D
+from keras.optimizers import Adadelta
 
 
-def modelA(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+def modelA(img_rows=28, img_cols=28, nb_filters=64, nb_classes=10, learning_rate=1.0):
 	model = Sequential()
 	model.add(Dropout(0.2, input_shape=(3, img_rows, img_cols)))
 	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
@@ -15,16 +16,12 @@ def modelA(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, 
 	model.add(Dropout(0.5))
 	model.add(Flatten())
 	model.add(Dense(nb_classes))
-	if logits:
-		logits_tensor = model(input_ph)
 	model.add(Activation('softmax'))
-	if logits:
-		return model, logits_tensor
-	else:
-		return model
+	model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
 
 
-def modelB(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+def modelB(img_rows=28, img_cols=28, nb_filters=64, nb_classes=10, learning_rate=1.0):
 	model = Sequential()
 	model.add(Convolution2D(nb_filters, 3, 3,
 			border_mode='valid',
@@ -39,13 +36,9 @@ def modelB(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, 
 	model.add(Activation('relu'))
 	model.add(Dropout(0.5))
 	model.add(Dense(nb_classes))
-	if logits:
-		logits_tensor = model(input_ph)
 	model.add(Activation('softmax'))
-	if logits:
-		return model, logits_tensor
-	else:
-		return model
+	model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
 
 
 def modelC(logits=False,input_ph=None, img_rows=28, img_cols=28, hidden_neurons=512, nb_classes=10):
@@ -58,16 +51,12 @@ def modelC(logits=False,input_ph=None, img_rows=28, img_cols=28, hidden_neurons=
 	model.add(Dropout(0.2))
 	model.add(Dense(nb_classes))
 	model.add(Activation('softmax'))
-	if logits:
-		logits_tensor = model(input_ph)
 	model.add(Activation('softmax'))
-	if logits:
-		return model, logits_tensor
-	else:
-		return model
+	model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
 
 
-def model_atrous(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+def model_atrous(img_rows=28, img_cols=28, nb_filters=64, nb_classes=10, learning_rate=1.0):
 	model = Sequential()
 	model.add(AtrousConvolution2D(nb_filters, 3, 3,
 		border_mode='valid',
@@ -82,16 +71,12 @@ def model_atrous(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filter
 	model.add(Activation('relu'))
 	model.add(Dropout(0.5))
 	model.add(Dense(nb_classes))
-	if logits:
-		logits_tensor = model(input_ph)
 	model.add(Activation('softmax'))
-	if logits:
-		return model, logits_tensor
-	else:
-		return model
+	model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
 
 
-def model_separable(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_filters=64, nb_classes=10):
+def model_separable(img_rows=28, img_cols=28, nb_filters=64, nb_classes=10, learning_rate=1.0):
 	model = Sequential()
 	model.add(SeparableConvolution2D(nb_filters, 3, 3,
 		border_mode='valid',
@@ -106,10 +91,6 @@ def model_separable(logits=False,input_ph=None, img_rows=28, img_cols=28, nb_fil
 	model.add(Activation('relu'))
 	model.add(Dropout(0.5))
 	model.add(Dense(nb_classes))
-	if logits:
-		logits_tensor = model(input_ph)
 	model.add(Activation('softmax'))
-	if logits:
-		return model, logits_tensor
-	else:
-		return model
+	model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	return model

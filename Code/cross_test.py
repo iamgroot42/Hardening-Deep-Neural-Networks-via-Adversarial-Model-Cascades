@@ -1,5 +1,7 @@
 import common
 
+import tensorflow as tf
+
 import keras
 import json
 from keras.models import model_from_json
@@ -12,7 +14,8 @@ from tensorflow.python.platform import flags
 import utils_mnist, utils_cifar
 import utils
 from sklearn.externals import joblib
-from Models import vbow, nn_svm, helpers
+from Models import vbow, nn_svm
+import helpers
 
 FLAGS = flags.FLAGS
 
@@ -43,11 +46,6 @@ def main(argv=None):
 	sess = tf.Session()
 	keras.backend.set_session(sess)
 
-	if flatten:
-		x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
-	else:
-		x_shape, y_shape = utils_cifar.placeholder_shapes()
-
 	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
 	else:
@@ -71,7 +69,7 @@ def main(argv=None):
 			print('Proxy dataset created')
 		else:
 			err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
-			print('Misclassification accuracy on adversarial examples: ' + str(1-err))
+			print('\nMisclassification accuracy on adversarial examples: ' + str(1-err))
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)
@@ -85,11 +83,7 @@ def main(argv=None):
 			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv)
 			X_test_adv = X_train_p
 
-		x = tf.placeholder(tf.float32, shape=x_shape)
-		y = tf.placeholder(tf.float32, shape=y_shape)
-
 		model = utils.load_model(FLAGS.model_path)
-		predictions = model(x)
 
 		if FLAGS.proxy_data:
 			Y_train_p = model.predict(X_test_adv)
@@ -97,8 +91,8 @@ def main(argv=None):
 			np.save(FLAGS.proxy_y, Y_train_p)
 			print('Proxy dataset created')
 		else:
-			accuracy = predictions.evaluate(X_test_adv, Y_test, batch_size=FLAGS.batch_size)
-			print('Misclassification accuracy on adversarial examples: ' + str(1.0 - accuracy))
+			accuracy = model.evaluate(X_test_adv, Y_test, batch_size=FLAGS.batch_size)
+			print('\nMisclassification accuracy on adversarial examples: ' + str(100*(1.0 - accuracy[1])))
 
 
 if __name__ == '__main__':

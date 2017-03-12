@@ -43,7 +43,7 @@ def hybrid_error(X_test, Y_test, model, cluster):
 	return acc
 
 
-def modelCS(X_train, Y_train, X_test, Y_test, ne, bs, learning_rate, nb_classes=10, input_ph=None):
+def modelCS(X_train, Y_train, X_test, Y_test, ne, bs, learning_rate, nb_classes=10):
 	final_model = internal_model(ne, bs, learning_rate, nb_classes)
 	final_model.fit(X_train, Y_train,
 				nb_epoch=ne,
