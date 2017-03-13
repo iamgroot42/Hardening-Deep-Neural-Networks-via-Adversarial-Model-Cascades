@@ -62,7 +62,7 @@ def main(argv=None):
 		cluster = joblib.load(FLAGS.cluster)
 		model.load_weights(FLAGS.model_path)
 		if FLAGS.proxy_data:
-			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv)
+			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv, nb_classes)
 			Y_train_p = np_utils.to_categorical(nn_svm.get_output(X_train_p, model, cluster),nb_classes)
 			np.save(FLAGS.proxy_x, X_train_p)
 			np.save(FLAGS.proxy_y, Y_train_p)
@@ -75,12 +75,12 @@ def main(argv=None):
 			cluster = joblib.load(FLAGS.cluster)
 			x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
 			if FLAGS.proxy_data:
-				X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv)
+				X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv, nb_classes)
 				X_test_adv = X_train_p
 			X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
 			X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
 		elif FLAGS.proxy_data:
-			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv)
+			X_train_p, Y_train_p = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv, nb_classes)
 			X_test_adv = X_train_p
 
 		model = utils.load_model(FLAGS.model_path)

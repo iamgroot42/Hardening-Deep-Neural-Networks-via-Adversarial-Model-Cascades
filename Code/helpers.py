@@ -30,7 +30,7 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 	return adv_x
 
 
-def jbda(X_train, Y_train, prefix, nb_classes = 10, n_points=200):
+def jbda(X_train, Y_train, prefix, n_points, nb_classes = 100):
 	# Try loading cached copy, if available
 	try:
 		X_train = np.load("__" + prefix + str(n_points) + "_x.npy")
@@ -49,11 +49,11 @@ def jbda(X_train, Y_train, prefix, nb_classes = 10, n_points=200):
 		X_train_ret = []
 		Y_train_ret = []
 		for key in distr.keys():
-			for i in distr[key]:
-				X_train_ret.append(X_train[i])
-				Y_train_ret.append(Y_train[i])
-		X_train_ret = np.array(X_train_ret)
-		Y_train_ret = np.array(Y_train_ret)
+			st = np.random.choice(distr[key], n_points)
+			X_train_ret.append(X_train[st])
+			Y_train_ret.append(Y_train[st])
+		X_train_ret = np.concatenate(X_train_ret)
+		Y_train_ret = np.concatenate(Y_train_ret)
 		# Cache data for later use
 		np.save("__" + prefix + str(n_points) + "_x.npy", X_train_ret)
 		np.save("__" + prefix + str(n_points) + "_y.npy", Y_train_ret)
