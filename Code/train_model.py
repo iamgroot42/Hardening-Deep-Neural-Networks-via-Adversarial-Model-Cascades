@@ -9,7 +9,7 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar
-from Models import autoencoder, handpicked, nn_svm, vbow, cnn
+from Models import autoencoder, handpicked, nn_svm, vbow, cnn, sota
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
 
@@ -28,7 +28,7 @@ flags.DEFINE_string('arch', 'arch.json', 'Path where cluster/SVM model is to be 
 flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
-flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be normal, have atrous or separable')
+flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be state-of-the-art, normal, have atrous or separable')
 
 
 def main(argv=None):
@@ -72,6 +72,8 @@ def main(argv=None):
 					model = cnn.model_atrous(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 				elif FLAGS.specialCNN == 'separable':
 					model = cnn.model_separable(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
+				elif FLAGS.specialCNN == 'sota':
+					model = sota.cnn_cifar100(FLAGS.learning_rate)
 				else:
 					model = cnn.modelB(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 			else:
