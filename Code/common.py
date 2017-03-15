@@ -4,5 +4,5 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 # Tensorflow bug fix while importing keras
-import tensorflow as tf
-tf.python.control_flow_ops = tf
+#import tensorflow as tf
+#tf.python.control_flow_ops = tf

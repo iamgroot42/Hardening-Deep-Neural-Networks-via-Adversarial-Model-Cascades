@@ -1,6 +1,6 @@
 # Fix for Tensorflow import error while using Keras
-import tensorflow as tf
-tf.python.control_flow_ops = tf
+#import tensorflow as tf
+#tf.python.control_flow_ops = tf
 
 from keras.models import Sequential
 from keras.layers.core import Flatten, Dense, Dropout
