@@ -3,6 +3,7 @@ import common
 import tensorflow as tf
 import numpy as np
 import keras
+from os.path import exists as file_exists
 import json
 
 from tensorflow.python.platform import app
@@ -68,6 +69,9 @@ def main(argv=None):
 	if FLAGS.is_autoencoder != 3:
 		if FLAGS.is_autoencoder == 0:
 			if FLAGS.is_blackbox:
+				if file_exists(FLAGS.save_here):
+					print "Cached BlackBox model found"
+					return 
 				if FLAGS.specialCNN == 'atrous':
 					model = cnn.model_atrous(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 				elif FLAGS.specialCNN == 'separable':
@@ -80,11 +84,17 @@ def main(argv=None):
 				model = cnn.modelA(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		elif FLAGS.is_autoencoder == 1:
 			if FLAGS.is_blackbox:
+				if file_exists(FLAGS.save_here):
+					print "Cached BlackBox model found"
+					return
 				model = autoencoder.modelD(X_train_p, X_test, ne=FLAGS.nb_epochs, bs=FLAGS.batch_size, nb_classes=n_classes, learning_rate=FLAGS.learnig_rate)
 			else:
 				model = autoencoder.modelE(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		elif FLAGS.is_autoencoder == 2:
 			if FLAGS.is_blackbox:
+				if file_exists(FLAGS.save_here):
+					print "Cached BlackBox model found"
+					return
 				clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0, max_iter=100, verbose=1, n_init=3)
 				X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
 				joblib.dump(clustering, FLAGS.cluster)
@@ -101,6 +111,9 @@ def main(argv=None):
 		model.save(FLAGS.save_here)
 	else:
 		if FLAGS.is_blackbox:
+			if file_exists(FLAGS.save_here):
+					print "Cached BlackBox model found"
+					return
 			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
 			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
 			print('\nOverall accuracy: ' + str(acc[1]*100))
