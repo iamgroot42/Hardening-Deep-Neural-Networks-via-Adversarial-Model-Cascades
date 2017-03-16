@@ -102,10 +102,13 @@ def main(argv=None):
 				model = handpicked.modelF(features=FLAGS.num_clusters,nb_classes=n_classes)
 			else:
 				model = autoencoder.modelE(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
-		model.fit(X_train_p, Y_train_p,
-			batch_size=FLAGS.batch_size,
-			nb_epoch=FLAGS.nb_epochs,
-			validation_split=0.2)
+		datagen = utils_cifar.augmented_data(X_train_p)
+		X_val, y_val = helpers.get_validation(X_train_p, Y_train_p, 0.2)
+		model.fit_generator(datagen.flow(X_train_p, Y_train_p,
+			batch_size=FLAGS.batch_size),
+			steps_per_epoch=FLAGS.batch_size,
+			epochs=FLAGS.nb_epochs,
+			validation_data=(X_val, y_val))
 		accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
 		print('\nTest accuracy for model: ' + str(accuracy[1]*100))
 		model.save(FLAGS.save_here)
@@ -114,7 +117,8 @@ def main(argv=None):
 			if file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"
 					return
-			NN, SVM = nn_svm.modelCS(X_train, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
+			datagen = utils_cifar.augmented_data(X_train_p)
+			NN, SVM = nn_svm.modelCS(datagen, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
 			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
 			print('\nOverall accuracy: ' + str(acc[1]*100))
 			NN.save(FLAGS.save_here)
@@ -123,10 +127,13 @@ def main(argv=None):
 				json.dump(NN.to_json(), outfile)
 		else:
 			model = autoencoder.modelE(nb_classes=n_classes)
-			model.train(X_train_p, Y_train_p,
-				batch_size=FLAGS.batch_size,
-				nb_epoch=FLAGS.nb_epochs,
-				validation_split=0.2)
+			datagen = utils_cifar.augmented_data(X_train_p)
+			X_val, y_val = helpers.get_validation(X_train_p, Y_train_p, 0.2)
+			model.fit_generator(datagen.flow(X_train_p, Y_train_p,
+				batch_size=FLAGS.batch_size),
+				steps_per_epoch=FLAGS.batch_size,
+				epochs=FLAGS.nb_epochs,
+				validation_data=(X_val, y_val))
 			accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
 			print('\nTest accuracy for model: ' + str(accuracy[1]*100))
 			model.save(FLAGS.save_here)
@@ -134,3 +141,8 @@ def main(argv=None):
 
 if __name__ == '__main__':
 	app.run()
+
+
+# implement paper
+# blackbox with adversarial examples
+# fight overfittig

@@ -5,6 +5,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
 from keras.layers import Convolution2D, MaxPooling2D
 from keras.utils import np_utils
+from keras.preprocessing.image import ImageDataGenerator
 
 
 def placeholder_shapes():
@@ -15,7 +16,7 @@ def placeholder_shapes_handpicked(K):
 	return (None, K), (None, 100)
 
 
-def data_cifar():
+def data_cifar(normalize=True):
 	img_rows = 32
 	img_cols = 32
 	nb_classes = 100
@@ -25,8 +26,9 @@ def data_cifar():
 	X_test = X_test.reshape(X_test.shape[0], 3, img_rows, img_cols)
 	X_train = X_train.astype('float32')
 	X_test = X_test.astype('float32')
-	X_train /= 255
-	X_test /= 255
+	if normalize:
+		X_train /= 255
+		X_test /= 255
 	# convert class vectors to binary class matrices
 	Y_train = np_utils.to_categorical(y_train, nb_classes)
 	Y_test = np_utils.to_categorical(y_test, nb_classes)
@@ -45,3 +47,20 @@ def data_cifar_raw():
 	Y_train = np_utils.to_categorical(y_train, nb_classes)
 	Y_test = np_utils.to_categorical(y_test, nb_classes)
 	return X_train, Y_train, X_test, Y_test
+
+
+def augmented_data(X_train):
+	datagen = ImageDataGenerator(
+        featurewise_center=False,  # set input mean to 0 over the dataset
+        samplewise_center=False,  # set each sample mean to 0
+        featurewise_std_normalization=False,  # divide inputs by std of the dataset
+        samplewise_std_normalization=False,  # divide each input by its std
+        zca_whitening=False,  # apply ZCA whitening
+        rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+        width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
+        height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
+        horizontal_flip=True,  # randomly flip images
+        vertical_flip=False,  # randomly flip images
+        data_format="channels_first") # (channel, row, col) format per image
+    datagen.fit(X_train)
+    return datagen

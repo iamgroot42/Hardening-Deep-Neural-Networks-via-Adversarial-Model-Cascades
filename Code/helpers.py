@@ -58,3 +58,9 @@ def jbda(X_train, Y_train, prefix, n_points, nb_classes = 100):
 		np.save("__" + prefix + str(n_points) + "_x.npy", X_train_ret)
 		np.save("__" + prefix + str(n_points) + "_y.npy", Y_train_ret)
 		return X_train_ret, Y_train_ret
+
+
+def get_validation(X, y, validation_split=0.2):
+	num_points = len(X)
+	indices = np.random.choice(num_points, num_points * validation_split)
+	return X[indices], y[indices]
