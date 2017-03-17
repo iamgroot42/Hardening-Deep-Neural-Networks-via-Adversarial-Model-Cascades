@@ -62,5 +62,5 @@ def jbda(X_train, Y_train, prefix, n_points, nb_classes = 100):
 
 def get_validation(X, y, validation_split=0.2):
 	num_points = len(X)
-	indices = np.random.choice(num_points, num_points * validation_split)
+	indices = np.random.choice(num_points, int(num_points * validation_split))
 	return X[indices], y[indices]
