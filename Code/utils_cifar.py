@@ -49,7 +49,7 @@ def data_cifar_raw():
 	return X_train, Y_train, X_test, Y_test
 
 
-def augmented_data(X_train):
+def augmented_data(X):
 	datagen = ImageDataGenerator(
         featurewise_center=False,  # set input mean to 0 over the dataset
         samplewise_center=False,  # set each sample mean to 0
@@ -62,5 +62,5 @@ def augmented_data(X_train):
         horizontal_flip=True,  # randomly flip images
         vertical_flip=False,  # randomly flip images
         data_format="channels_first") # (channel, row, col) format per image
-    datagen.fit(X_train)
-    return datagen
+	datagen.fit(X)
+    	return datagen

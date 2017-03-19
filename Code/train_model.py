@@ -11,6 +11,8 @@ from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar
 from Models import autoencoder, handpicked, nn_svm, vbow, cnn, sota
+import helpers
+
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
 
@@ -71,7 +73,7 @@ def main(argv=None):
 			if FLAGS.is_blackbox:
 				if file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"
-					return 
+					return
 				if FLAGS.specialCNN == 'atrous':
 					model = cnn.model_atrous(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 				elif FLAGS.specialCNN == 'separable':
@@ -106,7 +108,7 @@ def main(argv=None):
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		model.fit_generator(datagen.flow(X_tr, y_tr,
 			batch_size=FLAGS.batch_size),
-			steps_per_epoch=FLAGS.batch_size,
+			steps_per_epoch=X_train_p.shape[0] // FLAGS.batch_size,
 			epochs=FLAGS.nb_epochs,
 			validation_data=(X_val, y_val))
 		accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
@@ -131,7 +133,7 @@ def main(argv=None):
 			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 			model.fit_generator(datagen.flow(X_tr, y_tr,
 				batch_size=FLAGS.batch_size),
-				steps_per_epoch=FLAGS.batch_size,
+				steps_per_epoch=X_train_p.shape[0] // FLAGS.batch_size,
 				epochs=FLAGS.nb_epochs,
 				validation_data=(X_val, y_val))
 			accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
