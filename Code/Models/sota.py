@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Convolution2D, MaxPooling2D, AtrousConvolution2D, SeparableConvolution2D, AveragePooling2D
+from keras.layers import Convolution2D, MaxPooling2D, AtrousConvolution2D, SeparableConvolution2D, AveragePooling2D, GlobalAveragePooling2D
 from keras.optimizers import Adadelta, SGD
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import ELU
@@ -17,7 +17,7 @@ def conv_stack(filters, side, activation, model, input_shape=None):
 	model.add(activation())
 
 
-def cnn_cifar100(learning_rate):
+def cnn_cifar100(learning_rate, n_classes=100):
 	model = Sequential()
 	conv_stack(192, 5, ELU, model,(3, 32, 32))
 	model.add(MaxPooling2D())
@@ -48,7 +48,7 @@ def cnn_cifar100(learning_rate):
 	model.add(Dense(300, W_regularizer=l2(0.001), init=he_normal()))
 	model.add(ELU())
 	model.add(BatchNormalization())
-	model.add(Dense(100, W_regularizer=l2(0.001), init=he_normal()))
+	model.add(Dense(n_classes, W_regularizer=l2(0.001), init=he_normal()))
 	model.add(Activation('softmax'))
 	model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
 	#model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])

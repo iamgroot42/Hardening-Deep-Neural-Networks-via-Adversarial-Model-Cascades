@@ -103,8 +103,8 @@ def main(argv=None):
 			else:
 				model = autoencoder.modelE(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		datagen = utils_cifar.augmented_data(X_train_p)
-		X_val, y_val = helpers.get_validation(X_train_p, Y_train_p, 0.2)
-		model.fit_generator(datagen.flow(X_train_p, Y_train_p,
+		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+		model.fit_generator(datagen.flow(X_tr, y_tr,
 			batch_size=FLAGS.batch_size),
 			steps_per_epoch=FLAGS.batch_size,
 			epochs=FLAGS.nb_epochs,
@@ -128,8 +128,8 @@ def main(argv=None):
 		else:
 			model = autoencoder.modelE(nb_classes=n_classes)
 			datagen = utils_cifar.augmented_data(X_train_p)
-			X_val, y_val = helpers.get_validation(X_train_p, Y_train_p, 0.2)
-			model.fit_generator(datagen.flow(X_train_p, Y_train_p,
+			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+			model.fit_generator(datagen.flow(X_tr, y_tr,
 				batch_size=FLAGS.batch_size),
 				steps_per_epoch=FLAGS.batch_size,
 				epochs=FLAGS.nb_epochs,
