@@ -29,7 +29,6 @@ flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoen
 flags.DEFINE_integer('per_class_adv', 1000 , 'Number of adversarial examples to be picked per class')
 
 def main(argv=None):
-	flatten = False
 	n_classes = 100
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
@@ -41,16 +40,10 @@ def main(argv=None):
 
 	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
-	if flatten:
-		X_test = X_test.reshape(10000, 784)
-
 	label_smooth = .1
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
-	if flatten:
-		x_shape, y_shape = utils_mnist.placeholder_shapes_flat()
-	else:
-		x_shape, y_shape = utils_cifar.placeholder_shapes()
+	x_shape, y_shape = utils_cifar.placeholder_shapes()
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)

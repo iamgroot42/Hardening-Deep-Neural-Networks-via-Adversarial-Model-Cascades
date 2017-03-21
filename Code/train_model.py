@@ -7,6 +7,7 @@ from os.path import exists as file_exists
 import json
 
 from tensorflow.python.platform import app
+from keras.models import load_model
 from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar
@@ -32,6 +33,7 @@ flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to b
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be state-of-the-art, normal, have atrous or separable')
+flags.DEFINE_boolean('retraining',False, 'if the CNN is being finetuned')
 
 
 def main(argv=None):
@@ -40,7 +42,6 @@ def main(argv=None):
 		print("Starting to train blackbox model")
 	else:
 		print("Starting to train proxy model")
-	flatten = False
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
@@ -55,18 +56,20 @@ def main(argv=None):
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 
-	if flatten:
-		X_train = X_train.reshape(60000, 784)
-		X_test = X_test.reshape(10000, 784)
-
 	label_smooth = .1
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
-	if FLAGS.is_blackbox:
-		X_train_p, Y_train_p = X_train, Y_train
+	if not FLAGS.retraining:
+		if FLAGS.is_blackbox:
+			X_train_p, Y_train_p = X_train, Y_train
+		else:
+			X_train_p = np.load(FLAGS.proxy_x)
+			Y_train_p = np.load(FLAGS.proxy_y)
 	else:
-		X_train_p = np.load(FLAGS.proxy_x)
-		Y_train_p = np.load(FLAGS.proxy_y)
+		adv_x = np.load(FLAGS.proxy_x)
+		adv_y = np.load(FLAGS.proxy_y)
+		X_train_p = np.concatenate((X_train, adv_x))
+		Y_train_p = np.concatenate((X_test, adv_y))
 
 	if FLAGS.is_autoencoder != 3:
 		if FLAGS.is_autoencoder == 0:
@@ -108,7 +111,7 @@ def main(argv=None):
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		model.fit_generator(datagen.flow(X_tr, y_tr,
 			batch_size=FLAGS.batch_size),
-			steps_per_epoch=X_train_p.shape[0] // FLAGS.batch_size,
+			steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
 			epochs=FLAGS.nb_epochs,
 			validation_data=(X_val, y_val))
 		accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
@@ -133,7 +136,7 @@ def main(argv=None):
 			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 			model.fit_generator(datagen.flow(X_tr, y_tr,
 				batch_size=FLAGS.batch_size),
-				steps_per_epoch=X_train_p.shape[0] // FLAGS.batch_size,
+				steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
 				epochs=FLAGS.nb_epochs,
 				validation_data=(X_val, y_val))
 			accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
