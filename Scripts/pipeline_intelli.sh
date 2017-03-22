@@ -5,7 +5,7 @@ perclass=$2
 
 mkdir -p ../Data/IntelliCNN/$epsilon
 # Train blackbox model
-python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sota >> ../Data/IntelliCNN/$epsilon/log
+python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sot --batch_size 16 --learning_rate 0.05 --nb_epochs 200 >> ../Data/IntelliCNN/$epsilon/log
 # Generate adversarial examples fo refining network strength
 python ../Code/generate_adversarials.py --model_path BM --adversary_path_x PX.npy --adversary_path_y PY.npy --fgsm_eps $epsilon >> ../Data/IntelliCNN/$epsilon/log
 # Remove previous model

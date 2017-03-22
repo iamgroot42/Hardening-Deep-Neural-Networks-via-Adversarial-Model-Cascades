@@ -69,7 +69,7 @@ def main(argv=None):
 		adv_x = np.load(FLAGS.proxy_x)
 		adv_y = np.load(FLAGS.proxy_y)
 		X_train_p = np.concatenate((X_train, adv_x))
-		Y_train_p = np.concatenate((X_test, adv_y))
+		Y_train_p = np.concatenate((Y_train, adv_y))
 
 	if FLAGS.is_autoencoder != 3:
 		if FLAGS.is_autoencoder == 0:
