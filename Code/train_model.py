@@ -123,7 +123,8 @@ def main(argv=None):
 					print "Cached BlackBox model found"
 					return
 			datagen = utils_cifar.augmented_data(X_train_p)
-			NN, SVM = nn_svm.modelCS(datagen, Y_train, X_test, Y_test, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
+			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+			NN, SVM = nn_svm.modelCS(datagen, X_tr, y_tr, X_val,y_val, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
 			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
 			print('\nOverall accuracy: ' + str(acc[1]*100))
 			NN.save(FLAGS.save_here)
@@ -146,8 +147,3 @@ def main(argv=None):
 
 if __name__ == '__main__':
 	app.run()
-
-
-# implement paper
-# blackbox with adversarial examples
-# fight overfittig

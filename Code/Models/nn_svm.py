@@ -1,4 +1,5 @@
 import common
+from sota import cnn_cifar100
 
 from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
@@ -8,26 +9,6 @@ from keras.optimizers import RMSprop
 
 import numpy as np
 from sklearn import svm
-
-
-def internal_model(ne, bs, learning_rate, nb_classes=10):
-	model = Sequential()
-	model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same', input_shape=(3, 32, 32)))
-	model.add(Convolution2D(32, 3, 3, activation='relu'))
-	model.add(MaxPooling2D((2, 2)))
-	model.add(Dropout(0.25))
-	model.add(Convolution2D(64, 3, 3, activation='relu', border_mode='same'))
-	model.add(Convolution2D(64, 3, 3, activation='relu'))
-	model.add(MaxPooling2D((2, 2)))
-	model.add(Dropout(0.25))
-	model.add(Flatten())
-	model.add(Dense(512))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.5))
-	model.add(Dense(nb_classes))
-	model.add(Activation('softmax'))
-	model.compile(loss='categorical_crossentropy',optimizer=RMSprop(lr=0.002), metrics=['accuracy'])
-	return model
 
 
 def get_output(X_test, model, cluster):
@@ -43,18 +24,17 @@ def hybrid_error(X_test, Y_test, model, cluster):
 	return acc
 
 
-def modelCS(X_train, Y_train, X_test, Y_test, ne, bs, learning_rate, nb_classes=10):
-	final_model = internal_model(ne, bs, learning_rate, nb_classes)
-	final_model.fit(X_train, Y_train,
-				nb_epoch=ne,
-				batch_size=bs,
-				validation_split=0.2)
-	score = final_model.evaluate(X_test, Y_test)
-	print("\nNN-only accuracy: " + str(score[1]))
+def modelCS(datagen, X_tr, y_tr, X_val,y_val, ne, bs, learning_rate,nb_classes):
+	final_model = cnn_cifar100(learning_rate)
+	final_model.fit_generator(datagen.flow(X_tr, y_tr,
+				batch_size=bs),
+				steps_per_epoch=X_tr.shape[0] // bs,
+				epochs=ne,
+				validation_data=(X_val, y_val))
 	# Remove last layers to get encoding for SVM
 	interm_l = Model(input=final_model.input,
                                  output=final_model.layers[-4].output)
-	X_train_SVM = interm_l.predict(X_train)
+	X_train_SVM = interm_l.predict(X_tr)
 	clf = svm.SVC(kernel='rbf')
-	clf.fit(X_train_SVM, np.argmax(Y_train, axis=1))
+	clf.fit(X_train_SVM, np.argmax(y_tr, axis=1))
 	return interm_l, clf
