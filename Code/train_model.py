@@ -59,22 +59,24 @@ def main(argv=None):
 	label_smooth = .1
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
-	if not FLAGS.retraining:
-		if FLAGS.is_blackbox:
-			X_train_p, Y_train_p = X_train, Y_train
-		else:
-			X_train_p = np.load(FLAGS.proxy_x)
-			Y_train_p = np.load(FLAGS.proxy_y)
+	if FLAGS.is_blackbox:
+		X_train_p, Y_train_p = X_train, Y_train
 	else:
-		adv_x = np.load(FLAGS.proxy_x)
-		adv_y = np.load(FLAGS.proxy_y)
-		X_train_p = np.concatenate((X_train, adv_x))
-		Y_train_p = np.concatenate((Y_train, adv_y))
+		X_train_p = np.load(FLAGS.proxy_x)
+		Y_train_p = np.load(FLAGS.proxy_y)
 
-	if FLAGS.is_autoencoder != 3:
-		if FLAGS.is_autoencoder == 0:
-			if FLAGS.is_blackbox:
-				if file_exists(FLAGS.save_here):
+	# Black-box network
+	if FLAGS.is_blackbox:
+		if FLAGS.is_autoencoder != 3:
+			if FLAGS.is_autoencoder == 0:
+				if FLAGS.retraining:
+					# Retraining using adversarial data
+					adv_x = np.load(FLAGS.proxy_x)
+					adv_y = np.load(FLAGS.proxy_y)
+					X_train_p = np.concatenate((X_train, adv_x))
+					Y_train_p = np.concatenate((Y_train, adv_y))
+					model = load_model(FLAGS.save_here)
+				elif file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"
 					return
 				if FLAGS.specialCNN == 'atrous':
@@ -85,18 +87,12 @@ def main(argv=None):
 					model = sota.cnn_cifar100(FLAGS.learning_rate)
 				else:
 					model = cnn.modelB(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
-			else:
-				model = cnn.modelA(img_rows=32,img_cols=32,nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
-		elif FLAGS.is_autoencoder == 1:
-			if FLAGS.is_blackbox:
+			elif FLAGS.is_autoencoder == 1:
 				if file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"
 					return
 				model = autoencoder.modelD(X_train_p, X_test, ne=FLAGS.nb_epochs, bs=FLAGS.batch_size, nb_classes=n_classes, learning_rate=FLAGS.learnig_rate)
-			else:
-				model = autoencoder.modelE(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
-		elif FLAGS.is_autoencoder == 2:
-			if FLAGS.is_blackbox:
+			elif FLAGS.is_autoencoder == 2:
 				if file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"
 					return
@@ -105,34 +101,6 @@ def main(argv=None):
 				joblib.dump(clustering, FLAGS.cluster)
 				X_test = vbow.img_to_vect(X_test, clustering)
 				model = handpicked.modelF(features=FLAGS.num_clusters,nb_classes=n_classes)
-			else:
-				model = autoencoder.modelE(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
-		datagen = utils_cifar.augmented_data(X_train_p)
-		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-		model.fit_generator(datagen.flow(X_tr, y_tr,
-			batch_size=FLAGS.batch_size),
-			steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
-			epochs=FLAGS.nb_epochs,
-			validation_data=(X_val, y_val))
-		accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
-		print('\nTest accuracy for model: ' + str(accuracy[1]*100))
-		model.save(FLAGS.save_here)
-	else:
-		if FLAGS.is_blackbox:
-			if file_exists(FLAGS.save_here):
-					print "Cached BlackBox model found"
-					return
-			datagen = utils_cifar.augmented_data(X_train_p)
-			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-			NN, SVM = nn_svm.modelCS(datagen, X_tr, y_tr, X_val,y_val, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
-			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
-			print('\nOverall accuracy: ' + str(acc[1]*100))
-			NN.save(FLAGS.save_here)
-			joblib.dump(SVM, FLAGS.cluster)
-			with open(FLAGS.arch, 'w') as outfile:
-				json.dump(NN.to_json(), outfile)
-		else:
-			model = autoencoder.modelE(nb_classes=n_classes)
 			datagen = utils_cifar.augmented_data(X_train_p)
 			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 			model.fit_generator(datagen.flow(X_tr, y_tr,
@@ -141,8 +109,34 @@ def main(argv=None):
 				epochs=FLAGS.nb_epochs,
 				validation_data=(X_val, y_val))
 			accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
-			print('\nTest accuracy for model: ' + str(accuracy[1]*100))
+			print('\nTest accuracy for black-box model: ' + str(accuracy[1]*100))
 			model.save(FLAGS.save_here)
+		else:
+			if file_exists(FLAGS.save_here):
+				print "Cached BlackBox model found"
+				return
+			datagen = utils_cifar.augmented_data(X_train_p)
+			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+			NN, SVM = nn_svm.modelCS(datagen, X_tr, y_tr, X_val,y_val, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
+			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
+			print('\nTest accuracy for black-box model: ' + str(acc[1]*100))
+			NN.save(FLAGS.save_here)
+			joblib.dump(SVM, FLAGS.cluster)
+			with open(FLAGS.arch, 'w') as outfile:
+				json.dump(NN.to_json(), outfile)
+	# Proxy network
+	else:
+		model = cnn.modelA(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
+		datagen = utils_cifar.augmented_data(X_train_p)
+		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+		model.fit_generator(datagen.flow(X_tr, y_tr,
+			batch_size=FLAGS.batch_size),
+			steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
+			epochs=FLAGS.nb_epochs,
+			validation_data=(X_val, y_val))
+		accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
+		print('\nTest accuracy for proxy model: ' + str(accuracy[1]*100))
+		model.save(FLAGS.save_here)
 
 
 if __name__ == '__main__':
