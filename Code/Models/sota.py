@@ -24,27 +24,27 @@ def cnn_cifar100(learning_rate, n_classes=100):
 
 	conv_stack(192, 1, ELU, model)
 	conv_stack(240, 3, ELU, model)
-	model.add(Dropout(0.3))
+	model.add(Dropout(0.1))
 	model.add(MaxPooling2D())
 
 	conv_stack(240, 1, ELU, model)
 	conv_stack(260, 2, ELU, model)
-	model.add(Dropout(0.4))
+	model.add(Dropout(0.2))
 	model.add(MaxPooling2D())
 
 	conv_stack(260, 1, ELU, model)
 	conv_stack(280, 2, ELU, model)
-	model.add(Dropout(0.5))
+	model.add(Dropout(0.3))
 	model.add(MaxPooling2D())
 
 	conv_stack(280, 1, ELU, model)
 	conv_stack(300, 2, ELU, model)
-	model.add(Dropout(0.6))
+	model.add(Dropout(0.4))
 	model.add(MaxPooling2D())
 
 	model.add(Flatten())
 	model.add(BatchNormalization())
-	model.add(Dropout(0.7))
+	model.add(Dropout(0.5))
 	model.add(Dense(300, W_regularizer=l2(0.001), init=he_normal()))
 	model.add(ELU())
 	model.add(BatchNormalization())

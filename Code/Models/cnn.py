@@ -27,24 +27,7 @@ def modelA(nb_classes, learning_rate):
 	model.add(Dense(nb_classes))
 	model.add(Activation('softmax'))
 	sgd = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
-	model.compile(loss='categorical_crossentropy', optimizer=sgd)
-	return model
-
-
-def modelA(img_rows=28, img_cols=28, nb_filters=64, nb_classes=10, learning_rate=1.0):
-	model = Sequential()
-	model.add(Dropout(0.2, input_shape=(3, img_rows, img_cols)))
-	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
-	model.add(Activation('relu'))
-	model.add(Convolution2D(nb_filters * 2, 6, 6, subsample=(2, 2),border_mode="valid"))
-	model.add(Activation('relu'))
-	model.add(Convolution2D(nb_filters *2, 5, 5, subsample=(1, 1)))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.5))
-	model.add(Flatten())
-	model.add(Dense(nb_classes))
-	model.add(Activation('softmax'))
-	model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 	return model
 
 
