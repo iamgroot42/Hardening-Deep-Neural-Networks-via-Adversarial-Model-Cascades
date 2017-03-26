@@ -48,14 +48,14 @@ def main(argv=None):
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
 	model = load_model(FLAGS.model_path)
-	X_test, Y_test = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
+	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
 	
-	X_test_adv, Y_test_adv = perturb.perturb_images(model, images, labels, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
+	X_test_adv, Y_test_adv = perturb.perturb_images(model, X_test_pm, Y_test_pm, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
 
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	np.save(FLAGS.adversary_path_x, X_test_adv)
-	np.save(FLAGS.adversary_path_xo, X_test)
-	np.save(FLAGS.adversary_path_y, Y_test)
+	np.save(FLAGS.adversary_path_xo, X_test_pm)
+	np.save(FLAGS.adversary_path_y, Y_test_adv)
 
 
 if __name__ == '__main__':

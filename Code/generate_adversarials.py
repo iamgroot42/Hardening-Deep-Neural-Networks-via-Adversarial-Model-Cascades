@@ -47,17 +47,17 @@ def main(argv=None):
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
 	model = load_model(FLAGS.model_path)
-	X_test, Y_test = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
+	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	predictions = model(x)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
-	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test])
+	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test_pm])
 	# Evaluate the accuracy of the blackbox model on adversarial examples
-	accuracy = model.evaluate(X_test_adv, Y_test, batch_size=FLAGS.batch_size)
+	accuracy = model.evaluate(X_test_adv, Y_test_pm, batch_size=FLAGS.batch_size)
 	print('\nMisclassification accuracy on adversarial examples: ' + str((1.0 - accuracy[1])*100))
 	np.save(FLAGS.adversary_path_x, X_test_adv)
-	np.save(FLAGS.adversary_path_xo, X_test)
-	np.save(FLAGS.adversary_path_y, Y_test)
+	np.save(FLAGS.adversary_path_xo, X_test_pm)
+	np.save(FLAGS.adversary_path_y, Y_test_pm)
 
 
 if __name__ == '__main__':
