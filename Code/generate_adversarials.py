@@ -24,7 +24,6 @@ flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original exampl
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
-flags.DEFINE_integer('per_class_adv', 1000 , 'Number of adversarial examples to be picked per class')
 
 def main(argv=None):
 	n_classes = 100
@@ -47,7 +46,7 @@ def main(argv=None):
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
 	model = load_model(FLAGS.model_path)
-	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
+	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	predictions = model(x)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)

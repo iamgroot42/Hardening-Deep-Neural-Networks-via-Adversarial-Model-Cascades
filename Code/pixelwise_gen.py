@@ -49,7 +49,6 @@ def main(argv=None):
 
 	model = load_model(FLAGS.model_path)
 	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
-	
 	X_test_adv, Y_test_adv = perturb.perturb_images(model, X_test_pm, Y_test_pm, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
 
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)

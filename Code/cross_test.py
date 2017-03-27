@@ -50,6 +50,9 @@ def main(argv=None):
 	else:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
+	X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 500, nb_classes)
+	X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train_pm, Y_train_pm, "train", FLAGS.per_class_adv, nb_classes)
+
 	X_test_adv = None
 	if not FLAGS.proxy_data:
 		X_test_adv = np.load(FLAGS.adversary_path_x)
@@ -61,7 +64,6 @@ def main(argv=None):
 		cluster = joblib.load(FLAGS.cluster)
 		model.load_weights(FLAGS.model_path)
 		if FLAGS.proxy_data:
-			X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv, nb_classes)
 			Y_train_pm = np_utils.to_categorical(nn_svm.get_output(X_train_pm, model, cluster),nb_classes)
 			np.save(FLAGS.proxy_x, X_train_pm)
 			np.save(FLAGS.proxy_y, Y_train_pm)
@@ -73,19 +75,13 @@ def main(argv=None):
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)
 			x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
-			if FLAGS.proxy_data:
-				X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv, nb_classes)
-				X_test_adv = X_train_pm
 			X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
 			X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
-		elif FLAGS.proxy_data:
-			X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", FLAGS.per_class_adv, nb_classes)
-			X_test_adv = X_train_pm
 
 		model = utils.load_model(FLAGS.model_path)
 
 		if FLAGS.proxy_data:
-			Y_train_p = model.predict(X_test_adv)
+			Y_train_p = model.predict(X_train_pm)
 			np.save(FLAGS.proxy_x, X_train_pm)
 			np.save(FLAGS.proxy_y, Y_train_p)
 			print('Proxy dataset created')

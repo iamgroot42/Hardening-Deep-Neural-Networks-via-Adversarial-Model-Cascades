@@ -52,11 +52,11 @@ def main(argv=None):
 
 	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
-		X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 600, nb_classes)
+		X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 500, n_classes)
 		X_train, Y_train = X_train_bm, Y_train_bm
 	else:
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
-		X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 600, nb_classes)
+		X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 500, n_classes)
 		X_train, Y_train = X_train_bm, Y_train_bm
 
 

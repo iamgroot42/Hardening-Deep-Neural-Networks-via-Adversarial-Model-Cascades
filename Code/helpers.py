@@ -53,7 +53,7 @@ def jbda(X_train, Y_train, prefix, n_points, nb_classes = 100, pool_split=0.8):
 		X_train_pm_ret = []
 		Y_train_pm_ret = []
 		for key in distr.keys():
-			st = np.random.choice(distr[key], n_points)
+			st = np.random.choice(distr[key], n_points, replace=False)
 			bm = st[:int(len(st)*pool_split)]
 			pm = st[int(len(st)*pool_split):]
 			X_train_bm_ret.append(X_train[bm])
