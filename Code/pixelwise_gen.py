@@ -23,13 +23,24 @@ flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original exampl
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
-flags.DEFINE_integer('per_class_adv', 1000 , 'Number of adversarial examples to be picked per class')
+flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to be picked per class')
 flags.DEFINE_integer('p', 1 , 'p')
 flags.DEFINE_integer('r', 1 , 'r')
 flags.DEFINE_integer('d', 3 , 'd')
 flags.DEFINE_integer('t', 10 , 't')
 flags.DEFINE_integer('k', 2 , 'k')
 flags.DEFINE_integer('R', 4 , 'R')
+
+
+def transform_data(X, forward=True):
+	if forward:
+		X *= 255
+		X -= 128
+		X /= 128
+	else:
+		X *= 128
+		X += 128
+		X /= 255
 
 
 def main(argv=None):
@@ -49,7 +60,9 @@ def main(argv=None):
 
 	model = load_model(FLAGS.model_path)
 	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
+	X_test_pm = transform_data(X_test_pm)
 	X_test_adv, Y_test_adv = perturb.perturb_images(model, X_test_pm, Y_test_pm, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
+	X_test_adv = transform_data(X_test_adv, False)
 
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	np.save(FLAGS.adversary_path_x, X_test_adv)
