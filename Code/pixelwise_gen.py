@@ -17,7 +17,7 @@ from keras.models import load_model
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
-flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
+flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
@@ -41,6 +41,7 @@ def transform_data(X, forward=True):
 		X *= 128
 		X += 128
 		X /= 255
+	return X
 
 
 def main(argv=None):
@@ -61,13 +62,14 @@ def main(argv=None):
 	model = load_model(FLAGS.model_path)
 	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
 	X_test_pm = transform_data(X_test_pm)
-	X_test_adv, Y_test_adv = perturb.perturb_images(model, X_test_pm, Y_test_pm, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
+	X_test_adv, Y_temp, indices = perturb.perturb_images(model, X_test_pm, Y_test_pm, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
 	X_test_adv = transform_data(X_test_adv, False)
+	X_test_pm = X_test_pm[indices]
+	Y_test_pm = Y_test_pm[indices]
 
-	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	np.save(FLAGS.adversary_path_x, X_test_adv)
 	np.save(FLAGS.adversary_path_xo, X_test_pm)
-	np.save(FLAGS.adversary_path_y, Y_test_adv)
+	np.save(FLAGS.adversary_path_y, Y_test_pm)
 
 
 if __name__ == '__main__':
