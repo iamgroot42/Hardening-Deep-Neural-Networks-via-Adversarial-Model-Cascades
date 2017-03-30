@@ -6,3 +6,4 @@ import cnn
 import vbow
 import handpicked
 import sota
+import vaenc
