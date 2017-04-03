@@ -4,7 +4,7 @@ perclass=$1
 
 mkdir -p ../Data/Pixelwise
 # Train blackbox model
-python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sot --batch_size 16 --learning_rate 0.05 --nb_epochs 200 >> ../Data/Pixelwise/log
+python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sota --batch_size 16 --learning_rate 0.05 --nb_epochs 200 >> ../Data/Pixelwise/log
 # Generate adversarial examples for proxy model
 python ../Code/pixelwise_gen.py --model_path BM --adversary_path_x ADX.npy --adversary_path_y ADY.npy >> ../Data/Pixelwise/log
 # Test misclassification accuracy of proxy adversarial examples on blackbox model

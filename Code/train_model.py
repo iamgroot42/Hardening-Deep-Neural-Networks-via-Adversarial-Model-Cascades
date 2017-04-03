@@ -116,12 +116,19 @@ def main(argv=None):
 			print('\nTest accuracy for black-box model: ' + str(accuracy[1]*100))
 			model.save(FLAGS.save_here)
 		else:
-			if file_exists(FLAGS.save_here):
-				print "Cached BlackBox model found"
-				return
 			datagen = utils_cifar.augmented_data(X_train_p)
 			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-			NN, SVM = nn_svm.modelCS(datagen, X_tr, y_tr, X_val,y_val, FLAGS.nb_epochs, FLAGS.batch_size, FLAGS.learning_rate,nb_classes=n_classes)
+			if file_exists(FLAGS.save_here):
+				print "Cached BlackBox model found"
+				model = load_model(FLAGS.save_here)
+			else:
+				model = cnn_cifar100(FLAGS.learning_rate)
+				model.fit_generator(datagen.flow(X_tr, y_tr,
+					batch_size=FLAGS.batch_size),
+					steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
+					epochs=FLAGS.nb_epochs,
+					validation_data=(X_val, y_val))
+			NN, SVM = nn_svm.modelCS(model, datagen, X_tr, y_tr, X_val,y_val)
 			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
 			print('\nTest accuracy for black-box model: ' + str(acc[1]*100))
 			NN.save(FLAGS.save_here)

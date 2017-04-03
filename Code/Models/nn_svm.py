@@ -24,16 +24,9 @@ def hybrid_error(X_test, Y_test, model, cluster):
 	return acc
 
 
-def modelCS(datagen, X_tr, y_tr, X_val,y_val, ne, bs, learning_rate,nb_classes):
-	final_model = cnn_cifar100(learning_rate)
-	final_model.fit_generator(datagen.flow(X_tr, y_tr,
-				batch_size=bs),
-				steps_per_epoch=X_tr.shape[0] // bs,
-				epochs=ne,
-				validation_data=(X_val, y_val))
+def modelCS(final_model, datagen, X_tr, y_tr, X_val, y_va):
 	# Remove last layers to get encoding for SVM
-	interm_l = Model(input=final_model.input,
-                                 output=final_model.layers[-4].output)
+	interm_l = Model(input=final_model.input, output=final_model.layers[-4].output)
 	X_train_SVM = interm_l.predict(X_tr)
 	clf = svm.SVC(kernel='rbf')
 	clf.fit(X_train_SVM, np.argmax(y_tr, axis=1))
