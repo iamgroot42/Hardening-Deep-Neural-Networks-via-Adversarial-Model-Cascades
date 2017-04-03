@@ -31,45 +31,32 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 
 
 def jbda(X_train, Y_train, prefix, n_points, nb_classes = 100, pool_split=0.8):
-	# Try loading cached copy, if available
-	try:
-		X_train_bm = np.load("__bm" + prefix + str(n_points) + "_x.npy")
-		Y_train_bm = np.load("__bm" + prefix + str(n_points) + "_y.npy")
-		X_train_pm = np.load("__pm" + prefix + str(n_points) + "_x.npy")
-		Y_train_pm = np.load("__pm" + prefix + str(n_points) + "_y.npy")
-		return X_train_bm, Y_train_bm, X_train_pm, Y_train_pm
-	except:
-		distr = {}
-		for i in range(nb_classes):
-			distr[i] = []
-		if Y_train.shape[1] == nb_classes:
-			for i in range(len(Y_train)):
-				distr[np.argmax(Y_train[i])].append(i)
-		else:
-			for i in range(len(Y_train)):
-				distr[Y_train[i][0]].append(i)
-		X_train_bm_ret = []
-		Y_train_bm_ret = []
-		X_train_pm_ret = []
-		Y_train_pm_ret = []
-		for key in distr.keys():
-			st = np.random.choice(distr[key], n_points, replace=False)
-			bm = st[:int(len(st)*pool_split)]
-			pm = st[int(len(st)*pool_split):]
-			X_train_bm_ret.append(X_train[bm])
-			Y_train_bm_ret.append(Y_train[bm])
-			X_train_pm_ret.append(X_train[pm])
-			Y_train_pm_ret.append(Y_train[pm])
-		X_train_bm_ret = np.concatenate(X_train_bm_ret)
-		Y_train_bm_ret = np.concatenate(Y_train_bm_ret)
-		X_train_pm_ret = np.concatenate(X_train_pm_ret)
-		Y_train_pm_ret = np.concatenate(Y_train_pm_ret)
-		# Cache data for later use
-		np.save("__bm" + prefix + str(n_points) + "_x.npy", X_train_bm_ret)
-		np.save("__bm" + prefix + str(n_points) + "_y.npy", Y_train_bm_ret)
-		np.save("__pm" + prefix + str(n_points) + "_x.npy", X_train_pm_ret)
-		np.save("__pm" + prefix + str(n_points) + "_y.npy", Y_train_pm_ret)
-		return X_train_bm_ret, Y_train_bm_ret, X_train_pm_ret, Y_train_pm_ret
+	distr = {}
+	for i in range(nb_classes):
+		distr[i] = []
+	if Y_train.shape[1] == nb_classes:
+		for i in range(len(Y_train)):
+			distr[np.argmax(Y_train[i])].append(i)
+	else:
+		for i in range(len(Y_train)):
+			distr[Y_train[i][0]].append(i)
+	X_train_bm_ret = []
+	Y_train_bm_ret = []
+	X_train_pm_ret = []
+	Y_train_pm_ret = []
+	for key in distr.keys():
+		st = np.random.choice(distr[key], n_points, replace=False)
+		bm = st[:int(len(st)*pool_split)]
+		pm = st[int(len(st)*pool_split):]
+		X_train_bm_ret.append(X_train[bm])
+		Y_train_bm_ret.append(Y_train[bm])
+		X_train_pm_ret.append(X_train[pm])
+		Y_train_pm_ret.append(Y_train[pm])
+	X_train_bm_ret = np.concatenate(X_train_bm_ret)
+	Y_train_bm_ret = np.concatenate(Y_train_bm_ret)
+	X_train_pm_ret = np.concatenate(X_train_pm_ret)
+	Y_train_pm_ret = np.concatenate(Y_train_pm_ret)
+	return X_train_bm_ret, Y_train_bm_ret, X_train_pm_ret, Y_train_pm_ret
 
 
 def validation_split(X, y, validation_split=0.2):

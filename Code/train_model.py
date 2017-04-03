@@ -20,9 +20,9 @@ from sklearn.externals import joblib
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
-flags.DEFINE_integer('batch_size', 256, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
 flags.DEFINE_integer('num_clusters', 10, 'Number of clusters in vbow')
-flags.DEFINE_float('learning_rate', 2, 'Learning rate for training')
+flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is to be saved')
 flags.DEFINE_boolean('is_blackbox', False , 'Whether the model is the blackbox model, or the proxy model')
@@ -130,6 +130,9 @@ def main(argv=None):
 				json.dump(NN.to_json(), outfile)
 	# Proxy network
 	else:
+		if file_exists(FLAGS.save_here):
+			print "Caches proxy found"
+			return
 		model = cnn.modelA(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		datagen = utils_cifar.augmented_data(X_train_p)
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)

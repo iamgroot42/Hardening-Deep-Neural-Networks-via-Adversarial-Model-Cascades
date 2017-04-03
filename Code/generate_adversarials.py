@@ -16,7 +16,7 @@ from keras.models import load_model
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
 flags.DEFINE_float('fgsm_eps', 0.1, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
@@ -36,7 +36,7 @@ def main(argv=None):
 	keras.backend.set_session(sess)
 
 	X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
-
+	
 	label_smooth = .1
 	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
 
@@ -44,9 +44,11 @@ def main(argv=None):
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
-
+	
+	print("Starting generation for epsilon = " + str(FLAGS.fgsm_eps))
 	model = load_model(FLAGS.model_path)
 	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
+	np.save(FLAGS.adversary_path_xo, X_test_pm)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	predictions = model(x)
 	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
@@ -55,7 +57,6 @@ def main(argv=None):
 	accuracy = model.evaluate(X_test_adv, Y_test_pm, batch_size=FLAGS.batch_size)
 	print('\nMisclassification accuracy on adversarial examples: ' + str((1.0 - accuracy[1])*100))
 	np.save(FLAGS.adversary_path_x, X_test_adv)
-	np.save(FLAGS.adversary_path_xo, X_test_pm)
 	np.save(FLAGS.adversary_path_y, Y_test_pm)
 
 

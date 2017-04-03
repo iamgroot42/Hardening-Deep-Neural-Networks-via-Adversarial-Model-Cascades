@@ -20,7 +20,7 @@ import helpers
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
-flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 0.1, 'Learning rate for training')
 flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are saved')
@@ -51,7 +51,7 @@ def main(argv=None):
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 
 	X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 500, nb_classes)
-	X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train_pm, Y_train_pm, "train", FLAGS.per_class_adv, nb_classes)
+	X_train_pm, Y_train_pm, X_test_pm, Y_test_pm = helpers.jbda(X_train_pm, Y_train_pm, "train", FLAGS.per_class_adv, nb_classes)
 
 	X_test_adv = None
 	if not FLAGS.proxy_data:

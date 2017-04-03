@@ -1,7 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Convolution2D, MaxPooling2D, AtrousConvolution2D, SeparableConvolution2D, AveragePooling2D, GlobalAveragePooling2D
-from keras.optimizers import Adadelta, SGD
+from keras.optimizers import Adadelta, SGD, Adam
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import ELU
 from keras.regularizers import l2
@@ -34,24 +34,24 @@ def cnn_cifar100(learning_rate, n_classes=100):
 
 	conv_stack(260, 1, ELU, model)
 	conv_stack(280, 2, ELU, model)
-	model.add(Dropout(0.3))
+	model.add(Dropout(0.2))
 	model.add(MaxPooling2D())
 
 	conv_stack(280, 1, ELU, model)
 	conv_stack(300, 2, ELU, model)
-	model.add(Dropout(0.4))
+	model.add(Dropout(0.2))
 	model.add(MaxPooling2D())
 
 	model.add(Flatten())
 	model.add(BatchNormalization())
-	model.add(Dropout(0.5))
+	model.add(Dropout(0.2))
 	model.add(Dense(300, W_regularizer=l2(0.001), init=he_normal()))
 	model.add(ELU())
 	model.add(BatchNormalization())
 	model.add(Dense(n_classes, W_regularizer=l2(0.001), init=he_normal()))
 	model.add(Activation('softmax'))
-	model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
-	#model.compile(optimizer=Adadelta(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	#model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
+	model.compile(optimizer=Adam(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
 	return model
 
 
