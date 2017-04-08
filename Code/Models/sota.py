@@ -51,8 +51,8 @@ def cnn_cifar100(learning_rate, n_classes=100):
 	model.add(BatchNormalization())
 	model.add(Dense(n_classes, W_regularizer=l2(0.01), init=he_normal()))
 	model.add(Activation('softmax'))
-	#model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
-	model.compile(optimizer=Adam(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
+	model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
+	# model.compile(optimizer=Adam(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
 	return model
 
 
