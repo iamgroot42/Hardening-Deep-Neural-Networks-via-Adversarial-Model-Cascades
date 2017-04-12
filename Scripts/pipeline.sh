@@ -5,7 +5,7 @@ perclass=$2
 
 mkdir -p ../Data/VanillaCNN/$epsilon
 # Train blackbox model
-python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sota --batch_size 16 --learning_rate 0.1 --nb_epochs 300 >> ../Data/VanillaCNN/$epsilon/log
+python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sota --batch_size 16 --learning_rate 0.0001 --nb_epochs 300 >> ../Data/VanillaCNN/$epsilon/log
 # Generate training data for proxy network
 python ../Code/cross_test.py --model_path BM --proxy_data True --per_class_adv $perclass >> ../Data/VanillaCNN/$epsilon/log
 # Train proxy model
