@@ -70,7 +70,7 @@ def main(argv=None):
 			print('Proxy dataset created')
 		else:
 			err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
-			print('\nMisclassification accuracy on adversarial examples: ' + str(1-err))
+			print('\nMisclassification accuracy on adversarial examples: ' + str(100*(1-err)))
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)

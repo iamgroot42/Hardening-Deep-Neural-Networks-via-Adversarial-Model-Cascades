@@ -12,11 +12,10 @@ python ../Code/generate_adversarials.py --model_path BM --adversary_path_x PX.np
 rm BM
 # Finetune blackbox model using adversarial data
 python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sota --retraining True >> ../Data/IntelliCNN/$epsilon/log
-# WORK ON THIS ^^
 # Generate training data for proxy network
 python ../Code/cross_test.py --model_path BM --proxy_data True --per_class_adv $perclass >> ../Data/IntelliCNN/$epsilon/log
 # Train proxy model
-python ../Code/train_model.py --is_blackbox False --save_here PM >> ../Data/IntelliCNN/$epsilon/log
+python ../Code/train_model.py --is_blackbox False --save_here PM  --batch_size 16 --learning_rate 0.01 --nb_epochs 500 >> ../Data/IntelliCNN/$epsilon/log
 # Generate adversarial examples for proxy model
 python ../Code/generate_adversarials.py --model_path PM --adversary_path_x ADX.npy --adversary_path_y ADY.npy --fgsm_eps $epsilon >> ../Data/IntelliCNN/$epsilon/log
 # Test misclassification accuracy of proxy adversarial examples on blackbox model

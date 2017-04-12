@@ -125,7 +125,7 @@ def main(argv=None):
 				print "Cached BlackBox model found"
 				model = load_model(FLAGS.save_here)
 			else:
-				model = cnn_cifar100(FLAGS.learning_rate)
+				model = sota.cnn_cifar100(FLAGS.learning_rate)
 				model.fit_generator(datagen.flow(X_tr, y_tr,
 					batch_size=FLAGS.batch_size),
 					steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
@@ -133,7 +133,7 @@ def main(argv=None):
 					validation_data=(X_val, y_val))
 			NN, SVM = nn_svm.modelCS(model, datagen, X_tr, y_tr, X_val,y_val)
 			acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
-			print('\nTest accuracy for black-box model: ' + str(acc[1]*100))
+			print('\nTest accuracy for black-box model: ' + str(acc*100))
 			NN.save(FLAGS.save_here)
 			joblib.dump(SVM, FLAGS.cluster)
 			with open(FLAGS.arch, 'w') as outfile:
