@@ -14,7 +14,7 @@ from tensorflow.python.platform import flags
 import utils_mnist, utils_cifar
 import utils
 from sklearn.externals import joblib
-from Models import vbow, nn_svm
+from Models import nn_svm
 import helpers
 
 FLAGS = flags.FLAGS
@@ -74,9 +74,9 @@ def main(argv=None):
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)
-			x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
-			X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
-			X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
+			# x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
+			# X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
+			# X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
 
 		model = utils.load_model(FLAGS.model_path)
 

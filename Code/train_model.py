@@ -11,7 +11,7 @@ from keras.models import load_model
 from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar
-from Models import autoencoder, handpicked, nn_svm, vbow, cnn, sota
+from Models import autoencoder, handpicked, nn_svm, cnn, sota
 import helpers
 
 from sklearn.cluster import KMeans
@@ -21,7 +21,6 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
-flags.DEFINE_integer('num_clusters', 10, 'Number of clusters in vbow')
 flags.DEFINE_float('learning_rate', 0.001, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is to be saved')
@@ -95,16 +94,16 @@ def main(argv=None):
 				if file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"
 					return
-				model = autoencoder.modelD(X_train_p, X_test, ne=FLAGS.nb_epochs, bs=FLAGS.batch_size, nb_classes=n_classes, learning_rate=FLAGS.learnig_rate)
+				model = autoencoder.modelD(X_train_p, X_test, ne=FLAGS.nb_epochs, bs=FLAGS.batch_size, nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 			elif FLAGS.is_autoencoder == 2:
 				if file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"
 					return
-				clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0, max_iter=100, verbose=1, n_init=3)
-				X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
-				joblib.dump(clustering, FLAGS.cluster)
-				X_test = vbow.img_to_vect(X_test, clustering)
-				model = handpicked.modelF(features=FLAGS.num_clusters,nb_classes=n_classes)
+				# clustering = KMeans(n_clusters=FLAGS.num_clusters, random_state=0, max_iter=100, verbose=1, n_init=3)
+				# X_train_p, clustering =  vbow.cluster_features(X_train_p, clustering)
+				# joblib.dump(clustering, FLAGS.cluster)
+				# X_test = vbow.img_to_vect(X_test, clustering)
+				# model = handpicked.modelF(features=FLAGS.num_clusters,nb_classes=n_classes)
 			datagen = utils_cifar.augmented_data(X_train_p)
 			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 			model.fit_generator(datagen.flow(X_tr, y_tr,
@@ -141,7 +140,7 @@ def main(argv=None):
 	# Proxy network
 	else:
 		if file_exists(FLAGS.save_here):
-			print "Caches proxy found"
+			print "Cached proxy found"
 			return
 		model = cnn.modelA(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		datagen = utils_cifar.augmented_data(X_train_p)

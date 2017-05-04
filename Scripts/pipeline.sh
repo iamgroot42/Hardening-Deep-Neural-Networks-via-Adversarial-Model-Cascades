@@ -9,9 +9,9 @@ python ../Code/train_model.py --is_blackbox True --save_here BM --specialCNN sot
 # Generate training data for proxy network
 python ../Code/cross_test.py --model_path BM --proxy_data True --per_class_adv $perclass >> ../Data/VanillaCNN/$epsilon/log
 # Train proxy model
-python ../Code/train_model.py --is_blackbox False --save_here PM --batch_size 16 --learning_rate 0.01 --nb_epochs 500 >> ../Data/VanillaCNN/$epsilon/log
+python ../Code/train_model.py --is_blackbox False --save_here PM --is_autoencoder 3 --batch_size 16 --learning_rate 0.005 --nb_epochs 200 >> ../Data/VanillaCNN/$epsilon/log
 # Generate adversarial examples for proxy model
-python ../Code/generate_adversarials.py --model_path PM --adversary_path_x ADX.npy --adversary_path_y ADY.npy --fgsm_eps $epsilon >> ../Data/VanillaCNN/$epsilon/log
+python ../Code/generate_adversarials_fgsm.py --model_path PM --adversary_path_x ADX.npy --adversary_path_y ADY.npy --fgsm_eps $epsilon >> ../Data/VanillaCNN/$epsilon/log
 # Test misclassification accuracy of proxy adversarial examples on blackbox model
 python ../Code/cross_test.py --model_path BM --adversary_path_x ADX.npy --adversary_path_y ADY.npy >> ../Data/VanillaCNN/$epsilon/log
 # Sample an adversarial image for visualization

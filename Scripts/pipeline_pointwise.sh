@@ -12,10 +12,8 @@ python ../Code/cross_test.py --model_path BM --adversary_path_x ADX.npy --advers
 # Sample an adversarial image for visualization
 python ../Code/visualize_adex.py --dataset 1
 
-#mv BM ../Data/Pixelwise/
 ##mv ADX.npy ../Data/Pixelwise/
 #mv ADXO.npy ../Data/Pixelwise/
 #mv ADY.npy ../Data/Pixelwise/
 #mv adv_example.png ../Data/Pixelwise/
 #mv example.png ../Data/Pixelwise/
-
