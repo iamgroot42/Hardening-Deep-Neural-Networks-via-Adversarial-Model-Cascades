@@ -1,15 +1,12 @@
 #!/bin/bash
 
 rm PM
-bash automate.sh 10
-mv ../Data/VanillaCNN ../Data/VanillaCNN10_
-rm PM
 bash automate.sh 25
-mv ../Data/VanillaCNN ../Data/VanillaCNN25_
+mv ../Data/CNNSVM ../Data/CNNSVM25
 rm PM
 bash automate.sh 75
-mv ../Data/VanillaCNN ../Data/VanillaCNN75_
+mv ../Data/CNNSVM ../Data/CNNSVM75
 rm PM
 bash automate.sh 100
-mv ../Data/VanillaCNN ../Data/VanillaCNN100_
+mv ../Data/CNNSVM ../Data/CNNSVM100
 rm PM
