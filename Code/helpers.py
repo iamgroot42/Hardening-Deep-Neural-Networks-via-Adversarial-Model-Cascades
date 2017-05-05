@@ -161,3 +161,26 @@ def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max, nb_cla
 
 		X_adv[ind], _, _ = jsma(sess, x, pred, grads, val, np.argmax(target), theta, gamma, clip_min, clip_max)
 	return np.asarray(X_adv, dtype=np.float32)
+
+
+def reservoir(X_train, Y_train, prefix, n_points, nb_classes = 100, pool_split=0.8):
+	reservoir = []
+	for i in range(n_points):
+		reservoir[i] = i + 1
+
+	np.random.seed()
+	for i in range(n_points,len(X_train)):
+		j = random.randint(0, i+1)
+
+		if j < n_points:
+			reservoir[j] = i + 1
+
+	bm = reservoir[:int(len(reservoir)*pool_split)]
+	pm = reservoir[int(len(reservoir)*pool_split):]
+
+	X_train_bm_ret = X_train[bm]
+	Y_train_bm_ret = Y_train[bm]
+	X_train_pm_ret = X_train[pm]
+	Y_train_pm_ret = Y_train[pm]
+
+	return X_train_bm_ret, Y_train_bm_ret, X_train_pm_ret, Y_train_pm_ret

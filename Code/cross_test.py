@@ -72,12 +72,6 @@ def main(argv=None):
 			err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
 			print('\nMisclassification accuracy on adversarial examples: ' + str(100*(1-err)))
 	else:
-		if FLAGS.is_autoencoder == 2:
-			cluster = joblib.load(FLAGS.cluster)
-			# x_shape, y_shape = utils_cifar.placeholder_shapes_handpicked(cluster.n_clusters)
-			# X_test_adv = X_test_adv.reshape(X_test_adv.shape[0], 32, 32, 3)
-			# X_test_adv = vbow.img_to_vect(X_test_adv, cluster)
-
 		model = utils.load_model(FLAGS.model_path)
 
 		if FLAGS.proxy_data:
@@ -92,3 +86,4 @@ def main(argv=None):
 
 if __name__ == '__main__':
 	app.run()
+
