@@ -42,7 +42,9 @@ def main(argv=None):
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
 	# Create TF session and set as Keras backend session
-	sess = tf.Session()
+	config = tf.ConfigProto()
+	config.gpu_options.allow_growth=True
+	sess = tf.Session(config=config)
 	keras.backend.set_session(sess)
 
 	X_train_p = np.load(FLAGS.proxy_x)
