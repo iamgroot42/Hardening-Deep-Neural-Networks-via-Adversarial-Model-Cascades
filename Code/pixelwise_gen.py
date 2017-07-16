@@ -62,11 +62,11 @@ def main(argv=None):
 	model = load_model(FLAGS.model_path)
 	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=FLAGS.per_class_adv, nb_classes=n_classes)
 	X_test_pm = transform_data(X_test_pm)
-	X_test_adv, Y_temp, indices = perturb.perturb_images(model, X_test_pm, Y_test_pm, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
+	X_test_adv, Y_temp, indices, count = perturb.perturb_images(model, X_test_pm, Y_test_pm, FLAGS.p, FLAGS.r, FLAGS.d, FLAGS.t, FLAGS.k, FLAGS.R)
 	X_test_adv = transform_data(X_test_adv, False)
 	X_test_pm = X_test_pm[indices]
 	Y_test_pm = Y_test_pm[indices]
-
+	print("Took %d API calls for %d images"%(count, len(X_test_pm)))
 	np.save(FLAGS.adversary_path_x, X_test_adv)
 	np.save(FLAGS.adversary_path_xo, X_test_pm)
 	np.save(FLAGS.adversary_path_y, Y_test_pm)

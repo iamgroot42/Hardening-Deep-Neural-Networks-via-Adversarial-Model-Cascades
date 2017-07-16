@@ -4,7 +4,8 @@ import tensorflow as tf
 
 import keras
 import json
-from keras.models import model_from_json
+from keras.models import model_from_json, load_model, Model
+from keras.layers import Flatten
 from keras.utils import np_utils
 import numpy as np
 
@@ -71,6 +72,15 @@ def main(argv=None):
 		else:
 			err = nn_svm.hybrid_error(X_test_adv, Y_test, model, cluster)
 			print('\nMisclassification accuracy on adversarial examples: ' + str(1-err))
+	elif FLAGS.is_autoencoder == 4:
+		model = load_model(FLAGS.model_path)
+		out = model.layers[6].output
+		out = Flatten()(out)
+		interm_l = Model(input=model.input, output=out)
+		#print interm_l.layers
+		cluster = joblib.load(FLAGS.cluster)
+		err = nn_svm.hybrid_error(X_test_adv, Y_test, interm_l, cluster)
+		print('\nMisclassification accuracy on adversarial examples: ' + str(1-err))
 	else:
 		if FLAGS.is_autoencoder == 2:
 			cluster = joblib.load(FLAGS.cluster)

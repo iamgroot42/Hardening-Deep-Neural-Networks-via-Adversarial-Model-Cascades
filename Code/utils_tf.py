@@ -145,3 +145,4 @@ def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=True):
 	for e in out:
 		assert e.shape[0] == m, e.shape
 	return out
+

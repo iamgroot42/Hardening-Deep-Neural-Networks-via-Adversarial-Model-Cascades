@@ -28,6 +28,6 @@ def modelCS(final_model, datagen, X_tr, y_tr, X_val, y_va):
 	# Remove last layers to get encoding for SVM
 	interm_l = Model(input=final_model.input, output=final_model.layers[-4].output)
 	X_train_SVM = interm_l.predict(X_tr)
-	clf = svm.SVC(kernel='rbf')
+	clf = svm.SVC(kernel='rbf', probability=True)
 	clf.fit(X_train_SVM, np.argmax(y_tr, axis=1))
 	return interm_l, clf
