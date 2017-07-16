@@ -12,18 +12,18 @@ import numpy as np
 
 def modelD(X_train, X_test, ne=50, bs=128, learning_rate=0.1, nb_classes=10):
 	input_img = Input(shape=(3, 32, 32))
-	x = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(input_img)
+	x = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(input_img)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
-	x = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(x)
+	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(x)
 	x = MaxPooling2D((2, 2), border_mode='same')(x)
-	x = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(x)
+	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(x)
 	encoded = MaxPooling2D((2, 2), border_mode='same')(x)
-	# at this point the representation is (8, 4, 4) i.e. 128-dimensional
-	x = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(encoded)
-	x = UpSampling2D((2, 2))(x)
-	x = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(x)
+	# at this point the representation is (16, 4, 4)
+	x = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(encoded)
 	x = UpSampling2D((2, 2))(x)
 	x = Convolution2D(64, 3, 3, activation='relu', border_mode='same')(x)
+	x = UpSampling2D((2, 2))(x)
+	x = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(x)
 	x = UpSampling2D((2, 2))(x)
 	decoded = Convolution2D(3, 3, 3, activation='sigmoid', border_mode='same')(x)
 	encoder = Model(input=input_img, output=encoded)
@@ -64,7 +64,7 @@ def modelD(X_train, X_test, ne=50, bs=128, learning_rate=0.1, nb_classes=10):
 def modelE(img_rows=32, img_cols=32, nb_filters=64, nb_classes=10, learning_rate=1.0):
 	model = Sequential()
 	model.add(Dropout(0.2, input_shape=(3, img_rows, img_cols)))
-	model.add(Convolution2D(nb_filters, 8, 8,subsample=(2, 2),border_mode="same"))
+	model.add(Convolution2D(nb_filters, 8, 8, subsample=(2, 2),border_mode="same"))
 	model.add(Activation('relu'))
 	model.add(Convolution2D(nb_filters * 2, 6, 6, subsample=(2, 2),border_mode="valid"))
 	model.add(Activation('relu'))
@@ -80,17 +80,17 @@ def modelE(img_rows=32, img_cols=32, nb_filters=64, nb_classes=10, learning_rate
 
 def modelF(X_train, X_test, ne=50, bs=16, learning_rate=0.1, nb_classes=100):
 	input_img = Input(shape=(3, 32, 32))
-        x = Convolution2D(32, 3, 3, activation='relu', border_mode='valid')(input_img)
+	x = Convolution2D(32, 3, 3, activation='relu', border_mode='valid')(input_img)
 	x = Convolution2D(32, 3, 3, activation='relu', border_mode='valid')(x)
-        x = MaxPooling2D((2, 2), border_mode='same')(x)
+	x = MaxPooling2D((2, 2), border_mode='same')(x)
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='valid')(x)
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='valid')(x)
 	encoded = MaxPooling2D((2, 2), border_mode='same')(x)
-        # at this point the representation is of shape (16, 5, 5)
+	# at this point the representation is of shape (16, 5, 5)
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='valid')(encoded)
-        x = UpSampling2D((2, 2))(x)
+	x = UpSampling2D((2, 2))(x)
 	x = Convolution2D(16, 3, 3, activation='relu', border_mode='valid')(x)
-        x = UpSampling2D((2, 2))(x)
+	x = UpSampling2D((2, 2))(x)
 	x = Convolution2D(32, 3, 3, activation='relu', border_mode='valid')(x)
 	x = UpSampling2D((2, 2))(x)
 	x = Convolution2D(32, 3, 3, activation='relu', border_mode='valid')(x)
@@ -109,4 +109,3 @@ def modelF(X_train, X_test, ne=50, bs=16, learning_rate=0.1, nb_classes=100):
                                 validation_data=(X_test, X_test))
         score = autoencoder.evaluate(X_test, X_test)[1]
         print("\nAutoencoder accuracy: " + str(score))
-

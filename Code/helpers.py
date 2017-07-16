@@ -146,7 +146,6 @@ def jsma(sess, x, predictions, grads, sample, target, theta, gamma, clip_min, cl
 	else:
 		return np.reshape(adv_x, original_shape), 0, percent_perturbed
 
-
 def random_targets(gt, nb_classes):
     if len(gt.shape) > 1:
         gt = np.argmax(gt, axis=1)
@@ -158,7 +157,6 @@ def random_targets(gt, nb_classes):
         result[in_cl] = np.random.choice(other_classes(nb_classes, class_ind))
 
     return np_utils.to_categorical(np.asarray(result), nb_classes)
-
 
 def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max, nb_classes, targets=None):
 	X_adv = np.zeros(X.shape)
@@ -172,7 +170,6 @@ def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max, nb_cla
 
 		X_adv[ind], _, _ = jsma(sess, x, pred, grads, val, np.argmax(target), theta, gamma, clip_min, clip_max)
 	return np.asarray(X_adv, dtype=np.float32)
-
 
 def other_classes(nb_classes, class_ind):
     other_classes_list = list(range(nb_classes))

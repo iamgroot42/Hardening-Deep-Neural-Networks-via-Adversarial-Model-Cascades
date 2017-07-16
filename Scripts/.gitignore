@@ -2,3 +2,5 @@ Models/*
 LOG
 AUTO
 AEC
+BM*
+*.npy

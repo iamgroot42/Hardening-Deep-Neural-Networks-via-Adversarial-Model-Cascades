@@ -11,7 +11,7 @@ from keras.models import load_model
 from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar
-from Models import autoencoder, handpicked, nn_svm, vbow, cnn, sota
+from Models import autoencoder, handpicked, nn_svm, cnn, sota
 import helpers
 
 from sklearn.cluster import KMeans
@@ -21,7 +21,6 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs to train model')
 flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
-flags.DEFINE_integer('num_clusters', 10, 'Number of clusters in vbow')
 flags.DEFINE_float('learning_rate', 0.001, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
 flags.DEFINE_string('cluster', 'C.pkl', 'Path where cluster/SVM model is to be saved')
@@ -33,15 +32,11 @@ flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to b
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be state-of-the-art, normal, have atrous or separable')
-flags.DEFINE_boolean('retraining',False, 'if the CNN is being finetuned')
 
 
 def main(argv=None):
 	n_classes=100
-	if FLAGS.is_blackbox:
-		print("Starting to train blackbox model")
-	else:
-		print("Starting to train proxy model")
+	print("Starting to train model")
 	tf.set_random_seed(1234)
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
@@ -50,22 +45,6 @@ def main(argv=None):
 	sess = tf.Session()
 	keras.backend.set_session(sess)
 
-	if FLAGS.is_autoencoder == 2 and FLAGS.is_blackbox:
-		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar_raw()
-		X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 500, n_classes)
-		X_train, Y_train = X_train_bm, Y_train_bm
-	else:
-		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
-		X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 500, n_classes)
-		X_train, Y_train = X_train_bm, Y_train_bm
-
-
-	label_smooth = .1
-	Y_train = Y_train.clip(label_smooth / 9., 1. - label_smooth)
-
-	#if FLAGS.is_blackbox:
-	#	X_train_p, Y_train_p = X_train, Y_train
-	#else:
 	X_train_p = np.load(FLAGS.proxy_x)
 	Y_train_p = np.load(FLAGS.proxy_y)
 
@@ -151,7 +130,25 @@ def main(argv=None):
 		accuracy = model.evaluate(X_val, y_val, batch_size=FLAGS.batch_size)
 		print('\nTest accuracy for proxy model: ' + str(accuracy[1]*100))
 		model.save(FLAGS.save_here)
+	elif FLAGS.is_autoencoder == 3:
+		datagen = utils_cifar.augmented_data(X_train_p)
+		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+		model = sota.cnn_cifar100(FLAGS.learning_rate)
+		model.fit_generator(datagen.flow(X_tr, y_tr,
+			batch_size=FLAGS.batch_size),
+			steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
+			epochs=FLAGS.nb_epochs,
+			validation_data=(X_val, y_val))
+		NN, SVM = nn_svm.modelCS(model, datagen, X_tr, y_tr, X_val,y_val)
+		acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
+		print('\nTest accuracy for model: ' + str(acc*100))
+		NN.save(FLAGS.save_here)
+		joblib.dump(SVM, FLAGS.cluster)
+		with open(FLAGS.arch, 'w') as outfile:
+			json.dump(NN.to_json(), outfile)
+
 
 
 if __name__ == '__main__':
 	app.run()
+
