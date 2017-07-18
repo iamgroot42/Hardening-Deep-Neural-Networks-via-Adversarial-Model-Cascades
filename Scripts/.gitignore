@@ -4,3 +4,5 @@ AUTO
 AEC
 BM*
 *.npy
+NIGHTLOG*
+MultipleModels/*

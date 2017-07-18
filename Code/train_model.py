@@ -11,7 +11,7 @@ from keras.models import load_model
 from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar
-from Models import autoencoder, handpicked, nn_svm, cnn, sota
+from Models import autoencoder, handpicked, nn_svm, cnn, sota, nn
 import helpers
 
 from sklearn.cluster import KMeans
@@ -32,6 +32,7 @@ flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to b
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be state-of-the-art, normal, have atrous or separable')
+flags.DEFINE_integer('proxy_level', 1, 'If the proxy to be trained is an NN(0) or a CNN(1)')
 
 
 def main(argv=None):
@@ -121,7 +122,11 @@ def main(argv=None):
 				json.dump(NN.to_json(), outfile)
 	# Proxy network
 	else:
-		model = cnn.modelA(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
+		if FLAGS.proxy_level == 1:
+			model = cnn.modelA(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
+		else:
+			print "MLP"
+			model = nn.modelA_weak(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		datagen = utils_cifar.augmented_data(X_train_p)
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		model.fit_generator(datagen.flow(X_tr, y_tr,
@@ -132,24 +137,6 @@ def main(argv=None):
 		accuracy = model.evaluate(X_val, y_val, batch_size=FLAGS.batch_size)
 		print('\nTest accuracy for proxy model: ' + str(accuracy[1]*100))
 		model.save(FLAGS.save_here)
-	elif FLAGS.is_autoencoder == 3:
-		datagen = utils_cifar.augmented_data(X_train_p)
-		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-		model = sota.cnn_cifar100(FLAGS.learning_rate)
-		model.fit_generator(datagen.flow(X_tr, y_tr,
-			batch_size=FLAGS.batch_size),
-			steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
-			epochs=FLAGS.nb_epochs,
-			validation_data=(X_val, y_val))
-		NN, SVM = nn_svm.modelCS(model, datagen, X_tr, y_tr, X_val,y_val)
-		acc = nn_svm.hybrid_error(X_test, Y_test, NN, SVM)
-		print('\nTest accuracy for model: ' + str(acc*100))
-		NN.save(FLAGS.save_here)
-		joblib.dump(SVM, FLAGS.cluster)
-		with open(FLAGS.arch, 'w') as outfile:
-			json.dump(NN.to_json(), outfile)
-
-
 
 if __name__ == '__main__':
 	app.run()

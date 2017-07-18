@@ -31,6 +31,29 @@ def modelA(nb_classes, learning_rate):
 	return model
 
 
+def modelA_weak(nb_classes, learning_rate):
+        model = Sequential()
+        model.add(Convolution2D(8, 3, 3, border_mode='same',
+                        input_shape=(3, 32, 32)))
+        model.add(Activation('relu'))
+        model.add(Convolution2D(8, 3, 3))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Convolution2D(16, 3, 3))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.3))
+        model.add(Flatten())
+        model.add(Dense(64))
+        model.add(Activation('relu'))
+        model.add(Dropout(0.2))
+        model.add(Dense(nb_classes))
+        model.add(Activation('softmax'))
+        sgd = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
+        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+        return model
+
+
 def modelB(img_rows=28, img_cols=28, nb_filters=64, nb_classes=10, learning_rate=1.0):
 	model = Sequential()
 	model.add(Convolution2D(nb_filters, 3, 3,

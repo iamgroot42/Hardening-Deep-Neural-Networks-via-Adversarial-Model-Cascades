@@ -79,7 +79,6 @@ def main(argv=None):
 		out = model.layers[6].output
 		out = Flatten()(out)
 		interm_l = Model(input=model.input, output=out)
-		#print interm_l.layers
 		cluster = joblib.load(FLAGS.cluster)
 		err = nn_svm.hybrid_error(X_test_adv, Y_test, interm_l, cluster)
 		print('\nMisclassification accuracy on adversarial examples: ' + str(1-err))
