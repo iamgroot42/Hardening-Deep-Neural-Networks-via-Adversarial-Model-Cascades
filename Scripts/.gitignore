@@ -6,3 +6,6 @@ BM*
 *.npy
 NIGHTLOG*
 MultipleModels/*
+EnsembleModels/*
+EnsembleModelsRotate/*
+EnsembleModelsTranslate/

@@ -32,7 +32,7 @@ flags.DEFINE_integer('per_class_adv', 100 , 'Number of adversarial examples to b
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be state-of-the-art, normal, have atrous or separable')
-flags.DEFINE_integer('proxy_level', 1, 'If the proxy to be trained is an NN(0) or a CNN(1)')
+flags.DEFINE_integer('proxy_level', 1, 'Model with scale (1,2,4)')
 
 
 def main(argv=None):
@@ -124,9 +124,10 @@ def main(argv=None):
 	else:
 		if FLAGS.proxy_level == 1:
 			model = cnn.modelA(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
+		elif FLAGS.proxy_level == 2:
+			model = cnn.modelA2(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		else:
-			print "MLP"
-			model = nn.modelA_weak(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
+			model = cnn.modelA4(nb_classes=n_classes, learning_rate=FLAGS.learning_rate)
 		datagen = utils_cifar.augmented_data(X_train_p)
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		model.fit_generator(datagen.flow(X_tr, y_tr,
