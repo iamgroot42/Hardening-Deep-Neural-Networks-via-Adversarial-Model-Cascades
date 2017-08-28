@@ -9,13 +9,12 @@ import matplotlib.pyplot as plt
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are saved')
 flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are saved')
-flags.DEFINE_integer('example_index', 1, 'Which index do you want to visualize?')
+flags.DEFINE_integer('example_index', 3, 'Which index do you want to visualize?')
 flags.DEFINE_integer('dataset', 0 , 'MNIST(0), CIFAR10/100(1)')
 
 def main(argv=None):
@@ -34,12 +33,14 @@ def main(argv=None):
 		plt.matshow(X_test,  cmap='gray')
 		plt.savefig('example.png')
 	else:
+		print("wut")
 		X_test_adv = np.swapaxes(X_test_adv,0,2)
 		X_test_adv = np.swapaxes(X_test_adv,0,1)
 		#X_test = np.swapaxes(X_test,0,2)
 		#X_test = np.swapaxes(X_test,0,1)
 		plt.imshow(X_test_adv)
 		plt.savefig('adv_example.png')
+		print("saved")
 		#X_test *= 128
 		#X_test += 128
 		#X_test /= 255

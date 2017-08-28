@@ -21,7 +21,7 @@ flags.DEFINE_float('fgsm_eps', 0.1, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
-flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where original labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
 
@@ -53,7 +53,7 @@ def main(argv=None):
 	np.save(FLAGS.adversary_path_xo, X_test_pm)
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	predictions = model(x)
-	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps)
+	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps, clip_min=-1.0, clip_max=1.0)
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test_pm])
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = model.evaluate(X_test_adv, Y_test_pm, batch_size=FLAGS.batch_size)

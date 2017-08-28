@@ -11,7 +11,7 @@ from keras.models import load_model
 from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar
-from Models import autoencoder, handpicked, nn_svm, cnn, sota, nn
+from Models import autoencoder, nn_svm, cnn, sota, nn
 import helpers
 
 from sklearn.cluster import KMeans
@@ -33,7 +33,7 @@ flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to b
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 flags.DEFINE_string('specialCNN', 'normal', 'if the CNN to be used should be state-of-the-art, normal, have atrous or separable')
 flags.DEFINE_integer('proxy_level', 1, 'Model with scale (1,2,4)')
-
+flags.DEFINE_boolean('retraining', False, 'Whether the model is being retrained or traned from scratch')
 
 def main(argv=None):
 	n_classes=100
@@ -48,8 +48,12 @@ def main(argv=None):
 	sess = tf.Session(config=config)
 	keras.backend.set_session(sess)
 
-	X_train_p = np.load(FLAGS.proxy_x)
-	Y_train_p = np.load(FLAGS.proxy_y)
+	if FLAGS.is_blackbox:
+		X, Y, _, _ = utils_cifar.data_cifar()
+		X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 500, n_classes)
+	else:
+		X_train_p = np.load(FLAGS.proxy_x)
+		Y_train_p = np.load(FLAGS.proxy_y)
 
 	# Black-box network
 	if FLAGS.is_blackbox:
@@ -57,10 +61,10 @@ def main(argv=None):
 			if FLAGS.is_autoencoder == 0:
 				if FLAGS.retraining:
 					# Retraining using adversarial data
-					#adv_x = np.load(FLAGS.proxy_x)
-					#adv_y = np.load(FLAGS.proxy_y)
-					#X_train_p = np.concatenate((X_train, adv_x))
-					#Y_train_p = np.concatenate((Y_train, adv_y))
+					adv_x = np.load(FLAGS.proxy_x)
+					adv_y = np.load(FLAGS.proxy_y)
+					X_train_p = np.concatenate((X_train_p, adv_x))
+					Y_train_p = np.concatenate((Y_train_p, adv_y))
 					model = load_model(FLAGS.save_here)
 				elif file_exists(FLAGS.save_here):
 					print "Cached BlackBox model found"

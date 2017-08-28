@@ -1,1 +1,0 @@
-../Simple-Black-Box-Adversarial-Perturbations-for-Deep-Networks/perturb.py
