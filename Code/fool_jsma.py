@@ -54,7 +54,6 @@ def main(argv=None):
 	source_samples = Y_test_pm.shape[0]
 
 	labels = []
-
 	preds = model(x)
 
 	print('Crafting ' + str(source_samples) + ' * ' +
@@ -84,6 +83,9 @@ def main(argv=None):
 		# (i.e. all classes that differ from the label given in the dataset)
 		current_class = int(np.argmax(Y_test_pm[sample_ind]))
 		target_classes = helpers.other_classes(n_classes, current_class)
+
+		# Reduce search space for target classes to increase speed
+		target_classes = np.random.choice(target_classes, 10, replace=False)
 
 		grid_viz_data[current_class, current_class, :, :, :] = np.reshape(
 			X_test_pm[sample_ind:(sample_ind+1)],

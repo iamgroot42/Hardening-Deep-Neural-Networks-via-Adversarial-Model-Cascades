@@ -51,9 +51,6 @@ def main(argv=None):
 	if FLAGS.is_blackbox:
 		X, Y, _, _ = utils_cifar.data_cifar()
 		X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 500, n_classes)
-		indices = np.random.choice(len(Y_train_p), int(len(Y_train_p)/2))
-		X_train_p = X_train_p[indices]
-		Y_train_p = Y_train_p[indices]
 	else:
 		X_train_p = np.load(FLAGS.proxy_x)
 		Y_train_p = np.load(FLAGS.proxy_y)
