@@ -9,7 +9,7 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 from utils_tf import batch_eval
-import utils_mnist, utils_cifar
+import utils_cifar
 import helpers
 
 from keras.models import load_model
@@ -17,10 +17,8 @@ from keras.models import load_model
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
-flags.DEFINE_float('fgsm_eps', 0.1, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
-flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
 flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
  a CNN with an attached SVM(3), or none(0)')
@@ -38,20 +36,24 @@ def main(argv=None):
 	if keras.backend.image_dim_ordering() != 'tf':
 		keras.backend.set_image_dim_ordering('tf')
 
-	sess = tf.Session()
+	config = tf.ConfigProto()
+	config.gpu_options.allow_growth=True
+	sess = tf.Session(config=config)
 	keras.backend.set_session(sess)
 	print("Created TensorFlow session and set Keras backend.")
 
 	_, _, X_test, Y_test = utils_cifar.data_cifar()
-	source_samples = 1
 
 	x_shape, y_shape = utils_cifar.placeholder_shapes()
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
 	model = load_model(FLAGS.model_path)
-	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
-	np.save(FLAGS.adversary_path_xo, X_test_pm)
+
+	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=10, nb_classes=n_classes)
+	source_samples = Y_test_pm.shape[0]
+
+	labels = []
 
 	preds = model(x)
 
@@ -72,49 +74,58 @@ def main(argv=None):
 	# Define the SaliencyMapMethod attack object
 	jsma = SaliencyMapMethod(model, back='tf', sess=sess)
 
+	generated_images = []
+
 	# Loop over the samples we want to perturb into adversarial examples
 	for sample_ind in xrange(0, source_samples):
 		print('Attacking input %i/%i' % (sample_ind + 1, source_samples))
 
 		# We want to find an adversarial example for each possible target class
 		# (i.e. all classes that differ from the label given in the dataset)
-		current_class = int(np.argmax(Y_test[sample_ind]))
+		current_class = int(np.argmax(Y_test_pm[sample_ind]))
 		target_classes = helpers.other_classes(n_classes, current_class)
 
 		grid_viz_data[current_class, current_class, :, :, :] = np.reshape(
-			X_test[sample_ind:(sample_ind+1)],
+			X_test_pm[sample_ind:(sample_ind+1)],
 			(32, 32, 3))
+
+		target_classes = np.random.choice(n_classes, n_classes/10, replace=False)
 
 		# Loop over all target classes
 		for target in target_classes:
 			print('Generating adv. example for target class %i' % target)
+			try:
+				# This call runs the Jacobian-based saliency map approach
+				one_hot_target = np.zeros((1, n_classes), dtype=np.float32)
+				one_hot_target[0, target] = 1
+				jsma_params = {'theta': 1., 'gamma': 0.1,
+							   'nb_classes': n_classes, 'clip_min': 0.,
+							   'clip_max': 1., 'targets': y,
+							   'y_val': one_hot_target}
+				adv_x = jsma.generate_np(X_test_pm[sample_ind:(sample_ind+1)],
+										 **jsma_params)
 
-			# This call runs the Jacobian-based saliency map approach
-			one_hot_target = np.zeros((1, n_classes), dtype=np.float32)
-			one_hot_target[0, target] = 1
-			jsma_params = {'theta': 1., 'gamma': 0.1,
-						   'nb_classes': n_classes, 'clip_min': 0.,
-						   'clip_max': 1., 'targets': y,
-						   'y_val': one_hot_target}
-			adv_x = jsma.generate_np(X_test[sample_ind:(sample_ind+1)],
-									 **jsma_params)
+				generated_images.append(adv_x[0])
+				labels.append(Y_test_pm[sample_ind])
 
-			# Check if success was achieved
-			res = int(helpers.model_argmax(sess, x, preds, adv_x) == target)
+				# Check if success was achieved
+				res = int(helpers.model_argmax(sess, x, preds, adv_x) == target)
 
-			# Computer number of modified features
-			adv_x_reshape = adv_x.reshape(-1)
-			test_in_reshape = X_test[sample_ind].reshape(-1)
-			nb_changed = np.where(adv_x_reshape != test_in_reshape)[0].shape[0]
-			percent_perturb = float(nb_changed) / adv_x.reshape(-1).shape[0]
+				# Computer number of modified features
+				adv_x_reshape = adv_x.reshape(-1)
+				test_in_reshape = X_test_pm[sample_ind].reshape(-1)
+				nb_changed = np.where(adv_x_reshape != test_in_reshape)[0].shape[0]
+				percent_perturb = float(nb_changed) / adv_x.reshape(-1).shape[0]
 
-			# Add our adversarial example to our grid data
-			grid_viz_data[target, current_class, :, :, :] = np.reshape(
-				adv_x, (32, 32, 3))
+				# Add our adversarial example to our grid data
+				grid_viz_data[target, current_class, :, :, :] = np.reshape(
+					adv_x, (32, 32, 3))
 
-			# Update the arrays for later analysis
-			results[target, sample_ind] = res
-			perturbations[target, sample_ind] = percent_perturb
+				# Update the arrays for later analysis
+				results[target, sample_ind] = res
+				perturbations[target, sample_ind] = percent_perturb
+			except:
+				continue
 
 	print('--------------------------------------')
 
@@ -134,6 +145,16 @@ def main(argv=None):
 
 	# Close TF session
 	sess.close()
+
+	# Save adversarial images
+	generated_images = np.array(generated_images)
+	labels = np.array(labels)
+
+	assert(generated_images.shape[0]==labels.shape[0])
+
+	np.save(FLAGS.adversary_path_y, labels)
+	np.save(FLAGS.adversary_path_x, generated_images)
+
 
 if __name__ == '__main__':
 	app.run()

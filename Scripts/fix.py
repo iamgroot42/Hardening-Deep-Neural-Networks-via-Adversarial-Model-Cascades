@@ -1,11 +1,7 @@
 import h5py
-f = h5py.File('BM', 'r+')
-try:
-	del f['optimizer_weights']
-except:
-	print "done"
-f.close()
-f = h5py.File('PM', 'r+')
+import sys
+
+f = h5py.File(sys.argv[1], 'r+')
 try:
 	del f['optimizer_weights']
 except:

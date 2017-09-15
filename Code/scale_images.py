@@ -40,8 +40,8 @@ if __name__ == "__main__":
 	scale = float(sys.argv[2])
 	output = sys.argv[3]
 	shift = int(sys.argv[2])
-	angle = (360 + int(sys.argv[2])) % 260
+	angle = (360 + int(sys.argv[2])) % 360
 	#np.save(sys.argv[3], scaleImages(source, scale)) #Scale images
-	#np.save(sys.argv[3], shiftImages(source, 32, 32, shift, shift)) #Translate images
-        np.save(sys.argv[3], rotateImages(source, 32, 32, angle)) #Rotate images
+	np.save(sys.argv[3], shiftImages(source, 32, 32, shift, shift)) #Translate images
+        #np.save(sys.argv[3], rotateImages(source, 32, 32, angle)) #Rotate images
 

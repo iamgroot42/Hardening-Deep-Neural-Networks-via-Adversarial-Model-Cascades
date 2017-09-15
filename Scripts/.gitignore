@@ -1,3 +1,5 @@
+NEW*
+IntelliCNN*
 Models/*
 LOG
 AUTO
@@ -5,7 +7,6 @@ AEC
 BM*
 *.npy
 NIGHTLOG*
-MultipleModels/*
-EnsembleModels/*
-EnsembleModelsRotate/*
-EnsembleModelsTranslate/
+EnsembleScale/*
+EnsembleRotate/*
+EnsembleTranslate/*

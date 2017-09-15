@@ -60,7 +60,7 @@ def augmented_data(X):
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
         horizontal_flip=True,  # randomly flip images
-        vertical_flip=False,  # randomly flip images
+        vertical_flip=True,  # randomly flip images
         data_format="channels_first") # (channel, row, col) format per image
 	datagen.fit(X)
     	return datagen
