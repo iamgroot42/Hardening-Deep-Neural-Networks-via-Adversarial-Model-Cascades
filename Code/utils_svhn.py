@@ -13,8 +13,8 @@ def data_svhn():
 	img_cols = 32
 	nb_classes = 10
 	# the data, shuffled and split between train and test sets
-	X_train, y_train = np.load("SVHNx_tr.npy"), np.load("SVHNy_tr.npy")
-	X_test, y_test = np.load("SVHNx_te.npy"), np.load("SVHNy_te.npy")
+	X_train, y_train = np.load("SVHN/SVHNx_tr.npy"), np.load("SVHN/SVHNy_tr.npy")
+	X_test, y_test = np.load("SVHN/SVHNx_te.npy"), np.load("SVHN/SVHNy_te.npy")
 	X_train = X_train.reshape(X_train.shape[0], 3, img_rows, img_cols)
 	X_test = X_test.reshape(X_test.shape[0], 3, img_rows, img_cols)
 	# convert class vectors to binary class matrices
