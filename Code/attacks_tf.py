@@ -14,7 +14,6 @@ import helpers
 import utils
 
 def apply_perturbations(i, j, X, increase, theta, clip_min, clip_max):
-
     # perturb our input sample
     if increase:
         X[0, i] = np.minimum(clip_max, X[0, i] + theta)
@@ -94,8 +93,7 @@ def jacobian_graph(predictions, x, nb_classes):
     return list_derivatives
 
 
-def jsma(sess, x, predictions, grads, sample, target, theta, gamma, clip_min,
-         clip_max):
+def jsma(sess, x, predictions, grads, sample, target, theta, gamma, clip_min, clip_max):
     # Copy the source sample and define the maximum number of features
     # (i.e. the maximum number of iterations) that we may perturb
     adv_x = copy.copy(sample)
@@ -166,8 +164,7 @@ def jsma(sess, x, predictions, grads, sample, target, theta, gamma, clip_min,
         return np.reshape(adv_x, original_shape), 0, percent_perturbed
 
 
-def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max,
-               nb_classes, targets=None):
+def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max, nb_classes, targets=None):
     X_adv = np.zeros(X.shape)
 
     for ind, val in enumerate(X):
@@ -189,8 +186,7 @@ def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max,
     return np.asarray(X_adv, dtype=np.float32)
 
 
-def jacobian_augmentation(sess, x, X_sub_prev, Y_sub, grads, lmbda,
-                          keras_phase=None):
+def jacobian_augmentation(sess, x, X_sub_prev, Y_sub, grads, lmbda, keras_phase=None):
     assert len(x.get_shape()) == len(np.shape(X_sub_prev))
     assert len(grads) >= np.max(Y_sub) + 1
     assert len(X_sub_prev) == len(Y_sub)
@@ -224,4 +220,3 @@ def jacobian_augmentation(sess, x, X_sub_prev, Y_sub, grads, lmbda,
 
     # Return augmented training data (needs to be labeled afterwards)
     return X_sub
-

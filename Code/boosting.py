@@ -1,5 +1,3 @@
-#Author : Divam Gupta
-
 import tqdm
 
 import keras
@@ -10,7 +8,7 @@ from keras.datasets import mnist
 import numpy as np
 import os
 import helpers
-import utils_cifar
+import utils_cifar, utils_mnist, utils_svhn 
 
 from keras.objectives import categorical_crossentropy
 from keras.utils import np_utils
@@ -18,47 +16,49 @@ from keras.utils import np_utils
 import tensorflow as tf
 from keras import backend as K
 
-sess = tf.Session()
-K.set_session(sess)
+from tensorflow.python.platform import flags
+
+FLAGS = flags.FLAGS
+flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs')
+flags.DEFINE_integer('num_iters', 2, 'Numer of iterations inside boosting algorithm')
+flags.DEFINE_integer('batch_size', 16, 'Batch size')
+flags.DEFINE_string('mode', 'train', '(train,test,finetune)')
+flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
+flags.DEFINE_string('model_dir', './', 'path to directory of models')
+flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
+flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
+
+#Don't hog GPU
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=True
+sess = tf.Session(config=config)
+keras.backend.set_session(sess)
+
 
 
 class Boosting:
-	def __init__(self, batch_size=32, nb_epochs=10, optimizer_lr=0.5):
+	def __init__(self, batch_size=16, nb_epochs=10, iters=2):
 		self.models = []
 		self.modelWeights = None
 		self.batch_size = batch_size
 		self.nb_epochs = nb_epochs
-		self.optimizer_lr = optimizer_lr
+		self.iters = iters
 
 	def weightedCross(self, y_ph, y_pred, w_ph):
 		return tf.multiply( w_ph , categorical_crossentropy(y_ph, y_pred))
 
 	def fitWeighted(self, model, X, Y, W):
-		model.fit(X, Y, sample_weight=W, epochs=self.nb_epochs, batch_size=self.batch_size)
-		return
-		x_ph = tf.placeholder(tf.float32, shape=[self.batch_size] + list(X.shape[1:]))
-		y_ph = tf.placeholder(tf.float32, shape=[self.batch_size] + list(Y.shape[1:]))
-		w_ph = tf.placeholder(tf.float32, shape=(self.batch_size, ))
-
-		y_pred = model(x_ph)
-		loss = tf.reduce_mean(self.weightedCross(y_ph, y_pred, w_ph))
-		train_step = tf.train.GradientDescentOptimizer(self.optimizer_lr).minimize(loss)
-		for _ in tqdm.tqdm(range(self.nb_epochs)):
-			for i in range(0, X.shape[0]-self.batch_size, self.batch_size):
-				yB = Y[i:i+self.batch_size]
-				xB = X[i:i+self.batch_size]
-				wB = W[i:i+self.batch_size]
-				train_step.run(feed_dict={ y_ph:yB , x_ph:xB , w_ph: wB})
+		model.fit(X, Y, batch_size=self.batch_size, epochs=self.nb_epochs, validation_split=0.2,sample_weight=W)
 
 	def train(self, X, Y):
 		modelWeights= np.zeros(len(self.models))
 		dataPointWeights = np.ones(X.shape[0]) / X.shape[0]
 
-		init_op = tf.global_variables_initializer()
+		init_op = tf.global_variables_intializer()
 		sess.run(init_op)
 
 		with sess.as_default():
-			for it in range(10):
+			for _ in range(self.iters):
 				for i,m in enumerate(self.models):
 					self.fitWeighted(m, X, Y, dataPointWeights)
 					yp = m.predict(X)
@@ -70,7 +70,7 @@ class Boosting:
 		self.modelWeights = modelWeights
 
 	def predict(self, X):
-		preds = [None for _ in len(self.models)]
+		preds = [None for _ in range(len(self.models))]
 		for i,m in enumerate(self.models):
 			preds[i] = m.predict(X)
 		Y = np.zeros_like(preds[0])
@@ -84,15 +84,60 @@ class Boosting:
 	def load_models(self, data_dir):
 		for file in os.listdir(data_dir):
 			self.models.append(load_model(data_dir + file))
+		try:
+			self.modelWeights = np.load(data_dir + "weights.npy")
+		except:
+			print "Training first time"
+
+	def save_models(self, data_dir):
+		for i, model in enumerate(self.models):
+			model.save(data_dir + str(i+1))
+		np.save(data_dir + "weights", self.modelWeights)
+
+	def accuracy(self, Y, Y_):
+		num = (np.argmax(Y,axis=1) == np.argmax(Y_,axis=1)).sum()
+		den = len(Y)
+		print num, den
+		return num/den
 
 
 if __name__ == "__main__":
-	import sys
-	n_classes = 100
-	boost = Boosting(int(sys.argv[2]),int(sys.argv[3]), float(sys.argv[4]))
-	boost.load_models(sys.argv[1])
-	X, Y, _, _ = utils_cifar.data_cifar()
-        x_train, y_train, x_test,  y_test = helpers.jbda(X, Y, "train", 500, n_classes)
-	boost.train(x_train, y_train)
-	boost.predict(x_test)
+	boost = Boosting(FLAGS.batch_size, FLAGS.nb_epochs, FLAGS.learning_rate, FLAGS.num_iters)
+	boost.load_models(FLAGS.model_dir)
+	#Training mode
+	if FLAGS.mode in ['train', 'finetune']:
+		# Load data
+                if FLAGS.dataset == 'cifar100':
+                        X, Y, _, _ = utils_cifar.data_cifar()
+                        X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 500, 100)
+                elif FLAGS.dataset == 'mnist':
+                        X, Y, _, _ = utils_mnist.data_mnist()
+                        X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 5000, 10)
+                elif FLAGS.dataset == 'svhn':
+                        X, Y, _, _ = utils_svhn.data_svhn()
+                        X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 4000, 10)
+		else:
+			print "Invalid dataset; exiting"
+			exit()
+		#Finetune mode
+                if FLAGS.mode == 'finetune':
+                        X_train_p = np.concatenate((X_train_p, np.load(FLAGS.data_x)))
+                        Y_train_p = np.concatenate((Y_train_p, np.load(FLAGS.data_y)))
+		boost.train(x_train, y_train)
+		# Print validation accuracy
+                X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+                predicted = np.argmax(bag.predict(X_val),1)
+                true = np.argmax(y_val,1)
+                acc = (100*(predicted==true).sum()) / float(len(y_val))
+                print "Final validation accuracy", acc
+	#Testing mode
+        elif FLAGS.mode == 'test':
+                X = np.load(FLAGS.data_x)
+                Y = np.load(FLAGS.data_y)
+                boost.load_models(FLAGS.model_dir)
+		Y_ = boost.predict(X)
+                print "Misclassification accuracy",(100-boost.accuracy(Y, Y_))
+        else:
+                print "Invalid option"
+		boost.predict(x_test)
 

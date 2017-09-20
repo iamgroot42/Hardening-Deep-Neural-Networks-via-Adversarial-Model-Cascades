@@ -17,7 +17,7 @@ def conv_stack(filters, side, activation, model, input_shape=None):
 	model.add(activation())
 
 
-def cnn_cifar100(learning_rate, n_classes=100):
+def cifar_svhn(learning_rate, n_classes=100):
 	model = Sequential()
 	conv_stack(192, 5, ELU, model,(3, 32, 32))
 	model.add(MaxPooling2D())
@@ -52,37 +52,29 @@ def cnn_cifar100(learning_rate, n_classes=100):
 	model.add(Dense(n_classes, W_regularizer=l2(0.01), init=he_normal()))
 	model.add(Activation('softmax'))
 	model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
-	# model.compile(optimizer=Adam(lr=learning_rate),loss='categorical_crossentropy', metrics=['accuracy'])
 	return model
 
 
-def allcnn_cifar100(learning_rate):
-	# All-CNN, as described in : https://arxiv.org/pdf/1412.6806.pdf
-	model = Sequential()
-	model.add(Convolution2D(96, 3, 3, border_mode='same', input_shape=(3,32,32), W_regularizer=l2(0.005), init=he_normal()))
-	model.add(Activation('relu'))
-	model.add(Convolution2D(96, 3, 3, border_mode='same', W_regularizer=l2(0.001), init=he_normal()))
-	model.add(Activation('relu'))
-	model.add(Convolution2D(96, 3, 3, border_mode='same', W_regularizer=l2(0.001), init=he_normal(), subsample=(2,2)))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.5))
-	model.add(Convolution2D(192, 3, 3, border_mode='same', W_regularizer=l2(0.001), init=he_normal()))
-	model.add(Activation('relu'))
-	model.add(Convolution2D(192, 3, 3, border_mode='same', W_regularizer=l2(0.001), init=he_normal()))
-	model.add(Activation('relu'))
-	model.add(Convolution2D(192, 3, 3, border_mode='same', W_regularizer=l2(0.001), init=he_normal(), subsample=(2,2)))
-	model.add(Activation('relu'))
-	model.add(Dropout(0.5))
-	model.add(Convolution2D(192, 3, 3, border_mode='same', W_regularizer=l2(0.001), init=he_normal()))
-	model.add(Convolution2D(192, 1, 1, border_mode='same', W_regularizer=l2(0.001), init=he_normal()))
-	model.add(Convolution2D(10, 3, 3, border_mode='same', W_regularizer=l2(0.001), init=he_normal()))
-	model.add(GlobalAveragePooling2D())
-	model.add(Activation('softmax'))
-	model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
-	return model
+def mnist(learning_rate, n_classes=10):
+		model = Sequential()
+		model.add(Conv2D(32, kernel_size=(3, 3),
+				activation='relu',
+				input_shape=(1,28,28)))
+		model.add(Conv2D(64, (3, 3), activation='relu'))
+		model.add(MaxPooling2D(pool_size=(2, 2)))
+		model.add(Dropout(0.25))
+		model.add(Flatten())
+		model.add(Dense(128, activation='relu'))
+		model.add(Dropout(0.5))
+		model.add(Dense(10, activation='softmax'))
+
+		model.compile(loss=keras.losses.categorical_crossentropy,
+			  optimizer=Adadelta(),
+			  metrics=['accuracy'])
+		return model
 
 
 if __name__ == "__main__":
 	import keras
 	keras.backend.set_image_dim_ordering('th')
-	m = cnn_cifar100(1)
+	m = cifar100(1)

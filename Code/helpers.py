@@ -175,4 +175,3 @@ def other_classes(nb_classes, class_ind):
     other_classes_list = list(range(nb_classes))
     other_classes_list.remove(class_ind)
     return other_classes_list
-

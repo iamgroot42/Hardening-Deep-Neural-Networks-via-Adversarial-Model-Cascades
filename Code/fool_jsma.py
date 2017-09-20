@@ -9,19 +9,19 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 from utils_tf import batch_eval
-import utils_cifar
+import utils_cifar, utils_mnist, utils_svhn
 import helpers
 
 from keras.models import load_model
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
+
+flags.DEFINE_integer('n_subset_classes', 10, 'Number of target classes')
+flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
-flags.DEFINE_integer('is_autoencoder', 0 , 'Whether the model involves an autoencoder(1), handpicked features(2), \
- a CNN with an attached SVM(3), or none(0)')
 
 import os
 from six.moves import xrange
@@ -29,45 +29,60 @@ from six.moves import xrange
 from attacks import SaliencyMapMethod
 
 def main(argv=None):
-	n_classes = 100
+	n_classes = 10
+	image_shape = (32, 32, 3)
+	if FLAGS.dataset == 'cifar100':
+		n_classes = 100
+		_, _, X_test, Y_test = utils_cifar.data_cifar()
+		x_shape, y_shape = utils_cifar.placeholder_shapes()
+		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=10, nb_classes=n_classes)
+		grid_shape = (n_classes, n_classes, 32, 32, 3)
+	elif FLAGS.dataset == 'svhn':
+		_, _, X_test, Y_test = utils_mnist.data_mnist()
+		x_shape, y_shape = utils_mnist.placeholder_shapes()
+		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
+		grid_shape = (n_classes, n_classes, 28, 28, 1)
+	elif FLAGS.dataset == 'mnist':
+		_, _, X_test, Y_test = utils_svhn.data_svhn()
+		x_shape, y_shape = utils_svhn.placeholder_shapes()
+		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
+		grid_shape = (n_classes, n_classes, 32, 32, 3)
+		image_shape = (28, 28, 1)
+	else:
+		print "Invalid dataset. Exiting."
+		exit()
+
 	keras.layers.core.K.set_learning_phase(0)
 
 	tf.set_random_seed(1234)
 	if keras.backend.image_dim_ordering() != 'tf':
 		keras.backend.set_image_dim_ordering('tf')
 
+	#Don't hog GPU
 	config = tf.ConfigProto()
 	config.gpu_options.allow_growth=True
 	sess = tf.Session(config=config)
 	keras.backend.set_session(sess)
 	print("Created TensorFlow session and set Keras backend.")
 
-	_, _, X_test, Y_test = utils_cifar.data_cifar()
-
-	x_shape, y_shape = utils_cifar.placeholder_shapes()
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
 	model = load_model(FLAGS.model_path)
 
-	X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=10, nb_classes=n_classes)
 	source_samples = Y_test_pm.shape[0]
-
 	labels = []
 	preds = model(x)
 
-	print('Crafting ' + str(source_samples) + ' * ' +
-		  str(n_classes - 1) + ' adversarial examples')
+	print('Crafting ' + str(source_samples) + ' * ' + str(n_classes - 1) + ' adversarial examples')
 
 	# Keep track of success (adversarial example classified in target)
 	results = np.zeros((n_classes, source_samples), dtype='i')
 
 	# Rate of perturbed features for each test set example and target class
-	perturbations = np.zeros((n_classes, source_samples),
-							 dtype='f')
+	perturbations = np.zeros((n_classes, source_samples), dtype='f')
 
 	# Initialize our array for grid visualization
-	grid_shape = (n_classes, n_classes, 32, 32, 3)
 	grid_viz_data = np.zeros(grid_shape, dtype='f')
 
 	# Define the SaliencyMapMethod attack object
@@ -89,9 +104,9 @@ def main(argv=None):
 
 		grid_viz_data[current_class, current_class, :, :, :] = np.reshape(
 			X_test_pm[sample_ind:(sample_ind+1)],
-			(32, 32, 3))
+			image_shape)
 
-		target_classes = np.random.choice(n_classes, n_classes/10, replace=False)
+		target_classes = np.random.choice(n_classes, FLAGS.n_subset_classes, replace=False)
 
 		# Loop over all target classes
 		for target in target_classes:
@@ -104,6 +119,10 @@ def main(argv=None):
 							   'nb_classes': n_classes, 'clip_min': 0.,
 							   'clip_max': 1., 'targets': y,
 							   'y_val': one_hot_target}
+				if FLAGS.dataset =='svn':
+					jsma_params['clip_min'] = 0
+					jsma_params['clip_max'] = 255
+
 				adv_x = jsma.generate_np(X_test_pm[sample_ind:(sample_ind+1)],
 										 **jsma_params)
 
@@ -121,11 +140,12 @@ def main(argv=None):
 
 				# Add our adversarial example to our grid data
 				grid_viz_data[target, current_class, :, :, :] = np.reshape(
-					adv_x, (32, 32, 3))
+					adv_x, image_shape)
 
 				# Update the arrays for later analysis
 				results[target, sample_ind] = res
 				perturbations[target, sample_ind] = percent_perturb
+
 			except:
 				continue
 
