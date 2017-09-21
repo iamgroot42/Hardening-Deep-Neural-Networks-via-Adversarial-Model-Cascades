@@ -25,6 +25,7 @@ flags.DEFINE_string('level', 'proxy' , '(blackbox,proxy)')
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 flags.DEFINE_integer('proxy_level', 1, 'Model with scale (1,2,4)')
+flags.DEFINE_float('label_smooth', 0, 'Amount of label smoothening to be applied')
 
 
 def main(argv=None):
@@ -60,7 +61,6 @@ def main(argv=None):
 	elif FLAGS.level == 'proxy':
 		X_train_p = np.load(FLAGS.proxy_x)
 		Y_train_p = np.load(FLAGS.proxy_y)
-	else:
 
 	# Don't hog GPU
 	config = tf.ConfigProto()
@@ -74,7 +74,8 @@ def main(argv=None):
 			model = load_model(FLAGS.save_here)
 		else:
 			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-
+			if FLAGS.label_smooth > 0:
+				y_tr = y_tr.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
 		if FLAGS.dataset == 'cifar100':
 			model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
 			datagen = utils_cifar.augmented_data(X_train_p)

@@ -1,6 +1,8 @@
+import keras
+
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Convolution2D, MaxPooling2D, AtrousConvolution2D, SeparableConvolution2D, AveragePooling2D, GlobalAveragePooling2D
+from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D
 from keras.optimizers import Adadelta, SGD, Adam
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import ELU
@@ -10,9 +12,9 @@ from keras.initializers import he_normal
 
 def conv_stack(filters, side, activation, model, input_shape=None):
 	if not input_shape:
-		model.add(Convolution2D(filters, side, side, border_mode='same', W_regularizer=l2(0.01), init=he_normal()))
+		model.add(Conv2D(filters, side, side, border_mode='same', W_regularizer=l2(0.01), init=he_normal()))
 	else:
-		model.add(Convolution2D(filters, side, side, border_mode='same', input_shape=input_shape, W_regularizer=l2(0.01), init=he_normal()))
+		model.add(Conv2D(filters, side, side, border_mode='same', input_shape=input_shape, W_regularizer=l2(0.01), init=he_normal()))
 	model.add(BatchNormalization())
 	model.add(activation())
 
@@ -44,7 +46,7 @@ def cifar_svhn(learning_rate, n_classes=100):
 
 	model.add(Flatten())
 	model.add(BatchNormalization())
-	
+
 	model.add(Dropout(0.5))
 	model.add(Dense(300, W_regularizer=l2(0.01), init=he_normal()))
 	model.add(ELU())

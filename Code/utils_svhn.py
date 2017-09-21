@@ -1,6 +1,7 @@
 import common
 
 from keras.utils import np_utils
+import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 
 
@@ -9,17 +10,9 @@ def placeholder_shapes():
 
 
 def data_svhn():
-	img_rows = 32
-	img_cols = 32
-	nb_classes = 10
 	# the data, shuffled and split between train and test sets
-	X_train, y_train = np.load("SVHN/SVHNx_tr.npy"), np.load("SVHN/SVHNy_tr.npy")
-	X_test, y_test = np.load("SVHN/SVHNx_te.npy"), np.load("SVHN/SVHNy_te.npy")
-	X_train = X_train.reshape(X_train.shape[0], 3, img_rows, img_cols)
-	X_test = X_test.reshape(X_test.shape[0], 3, img_rows, img_cols)
-	# convert class vectors to binary class matrices
-	Y_train = np_utils.to_categorical(y_train, nb_classes)
-	Y_test = np_utils.to_categorical(y_test, nb_classes)
+	X_train, Y_train = np.load("../Code/SVHN/SVHNx_tr.npy"), np.load("../Code/SVHN/SVHNy_tr.npy")
+	X_test, Y_test = np.load("../Code/SVHN/SVHNx_te.npy"), np.load("../Code/SVHN/SVHNy_te.npy")
 	return X_train, Y_train, X_test, Y_test
 
 
@@ -30,11 +23,11 @@ def augmented_data(X):
 		featurewise_std_normalization=False,  # divide inputs by std of the dataset
 		samplewise_std_normalization=False,  # divide each input by its std
 		zca_whitening=False,  # apply ZCA whitening
-		rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+		rotation_range=10,  # randomly rotate images in the range (degrees, 0 to 180)
 		width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
 		height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
 		horizontal_flip=False,  # randomly flip images
-		vertical_flip=True,  # randomly flip images
+		vertical_flip=False,  # randomly flip images
 		data_format="channels_first") # (channel, row, col) format per image
 	datagen.fit(X)
 	return datagen
