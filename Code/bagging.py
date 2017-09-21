@@ -7,6 +7,7 @@ from keras.objectives import categorical_crossentropy
 from keras.utils import np_utils
 
 import utils_cifar, utils_mnist, utils_svhn
+from Models import cnn, sota
 import helpers
 import os
 
@@ -25,9 +26,11 @@ flags.DEFINE_integer('sample_ratio', 0.5, 'Percentage of sample to be taken per 
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'train', '(train,test,finetune)')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
-flags.DEFINE_string('model_dir', './', 'path to directory of models')
+flags.DEFINE_string('input_model_dir', './', 'path to input directory of models')
+flags.DEFINE_string('output_model_dir', './', 'path to output directory of models')
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
+flags.DEFINE_boolean('add_model', True, 'Add a model to the existing bag')
 
 class Bagging:
 	def __init__(self, n_classes, sample_ratio, batch_size, nb_epochs):
@@ -37,10 +40,16 @@ class Bagging:
 		self.nb_epochs = nb_epochs
 		self.models = []
 
-	def load_models(self, data_dir):
+	def load_models(self, data_dir, add_model):
 		self.models = []
+		if add_model:
+			self.models.append(add_model)
 		for file in os.listdir(data_dir):
 			self.models.append(load_model(os.path.join(data_dir,file)))
+
+	def save_models(self, data_dir):
+		for i, model in enumerate(self.models):
+			model.save(os.path.join(data_dir,str(i+1)))
 
 	def train(self, X, Y, data_dir):
 		subsets = []
@@ -58,7 +67,6 @@ class Bagging:
 							validation_data=(X_val, y_val))
 			accuracy = self.models[i].evaluate(X_val, y_val, batch_size=self.batch_size)
 			print("\nValidation accuracy for bag" + str(i) + " model: " + str(accuracy[1]*100))
-			self.models[i].save(data_dir + "bag" + str(i))
 
 	def predict(self, predict_on):
 		predictions = []
@@ -78,8 +86,10 @@ class Bagging:
 
 if __name__ == "__main__":
 	bag = None
+	n_classes = 10
 	if FLAGS.dataset == 'cifar100':
 		bag = Bagging(100, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
+		n_classes = 100
 	elif FLAGS.dataset == 'mnist':
 		bag = Bagging(10, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
 	elif FLAGS.dataset == 'svhn':
@@ -104,8 +114,14 @@ if __name__ == "__main__":
 		if FLAGS.mode == 'finetune':
 			X_train_p = np.concatenate((X_train_p, np.load(FLAGS.data_x)))
 			Y_train_p = np.concatenate((Y_train_p, np.load(FLAGS.data_y)))
+		model = None
 		# Load placeholder models
-		bag.load_models(FLAGS.model_dir)
+		if FLAGS.add_model:
+			if FLAGS.dataset == 'mnsit':
+				model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
+			else:
+				model = sota.mnist(FLAGS.learning_rate, n_classes)
+		bag.load_models(FLAGS.input_model_dir)
 		# Train data
 		bag.train(X_train_p, Y_train_p, FLAGS.model_dir, True)
 		# Print validation accuracy
@@ -114,6 +130,8 @@ if __name__ == "__main__":
 		true = np.argmax(y_val,1)
 		acc = (100*(predicted==true).sum()) / float(len(y_val))
 		print "Final validation accuracy", acc
+		#Save models
+		bag.save_models(FLAGS.output_model_dir)
 	#Testing mode
 	elif FLAGS.mode == 'test':
 		X = np.load(FLAGS.data_x)

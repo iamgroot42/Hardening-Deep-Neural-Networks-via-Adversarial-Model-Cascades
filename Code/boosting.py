@@ -8,7 +8,9 @@ from keras.datasets import mnist
 import numpy as np
 import os
 import helpers
+
 import utils_cifar, utils_mnist, utils_svhn 
+from Models import cnn, sota
 
 from keras.objectives import categorical_crossentropy
 from keras.utils import np_utils
@@ -24,7 +26,8 @@ flags.DEFINE_integer('num_iters', 2, 'Numer of iterations inside boosting algori
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'train', '(train,test,finetune)')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
-flags.DEFINE_string('model_dir', './', 'path to directory of models')
+flags.DEFINE_string('input_model_dir', './', 'path to input directory of models')
+flags.DEFINE_string('output_model_dir', './', 'path to output directory of models')
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
 
@@ -33,7 +36,6 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth=True
 sess = tf.Session(config=config)
 keras.backend.set_session(sess)
-
 
 
 class Boosting:
@@ -83,16 +85,16 @@ class Boosting:
 
 	def load_models(self, data_dir):
 		for file in os.listdir(data_dir):
-			self.models.append(load_model(data_dir + file))
+			self.models.append(load_model(os.path.join(data_dir,file)))
 		try:
-			self.modelWeights = np.load(data_dir + "weights.npy")
+			self.modelWeights = np.load(os.path.join(data_dir,"weights.npy"))
 		except:
 			print "Training first time"
 
 	def save_models(self, data_dir):
 		for i, model in enumerate(self.models):
-			model.save(data_dir + str(i+1))
-		np.save(data_dir + "weights", self.modelWeights)
+			model.save(os.path.join(data_dir,str(i+1)))
+		np.save(os.path.join(data_dir, "weights"), self.modelWeights)
 
 	def accuracy(self, Y, Y_):
 		num = (np.argmax(Y,axis=1) == np.argmax(Y_,axis=1)).sum()
@@ -103,41 +105,41 @@ class Boosting:
 
 if __name__ == "__main__":
 	boost = Boosting(FLAGS.batch_size, FLAGS.nb_epochs, FLAGS.learning_rate, FLAGS.num_iters)
-	boost.load_models(FLAGS.model_dir)
+	boost.load_models(FLAGS.input_model_dir)
 	#Training mode
 	if FLAGS.mode in ['train', 'finetune']:
 		# Load data
-                if FLAGS.dataset == 'cifar100':
-                        X, Y, _, _ = utils_cifar.data_cifar()
-                        X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 500, 100)
-                elif FLAGS.dataset == 'mnist':
-                        X, Y, _, _ = utils_mnist.data_mnist()
-                        X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 5000, 10)
-                elif FLAGS.dataset == 'svhn':
-                        X, Y, _, _ = utils_svhn.data_svhn()
-                        X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 4000, 10)
+		if FLAGS.dataset == 'cifar100':
+			X, Y, _, _ = utils_cifar.data_cifar()
+			X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 500, 100)
+		elif FLAGS.dataset == 'mnist':
+			X, Y, _, _ = utils_mnist.data_mnist()
+			X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 5000, 10)
+		elif FLAGS.dataset == 'svhn':
+			X, Y, _, _ = utils_svhn.data_svhn()
+			X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 4000, 10)
 		else:
 			print "Invalid dataset; exiting"
 			exit()
 		#Finetune mode
-                if FLAGS.mode == 'finetune':
-                        X_train_p = np.concatenate((X_train_p, np.load(FLAGS.data_x)))
-                        Y_train_p = np.concatenate((Y_train_p, np.load(FLAGS.data_y)))
+		if FLAGS.mode == 'finetune':
+			X_train_p = np.concatenate((X_train_p, np.load(FLAGS.data_x)))
+			Y_train_p = np.concatenate((Y_train_p, np.load(FLAGS.data_y)))
 		boost.train(x_train, y_train)
 		# Print validation accuracy
-                X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-                predicted = np.argmax(bag.predict(X_val),1)
-                true = np.argmax(y_val,1)
-                acc = (100*(predicted==true).sum()) / float(len(y_val))
-                print "Final validation accuracy", acc
+		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+		predicted = np.argmax(bag.predict(X_val),1)
+		true = np.argmax(y_val,1)
+		acc = (100*(predicted==true).sum()) / float(len(y_val))
+		print "Final validation accuracy", acc
+		# Save models
+		boost.save_models(FLAGs.output_model_dir)
 	#Testing mode
-        elif FLAGS.mode == 'test':
-                X = np.load(FLAGS.data_x)
-                Y = np.load(FLAGS.data_y)
-                boost.load_models(FLAGS.model_dir)
+	elif FLAGS.mode == 'test':
+		X = np.load(FLAGS.data_x)
+		Y = np.load(FLAGS.data_y)
+		boost.load_models(FLAGS.model_dir)
 		Y_ = boost.predict(X)
-                print "Misclassification accuracy",(100-boost.accuracy(Y, Y_))
-        else:
-                print "Invalid option"
-		boost.predict(x_test)
-
+		print "Misclassification accuracy",(100-boost.accuracy(Y, Y_))
+	else:
+		print "Invalid option"
