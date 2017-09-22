@@ -12,9 +12,9 @@ from keras.initializers import he_normal
 
 def conv_stack(filters, side, activation, model, input_shape=None):
 	if not input_shape:
-		model.add(Conv2D(filters, side, side, border_mode='same', W_regularizer=l2(0.01), init=he_normal()))
+		model.add(Conv2D(filters, (side, side), border_mode='same', W_regularizer=l2(0.01), init=he_normal()))
 	else:
-		model.add(Conv2D(filters, side, side, border_mode='same', input_shape=input_shape, W_regularizer=l2(0.01), init=he_normal()))
+		model.add(Conv2D(filters, (side, side), border_mode='same', input_shape=input_shape, W_regularizer=l2(0.01), init=he_normal()))
 	model.add(BatchNormalization())
 	model.add(activation())
 
@@ -74,9 +74,3 @@ def mnist(learning_rate, n_classes=10):
 			  optimizer=Adadelta(),
 			  metrics=['accuracy'])
 		return model
-
-
-if __name__ == "__main__":
-	import keras
-	keras.backend.set_image_dim_ordering('th')
-	m = cifar100(1)

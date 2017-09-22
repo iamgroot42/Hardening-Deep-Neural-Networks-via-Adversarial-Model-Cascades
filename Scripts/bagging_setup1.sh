@@ -2,12 +2,13 @@
 
 # No transfer of parameters, keep increasing bag (whitebox examples)
 
+export TF_CPP_MIN_LOG_LEVEL="2"
 dataset=$1 #(cifar100,mnist,svhn)
 epsilon=$2 #value of epsilon
 cumulative=$3 #(yes/no)
 
 temporary_folder=$(date -d "today" +"%Y%m%d%H%M%S")
-bag_dir="BAG_SETUP1"dataset
+bag_dir="BAG_SETUP1"$dataset
 mkdir $bag_dir $temporary_folder
 
 # Train a CNN, test how well it worked so far

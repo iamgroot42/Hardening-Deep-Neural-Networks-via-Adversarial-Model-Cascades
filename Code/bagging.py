@@ -4,6 +4,7 @@ import keras
 from keras.models import load_model
 
 from keras.objectives import categorical_crossentropy
+from tensorflow.python.platform import app
 from keras.utils import np_utils
 
 import utils_cifar, utils_mnist, utils_svhn
@@ -14,14 +15,9 @@ import os
 import tensorflow as tf
 from tensorflow.python.platform import flags
 
-#Don't hog GPU
-config = tf.ConfigProto()
-config.gpu_options.allow_growth=True
-sess = tf.Session(config=config)
-keras.backend.set_session(sess)
 
 FLAGS = flags.FLAGS
-flags.DEFINE_integer('nb_epochs', 10, 'Number of epochs')
+flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs')
 flags.DEFINE_integer('sample_ratio', 0.5, 'Percentage of sample to be taken per model for training')
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'train', '(train,test,finetune)')
@@ -31,6 +27,8 @@ flags.DEFINE_string('output_model_dir', './', 'path to output directory of model
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
 flags.DEFINE_boolean('add_model', True, 'Add a model to the existing bag')
+flags.DEFINE_float('learning_rate', 0.001 ,'Learning rate for classifier')
+
 
 class Bagging:
 	def __init__(self, n_classes, sample_ratio, batch_size, nb_epochs):
@@ -84,9 +82,11 @@ class Bagging:
 		return predicted
 
 
-if __name__ == "__main__":
+def main(argv=None):
 	bag = None
 	n_classes = 10
+	tf.set_random_seed(1234)
+
 	if FLAGS.dataset == 'cifar100':
 		bag = Bagging(100, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
 		n_classes = 100
@@ -97,6 +97,17 @@ if __name__ == "__main__":
 	else:
 		print "Invalid dataset specified. Exiting"
 		exit()
+
+	# Image dimensions ordering should follow the Theano convention
+	if keras.backend.image_dim_ordering() != 'th':
+		keras.backend.set_image_dim_ordering('th')
+
+	#Don't hog GPU
+	config = tf.ConfigProto()
+	config.gpu_options.allow_growth=True
+	sess = tf.Session(config=config)
+	keras.backend.set_session(sess)
+
 	#Training mode
 	if FLAGS.mode in ['train', 'finetune']:
 		X_train_p,Y_train_p = None, None
@@ -117,13 +128,13 @@ if __name__ == "__main__":
 		model = None
 		# Load placeholder models
 		if FLAGS.add_model:
-			if FLAGS.dataset == 'mnsit':
-				model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
-			else:
+			if FLAGS.dataset == 'mnist':
 				model = sota.mnist(FLAGS.learning_rate, n_classes)
-		bag.load_models(FLAGS.input_model_dir)
+			else:
+				model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
+		bag.load_models(FLAGS.input_model_dir, model)
 		# Train data
-		bag.train(X_train_p, Y_train_p, FLAGS.model_dir, True)
+		bag.train(X_train_p, Y_train_p, FLAGS.output_model_dir)
 		# Print validation accuracy
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		predicted = np.argmax(bag.predict(X_val),1)
@@ -136,10 +147,14 @@ if __name__ == "__main__":
 	elif FLAGS.mode == 'test':
 		X = np.load(FLAGS.data_x)
 		Y = np.load(FLAGS.data_y)
-		bag.load_models(FLAGS.model_dir)
+		bag.load_models(FLAGS.input_model_dir, None)
 		predicted = np.argmax(bag.predict(X),1)
 		Y = np.argmax(Y, 1)
 		acc = (100*(predicted==Y).sum()) / float(len(Y))
 		print "Misclassification accuracy",(100-acc)
 	else:
 		print "Invalid option"
+
+
+if __name__ == '__main__':
+	app.run()
