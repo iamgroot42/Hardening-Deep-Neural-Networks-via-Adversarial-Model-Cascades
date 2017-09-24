@@ -37,17 +37,17 @@ def main(argv=None):
 		x_shape, y_shape = utils_cifar.placeholder_shapes()
 		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=10, nb_classes=n_classes)
 		grid_shape = (n_classes, n_classes, 32, 32, 3)
-	elif FLAGS.dataset == 'svhn':
+	elif FLAGS.dataset == 'mnist':
 		_, _, X_test, Y_test = utils_mnist.data_mnist()
 		x_shape, y_shape = utils_mnist.placeholder_shapes()
 		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
 		grid_shape = (n_classes, n_classes, 28, 28, 1)
-	elif FLAGS.dataset == 'mnist':
+		image_shape = (28, 28, 1)
+	elif FLAGS.dataset == 'svhn':
 		_, _, X_test, Y_test = utils_svhn.data_svhn()
 		x_shape, y_shape = utils_svhn.placeholder_shapes()
 		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
 		grid_shape = (n_classes, n_classes, 32, 32, 3)
-		image_shape = (28, 28, 1)
 	else:
 		print "Invalid dataset. Exiting."
 		exit()
@@ -119,7 +119,7 @@ def main(argv=None):
 							   'nb_classes': n_classes, 'clip_min': 0.,
 							   'clip_max': 1., 'targets': y,
 							   'y_val': one_hot_target}
-				if FLAGS.dataset =='svn':
+				if FLAGS.dataset =='svhn':
 					jsma_params['clip_min'] = 0
 					jsma_params['clip_max'] = 255
 

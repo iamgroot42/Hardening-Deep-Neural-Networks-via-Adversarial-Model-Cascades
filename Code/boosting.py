@@ -9,10 +9,11 @@ import numpy as np
 import os
 import helpers
 
-import utils_cifar, utils_mnist, utils_svhn 
+import utils_cifar, utils_mnist, utils_svhn
 from Models import cnn, sota
 
 from keras.objectives import categorical_crossentropy
+from tensorflow.python.platform import app
 from keras.utils import np_utils
 
 import tensorflow as tf
@@ -28,8 +29,10 @@ flags.DEFINE_string('mode', 'train', '(train,test,finetune)')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
 flags.DEFINE_string('input_model_dir', './', 'path to input directory of models')
 flags.DEFINE_string('output_model_dir', './', 'path to output directory of models')
+flags.DEFINE_boolean('add_model', True, 'Add a model to the existing bag')
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
+flags.DEFINE_float('learning_rate', 0.001 ,'Learning rate for classifier')
 
 #Don't hog GPU
 config = tf.ConfigProto()
@@ -56,7 +59,7 @@ class Boosting:
 		modelWeights= np.zeros(len(self.models))
 		dataPointWeights = np.ones(X.shape[0]) / X.shape[0]
 
-		init_op = tf.global_variables_intializer()
+		init_op = tf.global_variables_initializer()
 		sess.run(init_op)
 
 		with sess.as_default():
@@ -83,9 +86,12 @@ class Boosting:
 		Y /= weightT
 		return Y
 
-	def load_models(self, data_dir):
+	def load_models(self, data_dir, add_model):
+		if add_model:
+			self.models.append(add_model)
 		for file in os.listdir(data_dir):
-			self.models.append(load_model(os.path.join(data_dir,file)))
+			if "npy" not in file:
+				self.models.append(load_model(os.path.join(data_dir,file)))
 		try:
 			self.modelWeights = np.load(os.path.join(data_dir,"weights.npy"))
 		except:
@@ -103,9 +109,24 @@ class Boosting:
 		return num/den
 
 
-if __name__ == "__main__":
-	boost = Boosting(FLAGS.batch_size, FLAGS.nb_epochs, FLAGS.learning_rate, FLAGS.num_iters)
-	boost.load_models(FLAGS.input_model_dir)
+def main(argv=None):
+	# Image dimensions ordering should follow the Theano convention
+        if keras.backend.image_dim_ordering() != 'th':
+                keras.backend.set_image_dim_ordering('th')
+
+	boost = Boosting(FLAGS.batch_size, FLAGS.nb_epochs, FLAGS.num_iters)
+	add_model = None
+	if FLAGS.add_model:
+		if FLAGS.dataset == 'cifar100':
+			add_model = sota.cifar_svhn(FLAGS.learning_rate, 100)
+		elif FLAGS.dataset == 'svhn':
+			add_model = sota.cifar_svhn(FLAGS.learning_rate, 10)
+		elif FLAGS.dataset == 'mnist':
+			add_model = sota.mnist(FLAGS.learning_rate, 10)
+		else:
+			print "Invalid dataset; exiting"
+			exit()
+	boost.load_models(FLAGS.input_model_dir, add_model)
 	#Training mode
 	if FLAGS.mode in ['train', 'finetune']:
 		# Load data
@@ -125,21 +146,25 @@ if __name__ == "__main__":
 		if FLAGS.mode == 'finetune':
 			X_train_p = np.concatenate((X_train_p, np.load(FLAGS.data_x)))
 			Y_train_p = np.concatenate((Y_train_p, np.load(FLAGS.data_y)))
-		boost.train(x_train, y_train)
+		boost.train(X_train_p, Y_train_p)
 		# Print validation accuracy
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-		predicted = np.argmax(bag.predict(X_val),1)
+		predicted = np.argmax(boost.predict(X_val),1)
 		true = np.argmax(y_val,1)
 		acc = (100*(predicted==true).sum()) / float(len(y_val))
 		print "Final validation accuracy", acc
 		# Save models
-		boost.save_models(FLAGs.output_model_dir)
+		boost.save_models(FLAGS.output_model_dir)
 	#Testing mode
 	elif FLAGS.mode == 'test':
 		X = np.load(FLAGS.data_x)
 		Y = np.load(FLAGS.data_y)
-		boost.load_models(FLAGS.model_dir)
+		boost.load_models(FLAGS.input_model_dir)
 		Y_ = boost.predict(X)
 		print "Misclassification accuracy",(100-boost.accuracy(Y, Y_))
 	else:
 		print "Invalid option"
+
+
+if __name__ == "__main__":
+	app.run()
