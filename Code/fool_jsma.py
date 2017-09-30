@@ -100,13 +100,14 @@ def main(argv=None):
 		target_classes = helpers.other_classes(n_classes, current_class)
 
 		# Reduce search space for target classes to increase speed
-		target_classes = np.random.choice(target_classes, 10, replace=False)
+		if len(target_classes) > FLAGS.n_subset_classes:
+			print "target",target_classes
+			print "subset",FLAGS.n_subset_classes
+			target_classes = np.random.choice(target_classes, FLAGS.n_subset_classes, replace=False)
 
 		grid_viz_data[current_class, current_class, :, :, :] = np.reshape(
 			X_test_pm[sample_ind:(sample_ind+1)],
 			image_shape)
-
-		target_classes = np.random.choice(n_classes, FLAGS.n_subset_classes, replace=False)
 
 		# Loop over all target classes
 		for target in target_classes:

@@ -27,7 +27,7 @@ flags.DEFINE_string('output_model_dir', './', 'path to output directory of model
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
 flags.DEFINE_boolean('add_model', True, 'Add a model to the existing bag')
-flags.DEFINE_float('learning_rate', 0.001 ,'Learning rate for classifier')
+flags.DEFINE_float('learning_rate', 0.0001 ,'Learning rate for classifier')
 
 
 class Bagging:
@@ -56,13 +56,19 @@ class Bagging:
 		for i, subset in enumerate(subsets):
 			x_sub = X[subset]
 			y_sub = Y[subset]
-			datagen = utils_cifar.augmented_data(x_sub)
+			if FLAGS.dataset == 'cifar100':
+				datagen = utils_cifar.augmented_data(x_sub)
+			elif FLAGS.dataset == 'svhn':
+				datagen = utils_svhn.augmented_data(x_sub)
 			X_tr, y_tr, X_val, y_val = helpers.validation_split(x_sub, y_sub, 0.2)
-			self.models[i].fit_generator(datagen.flow(X_tr, y_tr,
-							batch_size=self.batch_size),
-							steps_per_epoch=X_tr.shape[0] // self.batch_size,
-							epochs=self.nb_epochs,
-							validation_data=(X_val, y_val))
+			if FLAGS.dataset != 'mnist':
+				self.models[i].fit_generator(datagen.flow(X_tr, y_tr,
+								batch_size=self.batch_size),
+								steps_per_epoch=X_tr.shape[0] // self.batch_size,
+								epochs=self.nb_epochs,
+								validation_data=(X_val, y_val))
+			else:
+				self.models[i].fit(X_tr, y_tr, batch_size = self.batch_size, epochs=self.nb_epochs, validation_data=(X_val, y_val))
 			accuracy = self.models[i].evaluate(X_val, y_val, batch_size=self.batch_size)
 			print("\nValidation accuracy for bag" + str(i) + " model: " + str(accuracy[1]*100))
 

@@ -8,7 +8,7 @@ epsilon=$2 #value of epsilon
 cumulative=$3 #(yes/no)
 
 temporary_folder=$(date -d "today" +"%Y%m%d%H%M%S")
-bag_dir="BAG_SETUP1"$dataset
+bag_dir=$3"BAG_SETUP1"$dataset
 mkdir $bag_dir $temporary_folder
 
 # Train a CNN, test how well it worked so far
@@ -25,7 +25,7 @@ cp $bag_dir/1 $temporary_folder/1
 
 # Finetune using Whitebox JSMA Noise, test how well it worked so far
 python ../Code/fool_jsma.py --dataset $dataset --n_subset_classes 10 --model_path $temporary_folder/1 --adversary_path_x $temporary_folder"ad2x" --adversary_path_y $temporary_folder"ad2y"
-if [$cumulative == "yes"]; then
+if [ $cumulative == "yes" ]; then
 	python coalesce.py $temporary_folder"adx.npy" $temporary_folder"ady.npy" $temporary_folder"ad2x.npy" $temporary_folder"ad2y.npy" $temporary_folder"adx.npy" $temporary_folder"ady.npy" 
 else
 	mv $temporary_folder"ad2x.npy" $temporary_folder"adx.npy"

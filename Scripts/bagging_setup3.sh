@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# No transfer of parameters, keep increasing bag (whitebox examples)
+# Transfer of parameters, keep increasing bag (whitebox examples)
 
 export TF_CPP_MIN_LOG_LEVEL="2"
 dataset=$1 #(cifar100,mnist,svhn)
@@ -20,12 +20,11 @@ cp $temporary_folder/1 $bag_dir/1
 python ../Code/generate_adversarials_fgsm.py --dataset $dataset --model_path $temporary_folder/1 --fgsm_eps $2 --adversary_path_x $temporary_folder"adx" --adversary_path_y $temporary_folder"ady"
 python ../Code/bagging.py --mode finetune --dataset $dataset --input_model_dir $temporary_folder --add_model False --output_model_dir $temporary_folder --data_x $temporary_folder"adx.npy" --data_y $temporary_folder"ady.npy"
 python fix.py $temporary_folder/1
-cp $temporary_folder/1 $bag_dir/2
-cp $bag_dir/2 $temporary_folder/1
+cp $temporary_folder/1 $bag_dir/1
 
 # Finetune using Whitebox JSMA Noise, test how well it worked so far
 python ../Code/fool_jsma.py --dataset $dataset --n_subset_classes 10 --model_path $temporary_folder/1 --adversary_path_x $temporary_folder"ad2x" --adversary_path_y $temporary_folder"ad2y"
-if [$cumulative == "yes"]; then
+if [ $cumulative == "yes" ]; then
 	python coalesce.py $temporary_folder"adx.npy" $temporary_folder"ady.npy" $temporary_folder"ad2x.npy" $temporary_folder"ad2y.npy" $temporary_folder"adx.npy" $temporary_folder"ady.npy" 
 else
 	mv $temporary_folder"ad2x.npy" $temporary_folder"adx.npy"
