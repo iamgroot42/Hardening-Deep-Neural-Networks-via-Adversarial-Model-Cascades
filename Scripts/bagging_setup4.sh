@@ -15,7 +15,7 @@ jsma_y=$7
 
 
 temporary_folder=$(date -d "today" +"%Y%m%d%H%M%S")
-bag_dir=$3"BAG_SETUP2"$dataset
+bag_dir=$3"BAG_SETUP4"$dataset
 mkdir $bag_dir $temporary_folder
 
 # Train a CNN, test how well it worked so far
