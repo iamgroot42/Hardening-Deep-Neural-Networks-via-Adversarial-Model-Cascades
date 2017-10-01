@@ -27,8 +27,7 @@ cp $temporary_folder/1 $bag_dir/1
 # Finetune using Blackbox FGSM Noise, test how well it worked so far
 python ../Code/bagging.py --mode finetune --dataset $dataset --input_model_dir $temporary_folder --add_model False --output_model_dir $temporary_folder --data_x $fgsm_x --data_y $fgsm_y
 python fix.py $temporary_folder/1
-cp $temporary_folder/1 $bag_dir/2
-cp $bag_dir/2 $temporary_folder/1
+cp $temporary_folder/1 $bag_dir/1
 
 # Finetune using Blackbox JSMA Noise, test how well it worked so far
 if [ $cumulative == "yes" ]; then
@@ -40,7 +39,7 @@ else
 fi
 
 python fix.py $temporary_folder/1
-cp $temporary_folder/1 $bag_dir/3
+cp $temporary_folder/1 $bag_dir/1
 
 #Clean up
 rm -r $temporary_folder

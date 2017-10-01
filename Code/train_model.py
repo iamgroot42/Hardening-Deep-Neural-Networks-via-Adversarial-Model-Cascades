@@ -61,6 +61,8 @@ def main(argv=None):
 	elif FLAGS.level == 'proxy':
 		X_train_p = np.load(FLAGS.proxy_x)
 		Y_train_p = np.load(FLAGS.proxy_y)
+		if FLAGS.dataset == 'mnist':
+			data_shape = (1,28,28)
 
 	# Don't hog GPU
 	config = tf.ConfigProto()

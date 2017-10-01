@@ -32,7 +32,7 @@ else
 fi
 python ../Code/bagging.py --mode finetune --dataset $dataset --input_model_dir $temporary_folder --add_model False --output_model_dir $temporary_folder --data_x $temporary_folder"adx.npy" --data_y $temporary_folder"ady.npy"
 python fix.py $temporary_folder/1
-cp $temporary_folder/1 $bag_dir/3
+cp $temporary_folder/1 $bag_dir/1
 
 #Clean up
 rm -r $temporary_folder

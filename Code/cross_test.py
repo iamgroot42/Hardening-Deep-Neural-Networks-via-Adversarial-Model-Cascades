@@ -15,7 +15,6 @@ from tensorflow.python.platform import flags
 import utils_mnist, utils_cifar, utils_svhn
 import utils
 from sklearn.externals import joblib
-from Models import nn_svm
 import helpers
 
 FLAGS = flags.FLAGS
@@ -24,7 +23,8 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
 flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are saved')
-flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are saved')flags.DEFINE_boolean('proxy_data', False , 'If this is being used to generate training data for proxy model')
+flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are saved')
+flags.DEFINE_boolean('proxy_data', False , 'If this is being used to generate training data for proxy model')
 flags.DEFINE_string('proxy_x', 'PX.npy', 'Path where proxy training data is to be saved')
 flags.DEFINE_string('proxy_y', 'PY.npy', 'Path where proxy training data labels are to be saved')
 flags.DEFINE_integer('per_class_adv', 10 , 'Number of adversarial examples to be picked per class')
@@ -43,7 +43,7 @@ def main(argv=None):
 	keras.backend.set_session(sess)
 
 	if FLAGS.dataset == 'cifar100':
-		nb_classes = 100	
+		nb_classes = 100
 		X_train, Y_train, X_test, Y_test = utils_cifar.data_cifar()
 		X_train_bm, Y_train_bm, X_train_pm, Y_train_pm = helpers.jbda(X_train, Y_train, "train", 500, nb_classes)
 	elif FLAGS.dataset == 'mnist':
