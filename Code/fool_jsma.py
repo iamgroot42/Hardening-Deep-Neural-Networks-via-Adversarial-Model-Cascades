@@ -101,8 +101,6 @@ def main(argv=None):
 
 		# Reduce search space for target classes to increase speed
 		if len(target_classes) > FLAGS.n_subset_classes:
-			print "target",target_classes
-			print "subset",FLAGS.n_subset_classes
 			target_classes = np.random.choice(target_classes, FLAGS.n_subset_classes, replace=False)
 
 		grid_viz_data[current_class, current_class, :, :, :] = np.reshape(

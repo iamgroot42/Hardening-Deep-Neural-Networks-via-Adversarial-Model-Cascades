@@ -21,16 +21,18 @@ else
 	exit
 fi
 
+ppmodel=$(date -d "today" +"%Y%m%d%H%M%S")
+python ../Code/cross_test.py --model_path $model --proxy_x $ppmodel"X" --proxy_y $ppmodel"Y" --per_class_adv $ppc --dataset $dataset --proxy_data True
+python ../Code/train_model.py --dataset $dataset --nb_epochs 100 --save_here $ppmodel --level proxy --proxy_x $ppmodel"X.npy" --proxy_y $ppmodel"Y.npy"  --label_smooth $label_smooth
+rm $ppmodel"X.npy" $ppmodel"Y.npy"
+
 for epsilon in "${epsilon_values[@]}"
 do
 
 	prefix=$(date -d "today" +"%Y%m%d%H%M%S")
 
-	python ../Code/cross_test.py --model_path $model --proxy_x $prefix"X" --proxy_y $prefix"Y" --per_class_adv $ppc --dataset $dataset --proxy_data True
-	python ../Code/train_model.py --dataset $dataset --nb_epochs 100 --save_here $prefix --level proxy --proxy_x $prefix"X.npy" --proxy_y $prefix"Y.npy"  --label_smooth $label_smooth
-	python ../Code/generate_adversarials_fgsm.py --fgsm_eps $epsilon --model_path $prefix --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y"
+	python ../Code/generate_adversarials_fgsm.py --fgsm_eps $epsilon --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y"
 	python ../Code/cross_test.py --model_path $model --adversary_path_x $prefix"X.npy" --adversary_path_y $prefix"Y.npy" --per_class_adv $ppc --dataset $dataset --proxy_data False
-	rm $prefix $prefix"X.npy" $prefix"Y.npy"
+	rm  $prefix"X.npy" $prefix"Y.npy"
 	echo "Results above for " $epsilon
 done
-
