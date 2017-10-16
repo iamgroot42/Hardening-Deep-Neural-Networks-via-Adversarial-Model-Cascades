@@ -18,7 +18,7 @@ from tensorflow.python.platform import flags
 
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs')
-flags.DEFINE_integer('sample_ratio', 0.5, 'Percentage of sample to be taken per model for training')
+flags.DEFINE_integer('sample_ratio', 0.75, 'Percentage of sample to be taken per model for training')
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'train', '(train,test,finetune)')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')

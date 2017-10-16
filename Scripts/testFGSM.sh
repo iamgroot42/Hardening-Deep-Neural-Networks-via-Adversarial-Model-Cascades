@@ -37,4 +37,3 @@ do
 	rm  $prefix"X.npy" $prefix"Y.npy"
 	echo "Results above for " $epsilon
 done
-

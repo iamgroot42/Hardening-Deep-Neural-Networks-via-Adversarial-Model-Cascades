@@ -21,8 +21,9 @@ else
 	exit
 fi
 
-#ppmodel=$(date -d "today" +"%Y%m%d%H%M%S")
+
 ppmodel=$4
+#ppmodel=$(date -d "today" +"%Y%m%d%H%M%S")
 #python ../Code/cross_test.py --model_path $model/"1" --proxy_x $ppmodel"X" --proxy_y $ppmodel"Y" --per_class_adv $ppc --dataset $dataset --proxy_data True
 #python ../Code/train_model.py --dataset $dataset --nb_epochs 100 --save_here $ppmodel --level proxy --proxy_x $ppmodel"X.npy" --proxy_y $ppmodel"Y.npy"  --label_smooth $label_smooth
 #rm $ppmodel"X.npy" $ppmodel"Y.npy"
@@ -37,4 +38,3 @@ do
 	rm  $prefix"X.npy" $prefix"Y.npy"
 	echo "Results above for " $epsilon
 done
-
