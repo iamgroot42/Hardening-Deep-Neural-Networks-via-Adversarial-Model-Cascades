@@ -36,18 +36,15 @@ def main(argv=None):
 		_, _, X_test, Y_test = utils_cifar.data_cifar()
 		x_shape, y_shape = utils_cifar.placeholder_shapes()
 		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=10, nb_classes=n_classes)
-		grid_shape = (n_classes, n_classes, 32, 32, 3)
 	elif FLAGS.dataset == 'mnist':
 		_, _, X_test, Y_test = utils_mnist.data_mnist()
 		x_shape, y_shape = utils_mnist.placeholder_shapes()
 		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
-		grid_shape = (n_classes, n_classes, 28, 28, 1)
 		image_shape = (28, 28, 1)
 	elif FLAGS.dataset == 'svhn':
 		_, _, X_test, Y_test = utils_svhn.data_svhn()
 		x_shape, y_shape = utils_svhn.placeholder_shapes()
 		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
-		grid_shape = (n_classes, n_classes, 32, 32, 3)
 	else:
 		print "Invalid dataset. Exiting."
 		exit()
@@ -63,7 +60,6 @@ def main(argv=None):
 	config.gpu_options.allow_growth=True
 	sess = tf.Session(config=config)
 	keras.backend.set_session(sess)
-	print("Created TensorFlow session and set Keras backend.")
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
@@ -82,9 +78,6 @@ def main(argv=None):
 	# Rate of perturbed features for each test set example and target class
 	perturbations = np.zeros((n_classes, source_samples), dtype='f')
 
-	# Initialize our array for grid visualization
-	grid_viz_data = np.zeros(grid_shape, dtype='f')
-
 	# Define the SaliencyMapMethod attack object
 	jsma = SaliencyMapMethod(model, back='tf', sess=sess)
 
@@ -101,18 +94,13 @@ def main(argv=None):
 
 		# Reduce search space for target classes to increase speed
 		if len(target_classes) > FLAGS.n_subset_classes:
-			print "target",target_classes
-			print "subset",FLAGS.n_subset_classes
 			target_classes = np.random.choice(target_classes, FLAGS.n_subset_classes, replace=False)
-
-		grid_viz_data[current_class, current_class, :, :, :] = np.reshape(
-			X_test_pm[sample_ind:(sample_ind+1)],
-			image_shape)
 
 		# Loop over all target classes
 		for target in target_classes:
 			print('Generating adv. example for target class %i' % target)
 			try:
+
 				# This call runs the Jacobian-based saliency map approach
 				one_hot_target = np.zeros((1, n_classes), dtype=np.float32)
 				one_hot_target[0, target] = 1
@@ -138,10 +126,6 @@ def main(argv=None):
 				test_in_reshape = X_test_pm[sample_ind].reshape(-1)
 				nb_changed = np.where(adv_x_reshape != test_in_reshape)[0].shape[0]
 				percent_perturb = float(nb_changed) / adv_x.reshape(-1).shape[0]
-
-				# Add our adversarial example to our grid data
-				grid_viz_data[target, current_class, :, :, :] = np.reshape(
-					adv_x, image_shape)
 
 				# Update the arrays for later analysis
 				results[target, sample_ind] = res
@@ -181,4 +165,5 @@ def main(argv=None):
 
 if __name__ == '__main__':
 	app.run()
+
 

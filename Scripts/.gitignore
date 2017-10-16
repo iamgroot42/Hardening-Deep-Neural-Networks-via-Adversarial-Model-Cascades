@@ -14,3 +14,9 @@ no*
 yes*
 2017*
 *BAG_SETUP*
+Uniform/*
+Adaptive/*
+Proxy/*
+*MNIST*
+*CIFAR*
+*SVHN*

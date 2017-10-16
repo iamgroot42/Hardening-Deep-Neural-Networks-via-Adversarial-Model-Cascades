@@ -71,6 +71,6 @@ def mnist(learning_rate, n_classes=10):
 		model.add(Dense(10, activation='softmax'))
 
 		model.compile(loss=keras.losses.categorical_crossentropy,
-			  optimizer=Adadelta(),
+			  optimizer=Adadelta(lr=learning_rate),
 			  metrics=['accuracy'])
 		return model
