@@ -57,16 +57,14 @@ def main(argv=None):
 
 	model = KerasModelWrapper(keras.models.load_model(FLAGS.model_path))
 	deepfool = attacks.DeepFool(model, sess=sess)
-	deepfool.parse_params(clip_min=0.0, clip_max=1.0, nb_classes=n_classes, nb_candidate=FLAGS.n_subset_classes)
+	deepfool.parse_params(nb_classes=n_classes)
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
-	adv_x = deepfool.generate(X_test_pm)
-
-	#X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test_pm])
-	#sess.run(adv_x, feed_dict={'x':X_test_pm})
-	print(adv_x)
+	adv_x = deepfool.generate_np(X_test_pm, clip_min=0.0, clip_max=1.0, nb_candidate=FLAGS.n_subset_classes)
+	np.save(FLAGS.adversary_path_y, Y_test_pm)
+	np.save(FLAGS.adversary_path_x, adv_x)
 
 
 if __name__ == '__main__':

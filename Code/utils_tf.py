@@ -138,6 +138,18 @@ def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=True):
 	return out
 
 
+def model_argmax(sess, x, predictions, samples, feed=None):
+    feed_dict = {x: samples}
+    if feed is not None:
+        feed_dict.update(feed)
+    probabilities = sess.run(predictions, feed_dict)
+
+    if samples.shape[0] == 1:
+        return np.argmax(probabilities)
+    else:
+        return np.argmax(probabilities, axis=1)
+
+
 def l2_batch_normalize(x, epsilon=1e-12, scope=None):
     """
     Helper function to normalize a batch of vectors.
@@ -167,3 +179,32 @@ def kl_with_logits(p_logits, q_logits, scope=None,
                               name=name)
         tf.losses.add_loss(loss, loss_collection)
         return loss
+
+def clip_eta(eta, ord, eps):
+    """
+    Helper function to clip the perturbation to epsilon norm ball.
+    :param eta: A tensor with the current perturbation.
+    :param ord: Order of the norm (mimics Numpy).
+                Possible values: np.inf, 1 or 2.
+    :param eps: Epilson, bound of the perturbation.
+    """
+
+    # Clipping perturbation eta to self.ord norm ball
+    if ord not in [np.inf, 1, 2]:
+        raise ValueError('ord must be np.inf, 1, or 2.')
+    if ord == np.inf:
+        eta = tf.clip_by_value(eta, -eps, eps)
+    elif ord in [1, 2]:
+        reduc_ind = list(xrange(1, len(eta.get_shape())))
+        if ord == 1:
+            norm = tf.reduce_sum(tf.abs(eta),
+                                 reduction_indices=reduc_ind,
+                                 keep_dims=True)
+        elif ord == 2:
+            norm = tf.sqrt(tf.reduce_sum(tf.square(eta),
+                                         reduction_indices=reduc_ind,
+                                         keep_dims=True))
+        eta = eta * eps / norm
+    return eta
+
+

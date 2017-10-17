@@ -18,10 +18,6 @@ class Attack:
 		if not hasattr(model, '__call__'):
 			raise ValueError("model argument must be a function that returns "
 							 "the symbolic output when given an input tensor.")
-		if back == 'th':
-			warnings.warn("cleverhans support for Theano is deprecated and "
-						  "will be dropped on 2017-11-08.")
-
 		# Prepare attributes
 		self.model = model
 		self.back = back
@@ -63,6 +59,35 @@ class Attack:
 			raise NotImplementedError(error)
 
 		return self.sess.run(self._x_adv, feed_dict={self._x: x_val})
+	def get_or_guess_labels(self, x, kwargs):
+	        """
+        	Get the label to use in generating an adversarial example for x.
+	        The kwargs are fed directly from the kwargs of the attack.
+	        If 'y' is in kwargs, then assume it's an untargeted attack and
+	        use that as the label.
+	        If 'y_target' is in kwargs, then assume it's a targeted attack and
+	        use that as the label.
+	        Otherwise, use the model's prediction as the label and perform an
+	        untargeted attack.
+	        """
+
+	        if 'y' in kwargs and 'y_target' in kwargs:
+        	    raise ValueError("Can not set both 'y' and 'y_target'.")
+	        elif 'y' in kwargs:
+        	    labels = kwargs['y']
+	        elif 'y_target' in kwargs:
+	            labels = kwargs['y_target']
+	        else:
+	            preds = self.model.get_probs(x)
+	            preds_max = tf.reduce_max(preds, 1, keep_dims=True)
+	            original_predictions = tf.to_float(tf.equal(preds,
+	                                                        preds_max))
+	            labels = tf.stop_gradient(original_predictions)
+	        if isinstance(labels, np.ndarray):
+	            nb_classes = labels.shape[1]
+	        else:
+	            nb_classes = labels.get_shape().as_list()[1]
+	        return labels, nb_classes
 
 	def parse_params(self, params=None):
 		return True
@@ -256,7 +281,7 @@ class DeepFool(Attack):
 		grads = tf.stack(attacks_tf.jacobian_graph(preds, x, self.nb_candidate), axis=1)
 
 		def deepfool_wrap(x_val):
-			return deepfool_batch(self.sess, x, preds, logits, grads, x_val,
+			return attacks_tf.deepfool_batch(self.sess, x, preds, logits, grads, x_val,
 								  self.nb_candidate, self.overshoot,
 								  self.max_iter, self.clip_min, self.clip_max,
 								  self.nb_classes)
@@ -354,3 +379,242 @@ def vatm(model, x, logits, eps, back='tf', num_iterations=1, xi=1e-6,
     """
     from attacks_tf import vatm as vatm_tf
     return vatm_tf(model, x, logits, eps, num_iterations=num_iterations, xi=xi, clip_min=clip_min, clip_max=clip_max)
+
+
+class ElasticNetMethod(Attack):
+    def __init__(self, model, back='tf', sess=None):
+        super(ElasticNetMethod, self).__init__(model, back, sess)
+        self.feedable_kwargs = {'y': tf.float32,
+                                'y_target': tf.float32}
+
+        self.structural_kwargs = ['beta', 'batch_size', 'confidence',
+                                  'targeted', 'learning_rate',
+                                  'binary_search_steps', 'max_iterations',
+                                  'abort_early', 'initial_const',
+                                  'clip_min', 'clip_max']
+
+    def generate(self, x, **kwargs):
+        """
+        Return a tensor that constructs adversarial examples for the given
+        input. Generate uses tf.py_func in order to operate over tensors.
+        :param x: (required) A tensor with the inputs.
+        :param y: (optional) A tensor with the true labels for an untargeted
+                  attack. If None (and y_target is None) then use the
+                  original labels the classifier assigns.
+        :param y_target: (optional) A tensor with the target labels for a
+                  targeted attack.
+        :param beta: Trades off L2 distortion with L1 distortion: higher
+                     produces examples with lower L1 distortion, at the
+                     cost of higher L2 (and typically Linf) distortion
+        :param confidence: Confidence of adversarial examples: higher produces
+                           examples with larger l2 distortion, but more
+                           strongly classified as adversarial.
+        :param batch_size: Number of attacks to run simultaneously.
+        :param learning_rate: The learning rate for the attack algorithm.
+                              Smaller values produce better results but are
+                              slower to converge.
+        :param binary_search_steps: The number of times we perform binary
+                                    search to find the optimal tradeoff-
+                                    constant between norm of the perturbation
+                                    and confidence of the classification.
+        :param max_iterations: The maximum number of iterations. Setting this
+                               to a larger value will produce lower distortion
+                               results. Using only a few iterations requires
+                               a larger learning rate, and will produce larger
+                               distortion results.
+        :param abort_early: If true, allows early abort when the total
+                            loss starts to increase (greatly speeds up attack,
+                            but hurts performance, particularly on ImageNet)
+        :param initial_const: The initial tradeoff-constant to use to tune the
+                              relative importance of size of the perturbation
+                              and confidence of classification.
+                              If binary_search_steps is large, the initial
+                              constant is not important. A smaller value of
+                              this constant gives lower distortion results.
+        :param clip_min: (optional float) Minimum input component value
+        :param clip_max: (optional float) Maximum input component value
+        """
+        self.parse_params(**kwargs)
+
+        from attacks_tf import ElasticNetMethod as EAD
+        labels, nb_classes = self.get_or_guess_labels(x, kwargs)
+
+        attack = EAD(self.sess, self.model, self.beta,
+                     self.batch_size, self.confidence,
+                     'y_target' in kwargs, self.learning_rate,
+                     self.binary_search_steps, self.max_iterations,
+                     self.abort_early, self.initial_const,
+                     self.clip_min, self.clip_max,
+                     nb_classes, x.get_shape().as_list()[1:])
+
+        def ead_wrap(x_val, y_val):
+            return np.array(attack.attack(x_val, y_val), dtype=np.float32)
+        wrap = tf.py_func(ead_wrap, [x, labels], tf.float32)
+
+        return wrap
+
+    def parse_params(self, y=None, y_target=None,
+                     nb_classes=None, beta=1e-3,
+                     batch_size=9, confidence=0,
+                     learning_rate=1e-2,
+                     binary_search_steps=9, max_iterations=1000,
+                     abort_early=False, initial_const=1e-3,
+                     clip_min=0, clip_max=1):
+
+        if nb_classes is not None:
+            warnings.warn("The nb_classes argument is depricated and will "
+                          "be removed on 2018-02-11")
+        self.beta = beta
+        self.batch_size = batch_size
+        self.confidence = confidence
+        self.learning_rate = learning_rate
+        self.binary_search_steps = binary_search_steps
+        self.max_iterations = max_iterations
+        self.abort_early = abort_early
+        self.initial_const = initial_const
+        self.clip_min = clip_min
+        self.clip_max = clip_max
+
+
+class MadryEtAl(Attack):
+    """
+    The Projected Gradient Descent Attack (Madry et al. 2016).
+    Paper link: https://arxiv.org/pdf/1706.06083.pdf
+    """
+    def __init__(self, model, back='tf', sess=None):
+        super(MadryEtAl, self).__init__(model, back, sess)
+        self.feedable_kwargs = {'eps': np.float32,
+                                'eps_iter': np.float32,
+                                'y': np.float32,
+                                'y_target': np.float32,
+                                'clip_min': np.float32,
+                                'clip_max': np.float32}
+        self.structural_kwargs = ['ord', 'nb_iter']
+
+
+    def generate(self, x, **kwargs):
+        """
+        Generate symbolic graph for adversarial examples and return.
+        :param x: The model's symbolic inputs.
+        :param eps: (required float) maximum distortion of adversarial example
+                    compared to original input
+        :param eps_iter: (required float) step size for each attack iteration
+        :param nb_iter: (required int) Number of attack iterations.
+        :param y: (optional) A tensor with the model labels.
+        :param y_target: (optional) A tensor with the labels to target. Leave
+                         y_target=None if y is also set. Labels should be
+                         one-hot-encoded.
+        :param ord: (optional) Order of the norm (mimics Numpy).
+                    Possible values: np.inf, 1 or 2.
+        :param clip_min: (optional float) Minimum input component value
+        :param clip_max: (optional float) Maximum input component value
+        """
+
+        # Parse and save attack-specific parameters
+        assert self.parse_params(**kwargs)
+
+        labels, nb_classes = self.get_or_guess_labels(x, kwargs)
+        self.targeted = self.y_target is not None
+
+        # Initialize loop variables
+        adv_x = self.attack(x)
+
+        return adv_x
+
+    def parse_params(self, eps=0.3, eps_iter=0.01, nb_iter=40, y=None,
+                     ord=np.inf, clip_min=None, clip_max=None,
+                     y_target=None, **kwargs):
+        """
+        Take in a dictionary of parameters and applies attack-specific checks
+        before saving them as attributes.
+        Attack-specific parameters:
+        :param eps: (required float) maximum distortion of adversarial example
+                    compared to original input
+        :param eps_iter: (required float) step size for each attack iteration
+        :param nb_iter: (required int) Number of attack iterations.
+        :param y: (optional) A tensor with the model labels.
+        :param y_target: (optional) A tensor with the labels to target. Leave
+                         y_target=None if y is also set. Labels should be
+                         one-hot-encoded.
+        :param ord: (optional) Order of the norm (mimics Numpy).
+                    Possible values: np.inf, 1 or 2.
+        :param clip_min: (optional float) Minimum input component value
+        :param clip_max: (optional float) Maximum input component value
+        """
+
+        # Save attack-specific parameters
+        self.eps = eps
+        self.eps_iter = eps_iter
+        self.nb_iter = nb_iter
+        self.y = y
+        self.y_target = y_target
+        self.ord = ord
+        self.clip_min = clip_min
+        self.clip_max = clip_max
+
+        if self.y is not None and self.y_target is not None:
+            raise ValueError("Must not set both y and y_target")
+        # Check if order of the norm is acceptable given current implementation
+        if self.ord not in [np.inf, 1, 2]:
+            raise ValueError("Norm order must be either np.inf, 1, or 2.")
+        if self.back == 'th':
+            error_string = ("ProjectedGradientDescentMethod is"
+                            " not implemented in Theano")
+            raise NotImplementedError(error_string)
+
+        return True
+
+    def attack_single_step(self, x, eta, y):
+        """
+        Given the original image and the perturbation computed so far, computes
+        a new perturbation.
+        :param x: A tensor with the original input.
+        :param eta: A tensor the same shape as x that holds the perturbation.
+        :param y: A tensor with the target labels or ground-truth labels.
+        """
+        from utils_tf import tf_model_loss, clip_eta
+
+        adv_x = x + eta
+        preds = self.model.get_probs(adv_x)
+        loss = tf_model_loss(y, preds)
+        if self.targeted:
+            loss = -loss
+        grad, = tf.gradients(loss, adv_x)
+        scaled_signed_grad = self.eps_iter * tf.sign(grad)
+        adv_x = adv_x + scaled_signed_grad
+        adv_x = tf.clip_by_value(adv_x, self.clip_min, self.clip_max)
+        eta = adv_x - x
+        eta = clip_eta(eta, self.ord, self.eps)
+        return x, eta
+
+    def attack(self, x, **kwargs):
+        """
+        This method creates a symbolic graph that given an input image,
+        first randomly perturbs the image. The
+        perturbation is bounded to an epsilon ball. Then multiple steps of
+        gradient descent is performed to increase the probability of a target
+        label or decrease the probability of the ground-truth label.
+        :param x: A tensor with the input image.
+        """
+        from utils_tf import clip_eta
+
+        eta = tf.random_uniform(tf.shape(x), -self.eps, self.eps)
+        eta = clip_eta(eta, self.ord, self.eps)
+
+        if self.y is not None:
+            y = self.y
+        else:
+            preds = self.model.get_probs(x)
+            preds_max = tf.reduce_max(preds, 1, keep_dims=True)
+            y = tf.to_float(tf.equal(preds, preds_max))
+            y = y / tf.reduce_sum(y, 1, keep_dims=True)
+        y = tf.stop_gradient(y)
+
+        for i in range(self.nb_iter):
+            x, eta = self.attack_single_step(x, eta, y)
+
+        adv_x = x + eta
+        if self.clip_min is not None and self.clip_max is not None:
+            adv_x = tf.clip_by_value(adv_x, self.clip_min, self.clip_max)
+
+        return adv_x
