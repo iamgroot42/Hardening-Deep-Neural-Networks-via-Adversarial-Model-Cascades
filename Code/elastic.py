@@ -61,15 +61,13 @@ def main(argv=None):
 		confidence=0
 		enet = attacks.ElasticNetMethod(model, sess=sess)
 
-		x_adv = enet.generate_np(X_test_pm, max_iterations=100,
+		adv_x = enet.generate_np(X_test_pm, max_iterations=100,
                                         binary_search_steps=3,
 					beta=beta,
 					confidence=confidence,
-					batch_size=128,
+					batch_size=64,
                                         initial_const=1,
                                         clip_min=0.0, clip_max=1.0)
-
-		adv_x = vat.generate_np(X_test_pm)
 
 		np.save(FLAGS.adversary_path_y, Y_test_pm)
 		np.save(FLAGS.adversary_path_x, adv_x)

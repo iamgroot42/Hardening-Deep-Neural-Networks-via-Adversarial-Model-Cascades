@@ -60,8 +60,10 @@ def main(argv=None):
 		x = tf.placeholder(tf.float32, shape=x_shape)
 
 		madry = attacks.MadryEtAl(model, sess=sess)
-		adv_x = madry.attack(x)
-		#adv_x = madry.generate_np(X_test_pm)
+		madry.parse_params(eps=0.3, eps_iter=0.01, nb_iter=40,
+                     ord=np.inf, clip_min=None, clip_max=None, y_target=None)
+		#adv_x = madry.attack(x)
+		adv_x = madry.generate_np(X_test_pm)
 
 		#np.save(FLAGS.adversary_path_y, Y_test_pm)
 		#np.save(FLAGS.adversary_path_x, adv_x)

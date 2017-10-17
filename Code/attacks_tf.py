@@ -13,6 +13,7 @@ import utils_tf
 import helpers
 import utils
 
+
 def apply_perturbations(i, j, X, increase, theta, clip_min, clip_max):
     # perturb our input sample
     if increase:
@@ -415,6 +416,7 @@ class ElasticNetMethod(object):
 		self.elasticdist_y = self.l2dist_y + tf.multiply(self.l1dist_y, self.beta_t)
 
 		# compute the probability of the label class versus the maximum other
+
 		real = tf.reduce_sum((self.tlab) * self.output, 1)
 		real_y = tf.reduce_sum((self.tlab) * self.output_y, 1)
 		other = tf.reduce_max((1 - self.tlab) * self.output - (self.tlab * 10000), 1)
@@ -473,7 +475,10 @@ class ElasticNetMethod(object):
 		"""
 		r = []
 		for i in range(0, len(imgs), self.batch_size):
-			print("Running EAD attack on instance %d of %d") %(i, len(imgs))
+			# OOPS PROBLEM, FIX IN CLEVERHANS, FIX IN PR
+			if(i + self.batch_size >= len(imgs)):
+				break
+			print("Running EAD attack on instance " + str(i) + " of " + str(len(imgs)))
 			r.extend(self.attack_batch(imgs[i:i + self.batch_size], targets[i:i + self.batch_size]))
 		return np.array(r)
 
@@ -526,9 +531,9 @@ class ElasticNetMethod(object):
 				self.sess.run([self.train])
 				self.sess.run([self.setter, self.setter_y])
 				l, l2s, l1s, elastic = self.sess.run([self.loss,
-													  self.l2dist,
-													  self.l1dist,
-													  self.elasticdist])
+									 self.l2dist,
+									 self.l1dist,
+									 self.elasticdist])
 				scores, nimg = self.sess.run([self.output, self.newimg])
 
 				#if iteration % ((self.MAX_ITERATIONS // 10) or 1) == 0:
@@ -569,7 +574,7 @@ class ElasticNetMethod(object):
 			print(" Successfully generated adversarial examples on %d of %d instances."%(sum(upper_bound < 1e9), batch_size))
 			o_besten = np.array(o_besten)
 			mean = np.mean(np.sqrt(o_besten[o_besten < 1e9]))
-			print(" Elastic Mean successful distortion: {:.4g}"%(mean))
+			print(" Elastic Mean successful distortion: " + str(mean))
 
 		o_besten = np.array(o_besten)
 		return o_bestattack
