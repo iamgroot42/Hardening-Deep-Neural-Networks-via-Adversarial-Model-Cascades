@@ -9,11 +9,7 @@ import six
 import tensorflow as tf
 import time
 
-from tensorflow.python.platform import flags
 from utils import batch_indices
-
-FLAGS = flags.FLAGS
-
 
 def tf_model_loss(y, model, mean=True):
 	op = model.op
@@ -79,17 +75,18 @@ def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
 def tf_model_eval(sess, x, y, model, X_test, Y_test, verbose=True):
 	acc_value = keras.metrics.categorical_accuracy(y, model)
 	accuracy = 0.0
+	batch_size = 32
 	with sess.as_default():
-		nb_batches = int(math.ceil(float(len(X_test)) / FLAGS.batch_size))
-		assert nb_batches * FLAGS.batch_size >= len(X_test)
+		nb_batches = int(math.ceil(float(len(X_test)) / batch_size))
+		assert nb_batches * batch_size >= len(X_test)
 		for batch in range(nb_batches):
 			if batch % 100 == 0 and batch > 0:
 				if verbose:
 					print("Batch " + str(batch))
 			# Must not use the `batch_indices` function here, because it
 			# repeats some examples.
-			start = batch * FLAGS.batch_size
-			end = min(len(X_test), start + FLAGS.batch_size)
+			start = batch * batch_size
+			end = min(len(X_test), start + batch_size)
 			cur_batch_size = end - start
 			# The last batch may be smaller than all others, so we need to
 			# account for variable batch size here
@@ -101,15 +98,9 @@ def tf_model_eval(sess, x, y, model, X_test, Y_test, verbose=True):
 	return accuracy
 
 
-def tf_model_load(sess):
-	with sess.as_default():
-		saver = tf.train.Saver()
-		saver.restore(sess, os.path.join(FLAGS.train_dir, FLAGS.filename))
-	return True
-
-
 def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=True):
 	n = len(numpy_inputs)
+	batch_size=32
 	assert n > 0
 	assert n == len(tf_inputs)
 	m = numpy_inputs[0].shape[0]
@@ -119,17 +110,17 @@ def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=True):
 	for _ in tf_outputs:
 		out.append([])
 	with sess.as_default():
-		for start in six.moves.xrange(0, m, FLAGS.batch_size):
-			batch = start // FLAGS.batch_size
+		for start in six.moves.xrange(0, m, batch_size):
+			batch = start // batch_size
 			if batch % 100 == 0 and batch > 0:
 				if verbose:
 					print("Batch " + str(batch+1))
 
-			start = batch * FLAGS.batch_size
-			end = start + FLAGS.batch_size
+			start = batch * batch_size
+			end = start + batch_size
 			numpy_input_batches = [numpy_input[start:end] for numpy_input in numpy_inputs]
 			cur_batch_size = numpy_input_batches[0].shape[0]
-			assert cur_batch_size <= FLAGS.batch_size
+			assert cur_batch_size <= batch_size
 			for e in numpy_input_batches:
 				assert e.shape[0] == cur_batch_size
 
@@ -146,3 +137,33 @@ def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=True):
 		assert e.shape[0] == m, e.shape
 	return out
 
+
+def l2_batch_normalize(x, epsilon=1e-12, scope=None):
+    """
+    Helper function to normalize a batch of vectors.
+    :param x: the input placeholder
+    :param epsilon: stabilizes division
+    :return: the batch of l2 normalized vector
+    """
+    with tf.name_scope(scope, "l2_batch_normalize") as scope:
+        x_shape = tf.shape(x)
+        x = tf.contrib.layers.flatten(x)
+        x /= (epsilon + tf.reduce_max(tf.abs(x), 1, keep_dims=True))
+        square_sum = tf.reduce_sum(tf.square(x), 1, keep_dims=True)
+        x_inv_norm = tf.rsqrt(np.sqrt(epsilon) + square_sum)
+        x_norm = tf.multiply(x, x_inv_norm)
+        return tf.reshape(x_norm, x_shape, scope)
+
+
+def kl_with_logits(p_logits, q_logits, scope=None,
+                   loss_collection=tf.GraphKeys.REGULARIZATION_LOSSES):
+    """Helper function to compute kl-divergence KL(p || q)
+    """
+    with tf.name_scope(scope, "kl_divergence") as name:
+        p = tf.nn.softmax(p_logits)
+        p_log = tf.nn.log_softmax(p_logits)
+        q_log = tf.nn.log_softmax(q_logits)
+        loss = tf.reduce_mean(tf.reduce_sum(p * (p_log - q_log), axis=1),
+                              name=name)
+        tf.losses.add_loss(loss, loss_collection)
+        return loss

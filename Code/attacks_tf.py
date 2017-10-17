@@ -220,3 +220,75 @@ def jacobian_augmentation(sess, x, X_sub_prev, Y_sub, grads, lmbda, keras_phase=
 
     # Return augmented training data (needs to be labeled afterwards)
     return X_sub
+
+
+def deepfool_batch(sess, x, pred, logits, grads, X, nb_candidate, overshoot,
+				   max_iter, clip_min, clip_max, nb_classes, feed=None):
+	X_adv = deepfool_attack(sess, x, pred, logits, grads, X, nb_candidate,
+							overshoot, max_iter, clip_min, clip_max, feed=feed)
+	return np.asarray(X_adv, dtype=np.float32)
+
+
+def deepfool_attack(sess, x, predictions, logits, grads, sample, nb_candidate,
+					overshoot, max_iter, clip_min, clip_max, feed=None):
+	adv_x = copy.copy(sample)
+	iteration = 0
+	current = utils_tf.model_argmax(sess, x, logits, adv_x, feed=feed)
+	if current.shape == ():
+		current = np.array([current])
+	w = np.squeeze(np.zeros(sample.shape[1:]))  # same shape as original image
+	r_tot = np.zeros(sample.shape)
+	original = current  # use original label as the reference
+
+	while (np.any(current == original) and iteration < max_iter):
+
+		if iteration % 5 == 0 and iteration > 0:
+			print("Attack result at iteration %d is %d"%(iteration,current))
+		gradients = sess.run(grads, feed_dict={x: adv_x})
+		predictions_val = sess.run(predictions, feed_dict={x: adv_x})
+		for idx in range(sample.shape[0]):
+			pert = np.inf
+			if current[idx] != original[idx]:
+				continue
+			for k in range(1, nb_candidate):
+				w_k = gradients[idx, k, ...] - gradients[idx, 0, ...]
+				f_k = predictions_val[idx, k] - predictions_val[idx, 0]
+
+				pert_k = (abs(f_k) + 0.00001) / np.linalg.norm(w_k.flatten())
+				if pert_k < pert:
+					pert = pert_k
+					w = w_k
+			r_i = pert*w/np.linalg.norm(w)
+			r_tot[idx, ...] = r_tot[idx, ...] + r_i
+
+		adv_x = np.clip(r_tot + sample, clip_min, clip_max)
+		current = utils_tf.model_argmax(sess, x, logits, adv_x, feed=feed)
+		if current.shape == ():
+			current = np.array([current])
+		iteration = iteration + 1
+
+	print("Attack result at iteration %d is %d"%(iteration, current))
+	print("%d out of %d"%(sum(current != original), sample.shape[0]) + " becomes adversarial examples at iteration %d"%(iteration))
+	adv_x = np.clip((1+overshoot)*r_tot + sample, clip_min, clip_max)
+	return adv_x
+
+
+def vatm(model, x, logits, eps, num_iterations=1, xi=1e-6, clip_min=None, clip_max=None, scope=None):
+	"""
+	:param eps: the epsilon (input variation parameter)
+	:param num_iterations: the number of iterations
+	:param xi: the finite difference parameter
+	"""
+	with tf.name_scope(scope, "virtual_adversarial_perturbation"):
+		d = tf.random_normal(tf.shape(x))
+		for i in range(num_iterations):
+			d = xi * utils_tf.l2_batch_normalize(d)
+			logits_d = model.get_logits(x + d)
+			kl = utils_tf.kl_with_logits(logits, logits_d)
+			Hd = tf.gradients(kl, d)[0]
+			d = tf.stop_gradient(Hd)
+		d = eps * utils_tf.l2_batch_normalize(d)
+		adv_x = x + d
+		if (clip_min is not None) and (clip_max is not None):
+			adv_x = tf.clip_by_value(adv_x, clip_min, clip_max)
+		return adv_x

@@ -2,6 +2,8 @@ from abc import ABCMeta
 import numpy as np
 import warnings
 
+import tensorflow as tf
+import attacks_tf
 
 class Attack:
 	__metaclass__ = ABCMeta
@@ -153,7 +155,6 @@ class SaliencyMapMethod(Attack):
 		"""
 		Attack-specific parameters:
 		"""
-		import tensorflow as tf
 		from attacks_tf import jacobian_graph, jsma_batch
 
 		# Parse and save attack-specific parameters
@@ -234,3 +235,122 @@ def jsma(sess, x, predictions, grads, sample, target, theta, gamma=np.inf,
 	elif back == 'th':
 		raise NotImplementedError("Theano jsma not implemented.")
 
+
+class DeepFool(Attack):
+	def __init__(self, model, back='tf', sess=None):
+		super(DeepFool, self).__init__(model, back, sess)
+
+		self.structural_kwargs = ['over_shoot', 'max_iter', 'clip_max',
+								  'clip_min', 'nb_candidate']
+
+	def generate(self, x, **kwargs):
+		assert self.parse_params(**kwargs)
+
+		logits = self.model.get_logits(x)
+		self.nb_classes = logits.get_shape().as_list()[-1]
+		assert self.nb_candidate <= self.nb_classes,\
+			'nb_candidate should not be greater than nb_classes'
+		preds = tf.reshape(tf.nn.top_k(logits, k=self.nb_candidate)[0],
+						   [-1, self.nb_candidate])
+
+		grads = tf.stack(attacks_tf.jacobian_graph(preds, x, self.nb_candidate), axis=1)
+
+		def deepfool_wrap(x_val):
+			return deepfool_batch(self.sess, x, preds, logits, grads, x_val,
+								  self.nb_candidate, self.overshoot,
+								  self.max_iter, self.clip_min, self.clip_max,
+								  self.nb_classes)
+		return tf.py_func(deepfool_wrap, [x], tf.float32)
+
+	def parse_params(self, nb_candidate=10, overshoot=0.02, max_iter=50,
+					 nb_classes=None, clip_min=0., clip_max=1., **kwargs):
+		"""
+		:param nb_candidate: The number of classes to test against, i.e.,
+							 deepfool only consider nb_candidate classes when
+							 attacking(thus accelerate speed). The nb_candidate
+							 classes are chosen according to the prediction
+							 confidence during implementation.
+		:param overshoot: A termination criterion to prevent vanishing updates
+		:param max_iter: Maximum number of iteration for deepfool
+		:param nb_classes: The number of model output classes
+		:param clip_min: Minimum component value for clipping
+		:param clip_max: Maximum component value for clipping
+		"""
+		self.nb_candidate = nb_candidate
+		self.overshoot = overshoot
+		self.max_iter = max_iter
+		self.clip_min = clip_min
+		self.clip_max = clip_max
+		return True
+
+
+
+
+class VirtualAdversarialMethod(Attack):
+    def __init__(self, model, back='tf', sess=None):
+        super(VirtualAdversarialMethod, self).__init__(model, back, sess)
+
+        self.feedable_kwargs = {'eps': tf.float32, 'xi': tf.float32,
+                                'clip_min': tf.float32,
+                                'clip_max': tf.float32}
+        self.structural_kwargs = ['num_iterations']
+
+    def generate(self, x, **kwargs):
+        """
+        Generate symbolic graph for adversarial examples and return.
+        :param x: The model's symbolic inputs.
+        :param eps: (optional float ) the epsilon (input variation parameter)
+        :param num_iterations: (optional) the number of iterations
+        :param xi: (optional float) the finite difference parameter
+        :param clip_min: (optional float) Minimum input component value
+        :param clip_max: (optional float) Maximum input component value
+        """
+        # Parse and save attack-specific parameters
+        assert self.parse_params(**kwargs)
+
+        return vatm(self.model, x, self.model.get_logits(x), eps=self.eps,
+                    num_iterations=self.num_iterations, xi=self.xi,
+                    clip_min=self.clip_min, clip_max=self.clip_max)
+
+    def parse_params(self, eps=2.0, num_iterations=1, xi=1e-6, clip_min=None,
+                     clip_max=None, **kwargs):
+        """
+        Take in a dictionary of parameters and applies attack-specific checks
+        before saving them as attributes.
+        Attack-specific parameters:
+        :param eps: (optional float )the epsilon (input variation parameter)
+        :param num_iterations: (optional) the number of iterations
+        :param xi: (optional float) the finite difference parameter
+        :param clip_min: (optional float) Minimum input component value
+        :param clip_max: (optional float) Maximum input component value
+        """
+        # Save attack-specific parameters
+        self.eps = eps
+        self.num_iterations = num_iterations
+        self.xi = xi
+        self.clip_min = clip_min
+        self.clip_max = clip_max
+        return True
+
+
+def vatm(model, x, logits, eps, back='tf', num_iterations=1, xi=1e-6,
+         clip_min=None, clip_max=None):
+    """
+    A wrapper for the perturbation methods used for virtual adversarial
+    training : https://arxiv.org/abs/1507.00677
+    It calls the right function, depending on the
+    user's backend.
+    :param model: the model which returns the network unnormalized logits
+    :param x: the input placeholder
+    :param logits: the model's unnormalized output tensor
+    :param eps: the epsilon (input variation parameter)
+    :param num_iterations: the number of iterations
+    :param xi: the finite difference parameter
+    :param clip_min: optional parameter that can be used to set a minimum
+                    value for components of the example returned
+    :param clip_max: optional parameter that can be used to set a maximum
+                    value for components of the example returned
+    :return: a tensor for the adversarial example
+    """
+    from attacks_tf import vatm as vatm_tf
+    return vatm_tf(model, x, logits, eps, num_iterations=num_iterations, xi=xi, clip_min=clip_min, clip_max=clip_max)
