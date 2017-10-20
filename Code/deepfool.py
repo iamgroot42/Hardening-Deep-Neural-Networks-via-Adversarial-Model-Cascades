@@ -14,12 +14,11 @@ from utils_tf import batch_eval
 import utils_cifar, utils_mnist, utils_svhn
 from keras_to_ch import KerasModelWrapper
 
-
-flags.DEFINE_integer('n_subset_classes', 10, 'Number of target classes')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_integer('iters', 50, 'Maximum iterations')
 
 
 def main(argv=None):
@@ -58,14 +57,14 @@ def main(argv=None):
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
 	deepfool = attacks.DeepFool(model, sess=sess)
-	deepfool.parse_params(nb_classes=n_classes)
 
 	x = tf.placeholder(tf.float32, shape=x_shape)
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
-	adv_x = deepfool.generate_np(X_test_pm, clip_min=0.0, clip_max=1.0, nb_candidate=FLAGS.n_subset_classes)
+	deepfool.parse_params(clip_min=0.0, clip_max=1.0, nb_candidate=n_classes, max_iter=FLAGS.iters)
+	adv_x = deepfool.generate_np(X_test_pm)
 
-	ccuracy = raw_model.evaluate(adv_x, Y_test_pm, batch_size=128)
+	accuracy = raw_model.evaluate(adv_x, Y_test_pm, batch_size=128)
         print('\nMisclassification accuracy on adversarial examples: ' + str((1.0 - accuracy[1])*100))
 
 	np.save(FLAGS.adversary_path_y, Y_test_pm)

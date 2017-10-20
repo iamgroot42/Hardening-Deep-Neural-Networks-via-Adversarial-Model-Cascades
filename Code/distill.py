@@ -97,8 +97,6 @@ def main(argv=None):
 
 	# load teacher model, unlabelled data
 	X_train = np.load(FLAGS.unlabelled_data)
-	np.random.shuffle(X_train)
-	X_train = X_train[:50000]
 	teacher = load_model(FLAGS.teacher_model)
 
 	# evaluate the labels (normal model with softmax; temperature=1)

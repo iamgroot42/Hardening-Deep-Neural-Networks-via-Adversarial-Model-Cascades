@@ -15,7 +15,6 @@ from keras_to_ch import KerasModelWrapper
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('n_subset_classes', 10, 'Number of target classes')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
