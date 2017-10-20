@@ -407,6 +407,10 @@ class ElasticNetMethod(object):
 		self.output = model.get_logits(self.newimg)
 		self.output_y = model.get_logits(self.slack)
 
+		print(self.output.get_shape())
+		print(self.output_y.get_shape())
+		print(self.tlab.get_shape())
+
 		# distance to the input data
 		self.l2dist = tf.reduce_sum(tf.square(self.newimg-self.timg), list(range(1, len(shape))))
 		self.l2dist_y = tf.reduce_sum(tf.square(self.slack-self.timg), list(range(1, len(shape))))

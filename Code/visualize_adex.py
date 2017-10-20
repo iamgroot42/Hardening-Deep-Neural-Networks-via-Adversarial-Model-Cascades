@@ -28,6 +28,7 @@ def main(argv=None):
 		X_test_adv = np.swapaxes(X_test_adv,0,1)
 		plt.imshow(X_test_adv)
 		plt.savefig('adv_example.png')
+	print("Image saved!")
 
 
 if __name__ == '__main__':

@@ -55,7 +55,8 @@ def main(argv=None):
 	sess = tf.Session(config=config)
 	keras.backend.set_session(sess)
 
-	model = KerasModelWrapper(keras.models.load_model(FLAGS.model_path))
+	raw_model = keras.models.load_model(FLAGS.model_path)
+	model = KerasModelWrapper(raw_model)
 	deepfool = attacks.DeepFool(model, sess=sess)
 	deepfool.parse_params(nb_classes=n_classes)
 
@@ -63,6 +64,10 @@ def main(argv=None):
 	y = tf.placeholder(tf.float32, shape=y_shape)
 
 	adv_x = deepfool.generate_np(X_test_pm, clip_min=0.0, clip_max=1.0, nb_candidate=FLAGS.n_subset_classes)
+
+	ccuracy = raw_model.evaluate(adv_x, Y_test_pm, batch_size=128)
+        print('\nMisclassification accuracy on adversarial examples: ' + str((1.0 - accuracy[1])*100))
+
 	np.save(FLAGS.adversary_path_y, Y_test_pm)
 	np.save(FLAGS.adversary_path_x, adv_x)
 
