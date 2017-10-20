@@ -21,7 +21,7 @@ def main(argv=None):
 	X_test_adv = X_test_adv[FLAGS.example_index]
 
 	if FLAGS.dataset == 0:
-		plt.matshow(X_test_adv,  cmap='gray')
+		plt.matshow(X_test_adv[0],  cmap='gray')
 		plt.savefig('adv_example.png')
 	else:
 		X_test_adv = np.swapaxes(X_test_adv,0,2)

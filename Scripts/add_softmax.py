@@ -5,6 +5,12 @@ from keras.layers import Activation
 import tensorflow as tf
 import sys
 
+# Don't hog GPU
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=True
+sess = tf.Session(config=config)
+keras.backend.set_session(sess)
+
 train_temp=1
 learning_rate = 1e-4
 
@@ -15,7 +21,7 @@ base = load_model(sys.argv[1], custom_objects={'fn':fn})
 
 logit = base.output
 softmax = Activation('softmax', name='self_added_softmax')(logit)
-new_model = Model(base.input, softmax)
+new_model = Model(inputs=base.input, outputs=softmax)
 
 sgd = keras.optimizers.SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
 new_model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])

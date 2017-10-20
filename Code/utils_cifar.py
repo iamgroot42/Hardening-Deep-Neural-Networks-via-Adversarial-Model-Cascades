@@ -54,8 +54,8 @@ def augmented_data(X):
 		samplewise_std_normalization=False,  # divide each input by its std
 		zca_whitening=False,  # apply ZCA whitening
 		rotation_range=15,  # randomly rotate images in the range (degrees, 0 to 180)
-		width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
-		height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
+		width_shift_range=0.15,  # randomly shift images horizontally (fraction of total width)
+		height_shift_range=0.15,  # randomly shift images vertically (fraction of total height)
 		horizontal_flip=True,  # randomly flip images
 		vertical_flip=True,  # randomly flip images
 		data_format="channels_first") # (channel, row, col) format per image

@@ -103,19 +103,15 @@ def main(argv=None):
 
 	# evaluate the labels (normal model with softmax; temperature=1)
 	predicted = teacher.predict(X_train)
+
 	# Y_train = sess.run(tf.nn.softmax(predicted/train_temp))
 	Y_train = predicted
 
-	# Scale data to [0,1]
-	X_train = X_train.astype('float32') / 255.
+	# Scale data to [0,1] (if required)
+	#X_train = X_train.astype('float32') / 255.
 
 	# train the student model at temperature t
 	student = train_logit_proxy(X_train, Y_train, n_classes, FLAGS.learning_rate, shape, FLAGS.nb_epochs, FLAGS.train_temp)
-
-	# and finally we predict at temperature 1
-	predicted = student.predict(X_train)
-
-	print(predicted)
 
 	# save student model
 	student.save(FLAGS.save_here)

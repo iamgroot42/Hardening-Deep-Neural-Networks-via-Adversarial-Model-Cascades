@@ -65,10 +65,7 @@ def main(argv=None):
 	# Craft adversarial examples using Fast Gradient Sign Method (FGSM)
 	predictions = model(x)
 
-	if FLAGS.dataset == 'cifar100':
-		adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps, clip_min=0.0, clip_max=1.0)
-	else:
-		adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps, clip_min=0, clip_max=255)
+	adv_x = helpers.fgsm(x, predictions, eps=FLAGS.fgsm_eps, clip_min=0.0, clip_max=1.0)
 
 	X_test_adv, = batch_eval(sess, [x], [adv_x], [X_test_pm])
 	# Evaluate the accuracy of the blackbox model on adversarial examples

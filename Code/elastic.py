@@ -65,7 +65,7 @@ def main(argv=None):
                                         binary_search_steps=3,
 					beta=beta,
 					confidence=confidence,
-					batch_size=64,
+					batch_size=128,
                                         initial_const=1,
                                         clip_min=0.0, clip_max=1.0)
 

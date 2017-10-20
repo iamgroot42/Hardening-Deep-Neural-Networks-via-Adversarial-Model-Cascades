@@ -8,25 +8,25 @@ import tensorflow as tf
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
+from six.moves import xrange
+
 from utils_tf import batch_eval
 import utils_cifar, utils_mnist, utils_svhn
 import helpers
 
 from keras.models import load_model
+from attacks import SaliencyMapMethod
 
 FLAGS = flags.FLAGS
-
 
 flags.DEFINE_integer('n_subset_classes', 10, 'Number of target classes')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
+flags.DEFINE_float('gamma', 0.1, 'Value of gamma for JSMA')
+flags.DEFINE_float('theta', 1.0, 'Value of theta for JSMA')
 
-import os
-from six.moves import xrange
-
-from attacks import SaliencyMapMethod
 
 def main(argv=None):
 	n_classes = 10
@@ -100,18 +100,13 @@ def main(argv=None):
 		for target in target_classes:
 			print('Generating adv. example for target class %i' % target)
 			try:
-
 				# This call runs the Jacobian-based saliency map approach
 				one_hot_target = np.zeros((1, n_classes), dtype=np.float32)
 				one_hot_target[0, target] = 1
-				jsma_params = {'theta': 1., 'gamma': 0.1,
-							   'nb_classes': n_classes, 'clip_min': 0.,
-							   'clip_max': 1., 'targets': y,
-							   'y_val': one_hot_target}
-				if FLAGS.dataset =='svhn':
-					jsma_params['clip_min'] = 0
-					jsma_params['clip_max'] = 255
-
+				jsma_params = {'theta': FLAGS.theta, 'gamma': FLAGS.gamma,
+						  'nb_classes': n_classes, 'clip_min': 0.,
+						  'clip_max': 1., 'targets': y,
+						   'y_val': one_hot_target}
 				adv_x = jsma.generate_np(X_test_pm[sample_ind:(sample_ind+1)],
 										 **jsma_params)
 
@@ -122,18 +117,17 @@ def main(argv=None):
 				res = int(helpers.model_argmax(sess, x, preds, adv_x) == target)
 
 				# Computer number of modified features
-				adv_x_reshape = adv_x.reshape(-1)
-				test_in_reshape = X_test_pm[sample_ind].reshape(-1)
-				nb_changed = np.where(adv_x_reshape != test_in_reshape)[0].shape[0]
-				percent_perturb = float(nb_changed) / adv_x.reshape(-1).shape[0]
+				# adv_x_reshape = adv_x.reshape(-1)
+				# test_in_reshape = X_test_pm[sample_ind].reshape(-1)
+				# nb_changed = np.where(adv_x_reshape != test_in_reshape)[0].shape[0]
+				# percent_perturb = float(nb_changed) / adv_x.reshape(-1).shape[0]
 
 				# Update the arrays for later analysis
 				results[target, sample_ind] = res
-				perturbations[target, sample_ind] = percent_perturb
+				# perturbations[target, sample_ind] = percent_perturb
 
 			except:
 				continue
-
 	print('--------------------------------------')
 
 	# Compute the number of adversarial examples that were successfully found
@@ -142,13 +136,13 @@ def main(argv=None):
 	print('Avg. rate of successful adv. examples {0:.4f}'.format(succ_rate))
 
 	# Compute the average distortion introduced by the algorithm
-	percent_perturbed = np.mean(perturbations)
-	print('Avg. rate of perturbed features {0:.4f}'.format(percent_perturbed))
+	# percent_perturbed = np.mean(perturbations)
+	# print('Avg. rate of perturbed features {0:.4f}'.format(percent_perturbed))
 
 	# Compute the average distortion introduced for successful samples only
-	percent_perturb_succ = np.mean(perturbations * (results == 1))
-	print('Avg. rate of perturbed features for successful '
-		  'adversarial examples {0:.4f}'.format(percent_perturb_succ))
+	# percent_perturb_succ = np.mean(perturbations * (results == 1))
+	# print('Avg. rate of perturbed features for successful '
+	# 	  'adversarial examples {0:.4f}'.format(percent_perturb_succ))
 
 	# Close TF session
 	sess.close()

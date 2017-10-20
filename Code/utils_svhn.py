@@ -13,6 +13,10 @@ def data_svhn():
 	# the data, shuffled and split between train and test sets
 	X_train, Y_train = np.load("../Code/SVHN/SVHNx_tr.npy"), np.load("../Code/SVHN/SVHNy_tr.npy")
 	X_test, Y_test = np.load("../Code/SVHN/SVHNx_te.npy"), np.load("../Code/SVHN/SVHNy_te.npy")
+	X_train = X_train.astype('float32')
+	X_test = X_test.astype('float32')
+	X_train /= 255.0
+	X_test /= 255.0
 	return X_train, Y_train, X_test, Y_test
 
 
