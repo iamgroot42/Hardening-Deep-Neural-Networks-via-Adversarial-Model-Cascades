@@ -51,7 +51,6 @@ else
 fi
 
 mkdir -p $bagfolder
-cp $seedmodel $bagfolder/1
 
 # Copy initial seed model to directory
 python fix.py $bagfolder/1
@@ -82,17 +81,23 @@ do
 	selectedmodel=$seedmodel
 	# Pick model according to desired option
 	if [ $transfer == "yes" ]; then
-		selectedmodel=$COUNTER
+		selectedmodel=$bagfolder/$COUNTER
 	fi
 
+	# Make a copy of selected model for finetuning
+	cp $selectedmodel $seeddata"model"
+
 	# Finetune data
-	python ../Code/bagging.py --mode finetune --dataset $dataset --seed_model $seedmodel --output_model_dir $bagfolder --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy"
+	python ../Code/bagging.py --mode finetune --dataset $dataset --seed_model $seedmodel"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy"
 
 	# Remove temporary data
 	rm $prefix"X.npy" $prefix"Y.npy"
 
 	# Update model counter
 	COUNTER=$[$COUNTER +1]
+
+	# Add this model to bag
+	mv $seedmodel"model" $dataset/$COUNTER
 
 	#Keras specific change to make sure model can be loaded in future
 	python fix.py $temporary_folder/1

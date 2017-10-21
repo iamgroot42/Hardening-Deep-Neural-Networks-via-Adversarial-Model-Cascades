@@ -74,10 +74,9 @@ def main(argv=None):
 	if FLAGS.level == 'blackbox':
 		if FLAGS.mode == 'finetune':
 			model = load_model(FLAGS.save_here)
-		else:
-			X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-			if FLAGS.label_smooth > 0:
-				y_tr = y_tr.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
+		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+		if FLAGS.label_smooth > 0:
+			y_tr = y_tr.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
 		if FLAGS.dataset == 'cifar100':
 			model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
 			datagen = utils_cifar.augmented_data(X_train_p)
