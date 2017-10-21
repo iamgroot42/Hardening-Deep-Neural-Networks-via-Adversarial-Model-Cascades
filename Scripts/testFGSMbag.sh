@@ -5,8 +5,6 @@ dataset=$1 #(cifar100,mnist,svhn)
 model=$2 #(path to directory of bag of models)
 ppmodel=$3 #(path to proxy model)
 
-label_smooth=0.0
-
 #Determine set of epsilon values according to dataset
 if [ $dataset == "mnist" ]
 	then
@@ -27,7 +25,7 @@ do
 
 	prefix=$(date -d "today" +"%Y%m%d%H%M%S")
 
-	python ../Code/generate_adversarials_fgsm.py --fgsm_eps $epsilon --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y"
+	python ../Code/fgsm.py --fgsm_eps $epsilon --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y"
 	python ../Code/bagging.py --input_model_dir $model --data_x $prefix"X.npy" --data_y $prefix"Y.npy" --mode test
 	rm  $prefix"X.npy" $prefix"Y.npy"
 	echo "Results above for " $epsilon

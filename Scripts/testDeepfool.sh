@@ -23,7 +23,7 @@ fi
 
 prefix=$(date -d "today" +"%Y%m%d%H%M%S")
 
-python ../Code/deepfool.py --gamma $gamma --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y" --iters $iters
+python ../Code/deepfool.py --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y" --iters $iters
 python ../Code/cross_test.py --model_path $model --adversary_path_x $prefix"X.npy" --adversary_path_y $prefix"Y.npy" --dataset $dataset --proxy_data False
 rm  $prefix"X.npy" $prefix"Y.npy"
 
