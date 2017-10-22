@@ -25,5 +25,5 @@ new_model = Model(inputs=base.input, outputs=softmax)
 
 sgd = keras.optimizers.SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
 new_model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
-new_model.save(sys.argv[2])
+new_model.save(sys.argv[1])
 

@@ -4,7 +4,9 @@ export TF_CPP_MIN_LOG_LEVEL="2"
 dataset=$1 #(cifar100,mnist,svhn)
 model=$2 #(path to blackbox model)
 ppmodel=$3 #(path to proxy model)
-gamma=1e-3
+jsma_gamma=0.1
+theta=1.0
+n_subset_classes=10
 
 #Determine set of epsilon values according to dataset
 if [ $dataset == "mnist" ]
@@ -23,7 +25,7 @@ fi
 
 prefix=$(date -d "today" +"%Y%m%d%H%M%S")
 
-python ../Code/elastic.py --gamma $gamma --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y"
+python ../Code/jsma.py --gamma $jsma_gamma --theta $theta --n_subset_classes $n_subset_classes --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y"
 python ../Code/cross_test.py --model_path $model --adversary_path_x $prefix"X.npy" --adversary_path_y $prefix"Y.npy" --dataset $dataset --proxy_data False
 rm  $prefix"X.npy" $prefix"Y.npy"
 echo $prefix

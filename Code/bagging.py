@@ -16,8 +16,8 @@ from tensorflow.python.platform import flags
 
 
 FLAGS = flags.FLAGS
-flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs')
-flags.DEFINE_integer('sample_ratio', 0.75, 'Percentage of sample to be taken per model for training')
+flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs')
+flags.DEFINE_float('sample_ratio', 0.75, 'Percentage of sample to be taken per model for training')
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'finetune', '(test,finetune)')
 flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
@@ -53,7 +53,7 @@ class Bagging:
 							validation_data=(X_val, y_val))
 		else:
 			model.fit(X_tr, y_tr, batch_size = self.batch_size, epochs=self.nb_epochs, validation_data=(X_val, y_val))
-		accuracy = models.evaluate(X_val, y_val, batch_size=self.batch_size)
+		accuracy = model.evaluate(X_val, y_val, batch_size=self.batch_size)
 		print("\nValidation accuracy: " + str(accuracy[1]*100))
 
 	def predict(self, models_dir, predict_on, method='voting'):
@@ -109,7 +109,9 @@ def main(argv=None):
 	model = load_model(FLAGS.seed_model)
 
 	# Make only dense layers trainable for finetuning
-	
+	for layer in model.layers:
+		if "dense" not in layer.name:
+			layer.trainable=False
 
 	#Training mode
 	if FLAGS.mode in ['train', 'finetune']:
@@ -131,13 +133,13 @@ def main(argv=None):
 
 		# Print validation accuracy
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-		predicted = np.argmax(bag.predict(X_val),1)
+		predicted = np.argmax(bag.predict(FLAGS.model_dir, X_val, FLAGS.predict_mode),1)
 		true = np.argmax(y_val,1)
 		acc = (100*(predicted==true).sum()) / float(len(y_val))
-		print "Final validation accuracy", acc
+		print "Whole bag's validation accuracy", acc
 
 		#Save model
-		model.save(FLAGS.seedmodel)
+		model.save(FLAGS.seed_model)
 
 	#Testing mode
 	elif FLAGS.mode == 'test':
