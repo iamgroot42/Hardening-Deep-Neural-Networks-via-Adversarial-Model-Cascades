@@ -93,7 +93,7 @@ do
 	cp $selectedmodel $seeddata"model"
 
 	# Finetune data
-	python ../Code/bagging.py --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --sample_ratio 0.001 --model_dir $bagfolder
+	python ../Code/bagging.py --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
 
 	# Remove temporary data
 	rm $seeddata"X.npy" $seeddata"Y.npy"

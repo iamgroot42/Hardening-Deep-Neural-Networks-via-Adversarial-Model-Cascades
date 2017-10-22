@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#mkdir -p ../Code/SVHN
+mkdir -p ../Code/SVHN
 cd ../Code/SVHN
 
 # Processed SVHN
