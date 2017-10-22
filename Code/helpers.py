@@ -4,6 +4,8 @@ import tensorflow as tf
 import numpy as np
 import copy
 
+# Set seed for reproducability
+np.random.seed(42)
 
 def tf_model_loss(y, model):
 	op = model.op
