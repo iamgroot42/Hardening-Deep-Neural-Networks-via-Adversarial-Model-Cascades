@@ -24,5 +24,7 @@
 - `bash prepare.sh` to download required data and models
 - Make sure your system has basic ML dependencies like Keras and Tensorflow
 - `bash test*.sh <dataset> <target_model> <proxy_model>`, where * denotes anoy of the 7 attacks given in the repo.
-- `bash genericBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?>`
+- For the basic bagging setup, run `bash genericBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?>`
 For example, `bash genericBagging.sh mnist PlainModel MYBAG/ no ORDER no`
+- For the adaptive bagging setup, rin `bash adaptiveBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?> <path_to_proxy_model>`
+For example, `bash genericBagging.sh mnist PlainModel MYBAG/ no ORDER no ProxyNormal`

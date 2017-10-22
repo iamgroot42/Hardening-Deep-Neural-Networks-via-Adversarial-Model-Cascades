@@ -1,3 +1,4 @@
+WOLO
 dropbox_uploader.sh
 *.tar.gz
 ProxyUnlabelledData/*
@@ -27,4 +28,4 @@ Proxy/*
 *SVHN*
 hacky.sh
 ORDER?
-[0-9]*model
+[0-9]*
