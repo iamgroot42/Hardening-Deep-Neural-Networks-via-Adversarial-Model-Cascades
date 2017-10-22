@@ -26,3 +26,5 @@ Proxy/*
 *CIFAR*
 *SVHN*
 hacky.sh
+ORDER?
+[0-9]*model

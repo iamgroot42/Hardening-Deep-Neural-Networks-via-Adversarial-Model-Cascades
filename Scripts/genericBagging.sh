@@ -64,6 +64,8 @@ sleep 2 #Make sure name does not clash with prefix inside loop
 # Read order of attacks
 while read attack
 do
+	echo "Running attack $COUNTER"
+
 	prefix=$(date -d "today" +"%s") #Unique per dataset
 
 	#Run attack
@@ -73,10 +75,10 @@ do
 	# Accumulate data
 	if [ $cumulative == "yes" ]; then
 		if [ "$COUNTER" -gt "1" ]; then
-			python coalesce.py $seeddata"X.npy" $seeddata"Y.npy" $prefix"X.npy" $prefox"Y.npy" $seeddata"X.npy" $seeddata"Y.npy"
+			python coalesce.py $seeddata"X.npy" $seeddata"Y.npy" $prefix"X.npy" $prefix"Y.npy" $seeddata"X.npy" $seeddata"Y.npy"
 		else
-			cp $prefix"X.npy" $seeddata"X.npy"
-			cp $prefix"Y.npy" $seeddata"Y.npy"
+			mv $prefix"X.npy" $seeddata"X.npy"
+			mv $prefix"Y.npy" $seeddata"Y.npy"
 		fi
 	else
 		mv $prefix"X.npy" $seeddata"X.npy"
@@ -95,8 +97,10 @@ do
 	# Finetune data
 	python ../Code/bagging.py --nb_epochs 10 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
 
-	# Remove temporary data
-	rm $seeddata"X.npy" $seeddata"Y.npy"
+	if [ $cumulative == "no" ]; then
+		# Remove temporary data
+		rm $seeddata"X.npy" $seeddata"Y.npy"
+	fi
 
 	# Update model counter
 	COUNTER=$[$COUNTER +1]

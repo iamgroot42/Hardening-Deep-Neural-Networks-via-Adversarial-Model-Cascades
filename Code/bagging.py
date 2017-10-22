@@ -105,16 +105,16 @@ def main(argv=None):
 	sess = tf.Session(config=config)
 	keras.backend.set_session(sess)
 
-	# Load model
-	model = load_model(FLAGS.seed_model)
-
-	# Make only dense layers trainable for finetuning
-	for layer in model.layers:
-		if "dense" not in layer.name:
-			layer.trainable=False
-
 	#Training mode
 	if FLAGS.mode in ['train', 'finetune']:
+		# Load model
+	        model = load_model(FLAGS.seed_model)
+
+		# Make only dense layers trainable for finetuning
+	        for layer in model.layers:
+        	        if "dense" not in layer.name:
+                	        layer.trainable=False
+
 		# Load data
 		if FLAGS.dataset == 'cifar100':
 			X, Y, _, _ = utils_cifar.data_cifar()
