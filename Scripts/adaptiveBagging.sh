@@ -63,6 +63,8 @@ mkdir -p $bagfolder
 python fix.py $seedmodel
 cp $seedmodel $bagfolder/1
 
+echo "Seed proxy model will be stored by the name $seedproxy"
+
 COUNTER=1 #Counting models
 
 seeddata=$(date -d "today" +"%s") #Required if cumulative data is to be used
@@ -129,5 +131,3 @@ do
         python fix.py $seedproxy
 
 done < $order
-
-echo "Seed proxy model stored by the name $seedproxy"
