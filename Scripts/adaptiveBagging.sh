@@ -125,7 +125,7 @@ do
 	python fix.py $bagfolder/$COUNTER
 
 	# Finetine proxy (make it adapt)
-	python ../Code/train_model.py --mode finetune --nb_epochs 20 --learning_rate 0.001 --save_here $seedproxy --proxy_x $prefix"Xproxy.npy" --proxy_y $prefix"Yproxy.npy" --level blackbox --dataset $dataset
+	python ../Code/train_model.py --mode finetune --nb_epochs 30 --learning_rate 0.1 --save_here $seedproxy --proxy_x $prefix"Xproxy.npy" --proxy_y $prefix"Yproxy.npy" --level blackbox --dataset $dataset
 
 	# Keras specific change to make sure proxy model can be loaded in future
         python fix.py $seedproxy

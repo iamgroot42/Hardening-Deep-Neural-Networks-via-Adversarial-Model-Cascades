@@ -24,7 +24,12 @@
 - `bash prepare.sh` to download required data and models
 - Make sure your system has basic ML dependencies like Keras and Tensorflow
 - `bash test*.sh <dataset> <target_model> <proxy_model>`, where * denotes anoy of the 7 attacks given in the repo.
+- `bash test*.sh <dataset> <bag_models>directory> <proxy_model> <voting/weighted>`, where * denotes any of the 7 attacks given in the repo.
 - For the basic bagging setup, run `bash genericBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?>`
+
 For example, `bash genericBagging.sh mnist PlainModel MYBAG/ no ORDER no`
-- For the adaptive bagging setup, rin `bash adaptiveBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?> <path_to_proxy_model>`
-For example, `bash genericBagging.sh mnist PlainModel MYBAG/ no ORDER no ProxyNormal`
+- For the adaptive bagging setup, run `bash adaptiveBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?> <path_to_proxy_model>`
+
+For example, `bash adaptiveBagging.sh mnist PlainModel MYBAG/ no ORDER no ProxyNormal`
+- For testing bagging on your own attack data, run `python ../Code/bagging.py --mode test --dataset <dataset> --model_dir <model_bag_directory> --data_x <data_X> --data_y <data_Y>  --predict_mode <voting/weighted>`
+
