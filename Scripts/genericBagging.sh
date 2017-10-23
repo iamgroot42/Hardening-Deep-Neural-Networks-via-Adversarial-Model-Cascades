@@ -68,8 +68,12 @@ do
 
 	prefix=$(date -d "today" +"%s") #Unique per dataset
 
-	#Run attack
-	command="${hashmap[$attack]} --dataset $dataset --adversary_path_x $prefix""X.npy --adversary_path_y $prefix""Y.npy --model_path $seedmodel"
+	#Run attack (on original model if NO-NO, else on the latest model)
+	if [ $cumulative == "no" ] && [ $transfer == "no" ]; then
+		command="${hashmap[$attack]} --dataset $dataset --adversary_path_x $prefix""X.npy --adversary_path_y $prefix""Y.npy --model_path $seedmodel"
+	else
+		command="${hashmap[$attack]} --dataset $dataset --adversary_path_x $prefix""X.npy --adversary_path_y $prefix""Y.npy --model_path $bagfolder/$COUNTER"
+	fi
 	$command
 
 	# Accumulate data
