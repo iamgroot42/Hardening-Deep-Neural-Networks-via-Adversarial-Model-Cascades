@@ -14,7 +14,7 @@ from tensorflow.python.platform import flags
 
 import utils_mnist, utils_cifar, utils_svhn
 import utils
-from sklearn.externals import joblib
+
 import helpers
 
 FLAGS = flags.FLAGS
