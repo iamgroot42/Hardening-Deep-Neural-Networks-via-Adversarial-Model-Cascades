@@ -72,13 +72,14 @@ def main(argv=None):
 
 	# Black-box network
 	if FLAGS.level == 'blackbox':
-		if FLAGS.mode == 'finetune':
-			model = load_model(FLAGS.save_here)
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		if FLAGS.label_smooth > 0:
 			y_tr = y_tr.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
 		if FLAGS.dataset == 'cifar100':
 			model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
+			if FLAGS.mode == 'finetune':
+	                        model = load_model(FLAGS.save_here)
+				model.lr.set_value(FLAGS.learning_rate)
 			datagen = utils_cifar.augmented_data(X_train_p)
 			model.fit_generator(datagen.flow(X_tr, y_tr,
 				batch_size=FLAGS.batch_size),
@@ -87,6 +88,9 @@ def main(argv=None):
 				validation_data=(X_val, y_val))
 		elif FLAGS.dataset == 'svhn':
 			model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
+			if FLAGS.mode == 'finetune':
+	                        model = load_model(FLAGS.save_here)
+				model.lr.set_value(FLAGS.learning_rate)
 			datagen = utils_svhn.augmented_data(X_train_p)
 			model.fit_generator(datagen.flow(X_tr, y_tr,
 				batch_size=FLAGS.batch_size),
@@ -96,6 +100,9 @@ def main(argv=None):
 			accuracy = model.evaluate(X_val, y_val, batch_size=FLAGS.batch_size)
 		else:
 			model = sota.mnist(FLAGS.learning_rate, n_classes)
+			if FLAGS.mode == 'finetune':
+                                model = load_model(FLAGS.save_here)
+				model.lr.set_value(FLAGS.learning_rate)
 			model.fit(X_tr, y_tr,
 				batch_size=FLAGS.batch_size,
 				epochs=FLAGS.nb_epochs,
