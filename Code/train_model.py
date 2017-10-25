@@ -75,8 +75,8 @@ def main(argv=None):
         if FLAGS.level == 'blackbox':
                 X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		# Early stopping and dynamic lr
-                reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001)
-                early_stop = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=5)
+                reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001, verbose=1)
+                early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=5, verbose=1)
                 if FLAGS.label_smooth > 0:
                         y_tr = y_tr.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
                 if FLAGS.dataset == 'cifar100':

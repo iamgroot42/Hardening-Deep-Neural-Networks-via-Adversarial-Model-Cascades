@@ -104,7 +104,7 @@ do
 	fi
 
 	# Finetune data
-	python ../Code/bagging.py --learning_rate $lr --nb_epochs 40 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
+	python ../Code/bagging.py --learning_rate $lr --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
 
 	if [ $cumulative == "no" ]; then
 		# Remove temporary data

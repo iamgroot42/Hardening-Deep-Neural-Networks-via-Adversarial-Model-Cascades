@@ -47,8 +47,8 @@ class Bagging:
 			datagen = utils_svhn.augmented_data(x_sub)
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(x_sub, y_sub, 0.2)
 		# Early stopping and dynamic lr
-		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001)
-		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=5)
+		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001, verbose=1)
+		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=5, verbose=1)
 		if FLAGS.dataset != 'mnist':
 			model.fit_generator(datagen.flow(X_tr, y_tr,
 			  				batch_size=self.batch_size),
