@@ -76,7 +76,7 @@ def main(argv=None):
                 X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
 		# Early stopping and dynamic lr
                 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001)
-                early_stop = EarlyStopping(monitor='val_loss', min_delta=0.05, patience=5)
+                early_stop = EarlyStopping(monitor='val_loss', min_delta=0.03, patience=5)
                 if FLAGS.label_smooth > 0:
                         y_tr = y_tr.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
                 if FLAGS.dataset == 'cifar100':
