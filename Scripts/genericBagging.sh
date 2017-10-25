@@ -98,8 +98,13 @@ do
 	# Make a copy of selected model for finetuning
 	cp $selectedmodel $seeddata"model"
 
+	lr=0.001
+	if [ $dataset == "mnist" ]; then
+		lr=0.1
+	fi
+
 	# Finetune data
-	python ../Code/bagging.py --nb_epochs 10 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
+	python ../Code/bagging.py --learning_rate $lr --nb_epochs 40 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
 
 	if [ $cumulative == "no" ]; then
 		# Remove temporary data

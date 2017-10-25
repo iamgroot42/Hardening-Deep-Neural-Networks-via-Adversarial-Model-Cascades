@@ -7,6 +7,7 @@ import keras
 from tensorflow.python.platform import app
 from keras.models import load_model
 from tensorflow.python.platform import flags
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 import utils_mnist, utils_cifar, utils_svhn
 from Models import cnn, sota
@@ -73,6 +74,9 @@ def main(argv=None):
         # Black-box network
         if FLAGS.level == 'blackbox':
                 X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
+		# Early stopping and dynamic lr
+                reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001)
+                early_stop = EarlyStopping(monitor='val_loss', min_delta=0.05, patience=5)
                 if FLAGS.label_smooth > 0:
                         y_tr = y_tr.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
                 if FLAGS.dataset == 'cifar100':
@@ -85,6 +89,7 @@ def main(argv=None):
                                 batch_size=FLAGS.batch_size),
                                 steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
                                 epochs=FLAGS.nb_epochs,
+				callbacks=[reduce_lr, early_stop],
                                 validation_data=(X_val, y_val))
                 elif FLAGS.dataset == 'svhn':
                         model = sota.cifar_svhn(FLAGS.learning_rate, n_classes)
@@ -96,6 +101,7 @@ def main(argv=None):
                                 batch_size=FLAGS.batch_size),
                                 steps_per_epoch=X_tr.shape[0] // FLAGS.batch_size,
                                 epochs=FLAGS.nb_epochs,
+				callbacks=[reduce_lr, early_stop],
                                 validation_data=(X_val, y_val))
                         accuracy = model.evaluate(X_val, y_val, batch_size=FLAGS.batch_size)
                 else:
@@ -106,6 +112,7 @@ def main(argv=None):
                         model.fit(X_tr, y_tr,
                                 batch_size=FLAGS.batch_size,
                                 epochs=FLAGS.nb_epochs,
+				callbacks=[reduce_lr, early_stop],
                                 validation_data=(X_val, y_val))
 
                 accuracy = model.evaluate(X_val, y_val, batch_size=FLAGS.batch_size)

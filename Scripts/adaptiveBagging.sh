@@ -107,8 +107,13 @@ do
 	# Make a copy of selected model for finetuning
 	cp $selectedmodel $seeddata"model"
 
+	lr=0.001
+        if [ $dataset == "mnist" ]; then
+                lr=0.1
+        fi
+
 	# Finetune target model using proxy's attack-data
-	python ../Code/bagging.py --nb_epochs 10 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
+	python ../Code/bagging.py --learning_rate $lr --nb_epochs 40 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
 
 	if [ $cumulative == "no" ]; then
 		# Remove temporary data
@@ -125,7 +130,7 @@ do
 	python fix.py $bagfolder/$COUNTER
 
 	# Finetine proxy (make it adapt)
-	python ../Code/train_model.py --mode finetune --nb_epochs 5 --learning_rate 0.001 --save_here $seedproxy --proxy_x $prefix"Xproxy.npy" --proxy_y $prefix"Yproxy.npy" --level blackbox --dataset $dataset
+	python ../Code/train_model.py --mode finetune --nb_epochs 20 --learning_rate $lr --save_here $seedproxy --proxy_x $prefix"Xproxy.npy" --proxy_y $prefix"Yproxy.npy" --level blackbox --dataset $dataset
 
 	# Keras specific change to make sure proxy model can be loaded in future
         python fix.py $seedproxy

@@ -6,6 +6,7 @@ from keras.models import load_model
 from keras.objectives import categorical_crossentropy
 from tensorflow.python.platform import app
 from keras.utils import np_utils
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 import utils_cifar, utils_mnist, utils_svhn
 import helpers
@@ -25,7 +26,7 @@ flags.DEFINE_string('model_dir', './', 'path to output directory of models')
 flags.DEFINE_string('seed_model', ' ', 'path to seed model')
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
-flags.DEFINE_float('learning_rate', 0.0001 ,'Learning rate for classifier')
+flags.DEFINE_float('learning_rate', 0.001 ,'Learning rate for classifier')
 flags.DEFINE_string('predict_mode', 'voting', 'Method for prediction while testing (voting/weighted)')
 
 
@@ -45,14 +46,19 @@ class Bagging:
 		elif FLAGS.dataset == 'svhn':
 			datagen = utils_svhn.augmented_data(x_sub)
 		X_tr, y_tr, X_val, y_val = helpers.validation_split(x_sub, y_sub, 0.2)
+		# Early stopping and dynamic lr
+		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001)
+		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.05, patience=5)
 		if FLAGS.dataset != 'mnist':
 			model.fit_generator(datagen.flow(X_tr, y_tr,
 			  				batch_size=self.batch_size),
 							steps_per_epoch=X_tr.shape[0] // self.batch_size,
 							epochs=self.nb_epochs,
+							callbacks=[reduce_lr, early_stop],
 							validation_data=(X_val, y_val))
 		else:
-			model.fit(X_tr, y_tr, batch_size = self.batch_size, epochs=self.nb_epochs, validation_data=(X_val, y_val))
+			model.fit(X_tr, y_tr, batch_size = self.batch_size, epochs=self.nb_epochs, validation_data=(X_val, y_val), 
+					callbacks=[reduce_lr, early_stop])
 		accuracy = model.evaluate(X_val, y_val, batch_size=self.batch_size)
 		print("\nValidation accuracy: " + str(accuracy[1]*100))
 
@@ -111,9 +117,9 @@ def main(argv=None):
 	        model = load_model(FLAGS.seed_model)
 
 		# Make only dense layers trainable for finetuning
-	        for layer in model.layers:
-        	        if "dense" not in layer.name:
-                	        layer.trainable=False
+	        #for layer in model.layers:
+        	#        if "dense" not in layer.name:
+                # 	        layer.trainable=False
 
 		# Load data
 		if FLAGS.dataset == 'cifar100':

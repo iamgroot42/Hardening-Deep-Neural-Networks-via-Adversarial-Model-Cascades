@@ -29,3 +29,5 @@ Proxy/*
 hacky.sh
 ORDER?
 [0-9]*
+*LOG*
+Plain
