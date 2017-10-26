@@ -1,20 +1,20 @@
-import copy
 import numpy as np
 import tensorflow as tf
 
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
+tf.set_random_seed(1234)
+
 FLAGS = flags.FLAGS
 
 import keras
-import attacks_tf ,attacks
-import helpers
-from utils_tf import batch_eval
-import utils_cifar, utils_mnist, utils_svhn
-from keras_to_ch import KerasModelWrapper
+from cleverhans.attacks import DeepFool 
 
-flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
+from keras_to_ch import KerasModelWrapper
+import data_load
+
+flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
@@ -22,29 +22,18 @@ flags.DEFINE_integer('iters', 50, 'Maximum iterations')
 
 
 def main(argv=None):
-	n_classes = 10
-	image_shape = (32, 32, 3)
-	if FLAGS.dataset == 'cifar100':
-		n_classes = 100
-		_, _, X_test, Y_test = utils_cifar.data_cifar()
-		x_shape, y_shape = utils_cifar.placeholder_shapes()
-		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=10, nb_classes=n_classes)
-	elif FLAGS.dataset == 'mnist':
-		_, _, X_test, Y_test = utils_mnist.data_mnist()
-		x_shape, y_shape = utils_mnist.placeholder_shapes()
-		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
-		image_shape = (28, 28, 1)
-	elif FLAGS.dataset == 'svhn':
-		_, _, X_test, Y_test = utils_svhn.data_svhn()
-		x_shape, y_shape = utils_svhn.placeholder_shapes()
-		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
-	else:
-		print("Invalid dataset. Exiting.")
+	# Initialize data object
+	dataObject = data_load.get_appropriate_data(FLAGS.dataset)()
+
+	if dataObject is None:
+		print "Invalid dataset; exiting"
 		exit()
+	
+	if FLAGS.mode == 'attack':
+		(X, Y) = dataObject.get_attack_data()
+	else:
+		(X, Y) = dataObject.get_hardening_data()
 
-	keras.layers.core.K.set_learning_phase(0)
-
-	tf.set_random_seed(1234)
 	if keras.backend.image_dim_ordering() != 'tf':
 		keras.backend.set_image_dim_ordering('tf')
 
@@ -56,19 +45,17 @@ def main(argv=None):
 
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
-	deepfool = attacks.DeepFool(model, sess=sess)
 
-	x = tf.placeholder(tf.float32, shape=x_shape)
-	y = tf.placeholder(tf.float32, shape=y_shape)
-
+	n_classes = Y.shape[1]
+	deepfool = DeepFool(model, sess=sess)
 	deepfool.parse_params(clip_min=0.0, clip_max=1.0, nb_candidate=n_classes, max_iter=FLAGS.iters)
 	adv_x = deepfool.generate_np(X_test_pm)
 
-	accuracy = raw_model.evaluate(adv_x, Y_test_pm, batch_size=128)
-        print('\nMisclassification accuracy on adversarial examples: ' + str((1.0 - accuracy[1])*100))
+	accuracy = raw_model.evaluate(adv_x, Y_test_pm, batch_size=FLAGS.batch_size)
+	print('\nError on adversarial examples: ' + str((1.0 - accuracy[1])))
 
-	np.save(FLAGS.adversary_path_y, Y_test_pm)
 	np.save(FLAGS.adversary_path_x, adv_x)
+	np.save(FLAGS.adversary_path_y, Y)
 
 
 if __name__ == '__main__':

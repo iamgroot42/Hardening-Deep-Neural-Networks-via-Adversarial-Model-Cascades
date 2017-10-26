@@ -19,7 +19,7 @@ def conv_stack(filters, side, activation, model, input_shape=None):
 	model.add(activation())
 
 
-def cifar_svhn(learning_rate, n_classes=100):
+def cifar_svhn(learning_rate, n_classes=10):
 	model = Sequential()
 	conv_stack(192, 5, ELU, model,(3, 32, 32))
 	model.add(MaxPooling2D())
@@ -58,20 +58,29 @@ def cifar_svhn(learning_rate, n_classes=100):
 
 
 def mnist(learning_rate, n_classes=10):
-		model = Sequential()
-		model.add(Conv2D(32, kernel_size=(3, 3),
-				activation='relu',
-				input_shape=(1,28,28)))
-		model.add(Conv2D(64, (3, 3), activation='relu'))
-		model.add(MaxPooling2D(pool_size=(2, 2)))
-		model.add(Dropout(0.25))
-		model.add(Flatten())
-		model.add(Dense(128))
-		model.add(Activation('relu'))
-		model.add(Dropout(0.5))
-		model.add(Dense(10))
-		model.add(Activation('softmax'))
-		model.compile(loss=keras.losses.categorical_crossentropy,
-			  optimizer=Adadelta(lr=learning_rate),
-			  metrics=['accuracy'])
-		return model
+	model = Sequential()
+	model.add(Conv2D(32, kernel_size=(3, 3),
+		activation='relu',
+		input_shape=(1,28,28)))
+	model.add(Conv2D(64, (3, 3), activation='relu'))
+	model.add(MaxPooling2D(pool_size=(2, 2)))
+	model.add(Dropout(0.25))
+	model.add(Flatten())
+	model.add(Dense(128))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.5))
+	model.add(Dense(10))
+	model.add(Activation('softmax'))
+	model.compile(loss=keras.losses.categorical_crossentropy,
+		optimizer=Adadelta(lr=learning_rate),
+		metrics=['accuracy'])
+	return model
+
+
+def get_appropriate_model(dataset)
+	model_mapping = {
+		"mnist": mnist,
+		"cifar10": cifar_svhn,
+		"svhn": cifar_svhn
+	}
+	return model_mapping[dataset.lower()]

@@ -8,8 +8,6 @@ from tensorflow.python.platform import app
 from keras.utils import np_utils
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-import utils_cifar, utils_mnist, utils_svhn
-import helpers
 import os
 
 import tensorflow as tf
@@ -17,11 +15,11 @@ from tensorflow.python.platform import flags
 
 
 FLAGS = flags.FLAGS
-flags.DEFINE_integer('nb_epochs', 50, 'Number of epochs')
+flags.DEFINE_integer('nb_epochs', 100, 'Number of epochs')
 flags.DEFINE_float('sample_ratio', 0.75, 'Percentage of sample to be taken per model for training')
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'finetune', '(test,finetune)')
-flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
+flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 flags.DEFINE_string('model_dir', './', 'path to output directory of models')
 flags.DEFINE_string('seed_model', ' ', 'path to seed model')
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')

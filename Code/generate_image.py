@@ -2,8 +2,10 @@ import common
 
 import numpy as np
 
+# Foe headless machines
 import matplotlib
 matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 from tensorflow.python.platform import app
@@ -12,15 +14,15 @@ from tensorflow.python.platform import flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are saved')
-flags.DEFINE_integer('example_index', 3, 'Which index do you want to visualize?')
-flags.DEFINE_integer('dataset', 0 , 'MNIST(0), CIFAR10/100(1)')
+flags.DEFINE_integer('example_index', 0, 'Which index do you want to visualize?')
 
 def main(argv=None):
 
 	X_test_adv = np.load(FLAGS.adversary_path_x)
 	X_test_adv = X_test_adv[FLAGS.example_index]
 
-	if FLAGS.dataset == 0:
+	# Infer type of image from data
+	if X_test_adv.shape[0] == 1:
 		plt.matshow(X_test_adv[0],  cmap='gray')
 		plt.savefig('adv_example.png')
 	else:

@@ -1,4 +1,3 @@
-import copy
 import numpy as np
 import tensorflow as tf
 
@@ -6,16 +5,17 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 import keras
-import attacks_tf ,attacks
-import helpers
-from utils_tf import batch_eval
-import utils_cifar, utils_mnist, utils_svhn
+from cleverhans.attacks import ElasticNetMethod
 
 from keras_to_ch import KerasModelWrapper
+import data_load
 
-FLAGS = flags.FLAGS
+# Set seed for reproducability
+tf.set_random_seed(42)
 
-flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
+FLAGS = flags.FLAG
+
+flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where adversarial labels are to be saved')
@@ -23,29 +23,20 @@ flags.DEFINE_float('beta', 1e-3, 'Value of Beta')
 
 
 def main(argv=None):
-	n_classes = 10
-	image_shape = (32, 32, 3)
-	if FLAGS.dataset == 'cifar100':
-		n_classes = 100
-		_, _, X_test, Y_test = utils_cifar.data_cifar()
-		x_shape, y_shape = utils_cifar.placeholder_shapes()
-		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=10, nb_classes=n_classes)
-	elif FLAGS.dataset == 'mnist':
-		_, _, X_test, Y_test = utils_mnist.data_mnist()
-		x_shape, y_shape = utils_mnist.placeholder_shapes()
-		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
-		image_shape = (28, 28, 1)
-	elif FLAGS.dataset == 'svhn':
-		_, _, X_test, Y_test = utils_svhn.data_svhn()
-		x_shape, y_shape = utils_svhn.placeholder_shapes()
-		X_test_bm, Y_test_bm, X_test_pm, Y_test_pm = helpers.jbda(X_test, Y_test, prefix="adv", n_points=100, nb_classes=n_classes)
-	else:
-		print("Invalid dataset. Exiting.")
+	# Initialize data object
+	dataObject = data_load.get_appropriate_data(FLAGS.dataset)()
+
+	if dataObject is None:
+		print "Invalid dataset; exiting"
 		exit()
+
+	if FLAGS.mode == 'attack':# Set seed for reproducability
+		(X, Y) = dataObject.get_attack_data()
+	else:
+		(X, Y) = dataObject.get_hardening_data()
 
 	keras.layers.core.K.set_learning_phase(0)
 
-	tf.set_random_seed(1234)
 	if keras.backend.image_dim_ordering() != 'tf':
 		keras.backend.set_image_dim_ordering('tf')
 
@@ -58,16 +49,15 @@ def main(argv=None):
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
 
-	enet = attacks.ElasticNetMethod(model, sess=sess)
-	adv_x = enet.generate_np(X_test_pm, beta=FLAGS.beta, batch_size=256, clip_min=0.0, clip_max=1.0)
+	enet = ElasticNetMethod(model, sess=sess)
+	x_adv = self.attack.generate_np(x_val, clip_min=0.0, clip_max=1.0, batch_size=FLAGS.batch_size)
 
-	accuracy = raw_model.evaluate(adv_x, Y_test_pm, batch_size = 128)
-        print('\nMisclassification accuracy on adversarial examples: ' + str((1.0 - accuracy[1])*100))
+	accuracy = raw_model.evaluate(adv_x, Y_test_pm, batch_size = FLAGS.batch_size)
+	print('\Error on adversarial examples: ' + str((1.0 - accuracy[1])))
 
-	np.save(FLAGS.adversary_path_y, Y_test_pm)
 	np.save(FLAGS.adversary_path_x, adv_x)
+	np.save(FLAGS.adversary_path_y, Y)
 
 
 if __name__ == '__main__':
 	app.run()
-

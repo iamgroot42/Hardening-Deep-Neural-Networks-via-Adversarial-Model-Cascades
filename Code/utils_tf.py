@@ -188,7 +188,6 @@ def clip_eta(eta, ord, eps):
                 Possible values: np.inf, 1 or 2.
     :param eps: Epilson, bound of the perturbation.
     """
-
     # Clipping perturbation eta to self.ord norm ball
     if ord not in [np.inf, 1, 2]:
         raise ValueError('ord must be np.inf, 1, or 2.')
@@ -206,5 +205,3 @@ def clip_eta(eta, ord, eps):
                                          keep_dims=True))
         eta = eta * eps / norm
     return eta
-
-

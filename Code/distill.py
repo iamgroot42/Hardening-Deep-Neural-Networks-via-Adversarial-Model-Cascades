@@ -13,11 +13,13 @@ from keras.optimizers import Adadelta, SGD
 import tensorflow as tf
 from tensorflow.python.platform import flags
 
+tf.set_random_seed(42)
+
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs')
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'train', '(train,test,finetune)')
-flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
+flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 flags.DEFINE_float('learning_rate', 0.01 ,'Learning rate for classifier')
 flags.DEFINE_float('train_temp', 1, 'Temperature at which model is trained')
 flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
@@ -73,7 +75,6 @@ def main(argv=None):
 	"""
 	n_classes = 10
 	shape = (3, 32, 32)
-	tf.set_random_seed(1234)
 
 	if FLAGS.dataset == 'cifar100':
 		n_classes = 100
@@ -105,9 +106,6 @@ def main(argv=None):
 	# Y_train = sess.run(tf.nn.softmax(predicted/train_temp))
 	Y_train = predicted
 
-	# Scale data to [0,1] (if required)
-	#X_train = X_train.astype('float32') / 255.
-
 	# train the student model at temperature t
 	student = train_logit_proxy(X_train, Y_train, n_classes, FLAGS.learning_rate, shape, FLAGS.nb_epochs, FLAGS.train_temp)
 
@@ -116,4 +114,3 @@ def main(argv=None):
 
 if __name__ == '__main__':
 	app.run()
-

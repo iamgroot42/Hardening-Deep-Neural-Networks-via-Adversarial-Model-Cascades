@@ -29,52 +29,14 @@ def fgsm(x, predictions, eps, clip_min=None, clip_max=None):
 	return adv_x
 
 
-def jbda(X_train, Y_train, prefix, n_points, nb_classes = 100, pool_split=0.8):
-	distr = {}
-	for i in range(nb_classes):
-		distr[i] = []
-	if Y_train.shape[1] == nb_classes:
-		for i in range(len(Y_train)):
-			distr[np.argmax(Y_train[i])].append(i)
-	else:
-		for i in range(len(Y_train)):
-			distr[Y_train[i][0]].append(i)
-	X_train_bm_ret = []
-	Y_train_bm_ret = []
-	X_train_pm_ret = []
-	Y_train_pm_ret = []
-	for key in distr.keys():
-		st = np.random.choice(distr[key], n_points, replace=False)
-		bm = st[:int(len(st)*pool_split)]
-		pm = st[int(len(st)*pool_split):]
-		X_train_bm_ret.append(X_train[bm])
-		Y_train_bm_ret.append(Y_train[bm])
-		X_train_pm_ret.append(X_train[pm])
-		Y_train_pm_ret.append(Y_train[pm])
-	X_train_bm_ret = np.concatenate(X_train_bm_ret)
-	Y_train_bm_ret = np.concatenate(Y_train_bm_ret)
-	X_train_pm_ret = np.concatenate(X_train_pm_ret)
-	Y_train_pm_ret = np.concatenate(Y_train_pm_ret)
-	return X_train_bm_ret, Y_train_bm_ret, X_train_pm_ret, Y_train_pm_ret
-
-
-def validation_split(X, y, validation_split=0.2):
-	num_points = len(X)
-	validation_indices = np.random.choice(num_points, int(num_points * validation_split))
-	train_indices = list(set(range(num_points)) - set(validation_indices))
-	X_train, y_train = X[train_indices], y[train_indices]
-	X_val, y_val = X[validation_indices], y[validation_indices]
-	return X_train, y_train, X_val, y_val
-
-
 def model_argmax(sess, x, predictions, samples):
-    feed_dict = {x: samples}
-    probabilities = sess.run(predictions, feed_dict)
+	feed_dict = {x: samples}
+	probabilities = sess.run(predictions, feed_dict)
 
-    if samples.shape[0] == 1:
-        return np.argmax(probabilities)
-    else:
-        return np.argmax(probabilities, axis=1)
+	if samples.shape[0] == 1:
+		return np.argmax(probabilities)
+	else:
+		return np.argmax(probabilities, axis=1)
 
 
 def apply_perturbations(i, j, X, increase, theta, clip_min, clip_max):
@@ -148,17 +110,19 @@ def jsma(sess, x, predictions, grads, sample, target, theta, gamma, clip_min, cl
 	else:
 		return np.reshape(adv_x, original_shape), 0, percent_perturbed
 
+
 def random_targets(gt, nb_classes):
-    if len(gt.shape) > 1:
-        gt = np.argmax(gt, axis=1)
+	if len(gt.shape) > 1:
+		gt = np.argmax(gt, axis=1)
 
-    result = np.zeros(gt.shape)
+	result = np.zeros(gt.shape)
 
-    for class_ind in xrange(nb_classes):
-        in_cl = gt == class_ind
-        result[in_cl] = np.random.choice(other_classes(nb_classes, class_ind))
+	for class_ind in xrange(nb_classes):
+		in_cl = gt == class_ind
+		result[in_cl] = np.random.choice(other_classes(nb_classes, class_ind))
 
-    return np_utils.to_categorical(np.asarray(result), nb_classes)
+	return np_utils.to_categorical(np.asarray(result), nb_classes)
+
 
 def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max, nb_classes, targets=None):
 	X_adv = np.zeros(X.shape)
@@ -173,7 +137,8 @@ def jsma_batch(sess, x, pred, grads, X, theta, gamma, clip_min, clip_max, nb_cla
 		X_adv[ind], _, _ = jsma(sess, x, pred, grads, val, np.argmax(target), theta, gamma, clip_min, clip_max)
 	return np.asarray(X_adv, dtype=np.float32)
 
+
 def other_classes(nb_classes, class_ind):
-    other_classes_list = list(range(nb_classes))
-    other_classes_list.remove(class_ind)
-    return other_classes_list
+	other_classes_list = list(range(nb_classes))
+	other_classes_list.remove(class_ind)
+	return other_classes_list
