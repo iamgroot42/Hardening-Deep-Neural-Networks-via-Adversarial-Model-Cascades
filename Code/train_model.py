@@ -12,9 +12,6 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import data_load
 from Models import sota
 
-# Set seed for reproducability
-tf.set_random_seed(42)
-
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('mode', 'train', '(train,finetune)')
@@ -48,12 +45,6 @@ def main(argv=None):
 		print "Invalid dataset; exiting"
 		exit()
 
-	# Don't hog GPU
-	config = tf.ConfigProto()
-	config.gpu_options.allow_growth=True
-	sess = tf.Session(config=config)
-	keras.backend.set_session(sess)
-
 	# Black-box network
 	(blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
 	X_train, Y_train, X_validation, Y_validation = dataObject.validation_split(blackbox_Xtrain, blackbox_Ytrain, 0.2)
@@ -74,7 +65,7 @@ def main(argv=None):
 
 	datagen = dataObject.date_generator()
 	datagen.fit(X_train)
-	model.fit_gene  rator(datagen.flow(X_train, Y_train,
+	model.fit_generator(datagen.flow(X_train, Y_train,
 		batch_size=FLAGS.batch_size),
 		steps_per_epoch=X_train.shape[0] // FLAGS.batch_size,
 		epochs=FLAGS.nb_epochs,

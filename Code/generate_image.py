@@ -2,7 +2,7 @@ import common
 
 import numpy as np
 
-# Foe headless machines
+# For headless machines
 import matplotlib
 matplotlib.use('Agg')
 

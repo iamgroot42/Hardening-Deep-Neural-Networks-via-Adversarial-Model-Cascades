@@ -5,8 +5,6 @@ import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 from keras.datasets import cifar10, mnist
 
-# Set seed for reproducability
-np.random.seed(42)
 
 class Data:
 	def __init__(self, dataset, extra_X, extra_Y):

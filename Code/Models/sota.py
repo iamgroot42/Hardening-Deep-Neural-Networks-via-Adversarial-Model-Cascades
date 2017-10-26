@@ -19,7 +19,8 @@ def conv_stack(filters, side, activation, model, input_shape=None):
 	model.add(activation())
 
 
-def cifar_svhn(learning_rate, n_classes=10):
+# Reference: https://arxiv.org/pdf/1511.07289.pdf
+def cifar(learning_rate, n_classes=10):
 	model = Sequential()
 	conv_stack(192, 5, ELU, model,(3, 32, 32))
 	model.add(MaxPooling2D())
@@ -53,7 +54,9 @@ def cifar_svhn(learning_rate, n_classes=10):
 	model.add(BatchNormalization())
 	model.add(Dense(n_classes, W_regularizer=l2(0.01), init=he_normal()))
 	model.add(Activation('softmax'))
-	model.compile(optimizer=SGD(lr=learning_rate,momentum=0.9),loss='categorical_crossentropy', metrics=['accuracy'])
+	model.compile(loss=keras.losses.categorical_crossentropy,
+		optimizer=Adadelta(lr=learning_rate),
+		metrics=['accuracy'])
 	return model
 
 
@@ -77,10 +80,38 @@ def mnist(learning_rate, n_classes=10):
 	return model
 
 
+# As defined here: https://github.com/penny4860/SVHN-deep-digit-detector
+def svhn(learning_rate, n_classes=10):
+	model = Sequential()
+	model.add(Convolution2D(32, 3, 3, border_mode='same',
+			input_shape=(3, 32, 32)))
+	model.add(Activation('relu'))
+	model.add(Convolution2D(32, 3, 3))
+	model.add(Activation('relu'))
+	model.add(MaxPooling2D(pool_size=(2, 2)))
+	model.add(Dropout(0.4))
+	model.add(Convolution2D(64, 3, 3, border_mode='same'))
+	model.add(Activation('relu'))
+	model.add(Convolution2D(64, 3, 3))
+	model.add(Activation('relu'))
+	model.add(MaxPooling2D(pool_size=(2, 2)))
+	model.add(Dropout(0.3))
+	model.add(Flatten())
+	model.add(Dense(1024))
+	model.add(Activation('relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(nb_classes))
+	model.add(Activation('softmax'))
+	model.compile(loss=keras.losses.categorical_crossentropy,
+		optimizer=Adadelta(lr=learning_rate),
+		metrics=['accuracy'])
+	return model
+
+
 def get_appropriate_model(dataset)
 	model_mapping = {
 		"mnist": mnist,
-		"cifar10": cifar_svhn,
-		"svhn": cifar_svhn
+		"cifar10": cifar,
+		"svhn": svhn
 	}
 	return model_mapping[dataset.lower()]
