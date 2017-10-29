@@ -4,13 +4,12 @@ from keras.models import load_model
 from tensorflow.python.platform import app
 
 from keras.models import Sequential
-from keras.layers import Activation 
+from keras.layers import Activation
 
 import tensorflow as tf
 from tensorflow.python.platform import flags
 
 from Models import cnn
-import data_load
 
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs')
@@ -31,19 +30,15 @@ def main(argv=None):
 	Nicolas Papernot, Patrick McDaniel, Xi Wu, Somesh Jha, Ananthram Swami
 	IEEE S&P, 2016.
 	"""
-	
+
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
-
-	# Initialize data object
-	dataObject = data_load.get_appropriate_data(FLAGS.dataset)()
 
 	model = cnn.proxy(shape, nb_classes)
 	if FLAGS.use_distillation:
 		model = cnn.proxy(shape, nb_classes, True)
 
-	
 	# load teacher model, unlabelled data
 	X_train = np.load(FLAGS.unlabelled_data)
 	teacher = load_model(FLAGS.teacher_model)

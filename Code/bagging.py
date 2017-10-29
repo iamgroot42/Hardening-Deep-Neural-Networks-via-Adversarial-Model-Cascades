@@ -86,7 +86,6 @@ class Bagging:
 def main(argv=None):
 	bag = None
 	n_classes = 10
-	tf.set_random_seed(1234)
 
 	if FLAGS.dataset == 'cifar100':
 		bag = Bagging(100, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)

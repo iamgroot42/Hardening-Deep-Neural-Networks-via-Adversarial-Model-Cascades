@@ -1,13 +1,12 @@
 import numpy as np
-import tensorflow as tf
 
 from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 import keras
 from cleverhans.attacks import FastGradientMethod 
+from cleverhans.utils_keras import KerasModelWrapper
 
-from keras_to_ch import KerasModelWrapper
 import data_load
 
 FLAGS = flags.FLAGS
@@ -18,10 +17,8 @@ flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
 flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where original labels are to be saved')
-flags.DEFINE_string('dataset', 'cifar100', '(cifar100,svhn,mnist)')
+flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 
-# Set seed for reproducability
-tf.set_random_seed(42)
 
 def main(argv=None):
 	# Initialize data object
@@ -40,12 +37,6 @@ def main(argv=None):
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
 
-	# Don't hog GPU
-	config = tf.ConfigProto()
-	config.gpu_options.allow_growth=True
-	sess = tf.Session(config=config)
-	keras.backend.set_session(sess)
-
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
 
@@ -54,7 +45,7 @@ def main(argv=None):
 
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = raw_model.evaluate(adv_x, Y, FLAGS=batch_size=FLAGS.batch_size)
-	print('\nError on adversarial examples: ' + str((1.0 - accuracy[1])))
+	print('\nError on adversarial examples: ' + str(1.0 - accuracy[1]))
 
 	np.save(FLAGS.adversary_path_x, X)
 	np.save(FLAGS.adversary_path_y, Y)
