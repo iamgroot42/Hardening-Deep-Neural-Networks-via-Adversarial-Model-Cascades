@@ -12,9 +12,9 @@ from keras.initializers import he_normal
 
 def conv_stack(filters, side, activation, model, input_shape=None):
 	if not input_shape:
-		model.add(Conv2D(filters, (side, side), border_mode='same', W_regularizer=l2(0.01), init=he_normal()))
+		model.add(Conv2D(filters, (side, side), border_mode='same', W_regularizer=l2(0.0001), init=he_normal()))
 	else:
-		model.add(Conv2D(filters, (side, side), border_mode='same', input_shape=input_shape, W_regularizer=l2(0.01), init=he_normal()))
+		model.add(Conv2D(filters, (side, side), border_mode='same', input_shape=input_shape, W_regularizer=l2(0.0001), init=he_normal()))
 	model.add(BatchNormalization())
 	model.add(activation())
 
@@ -49,10 +49,10 @@ def cifar(learning_rate, n_classes=10):
 	model.add(BatchNormalization())
 
 	model.add(Dropout(0.5))
-	model.add(Dense(300, W_regularizer=l2(0.01), init=he_normal()))
+	model.add(Dense(300, W_regularizer=l2(0.0001), init=he_normal()))
 	model.add(ELU())
 	model.add(BatchNormalization())
-	model.add(Dense(n_classes, W_regularizer=l2(0.01), init=he_normal()))
+	model.add(Dense(n_classes, W_regularizer=l2(0.0001), init=he_normal()))
 	model.add(Activation('softmax'))
 	model.compile(loss=keras.losses.categorical_crossentropy,
 		optimizer=Adadelta(lr=learning_rate),

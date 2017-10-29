@@ -51,7 +51,7 @@ def main(argv=None):
 
 	# Early stopping and dynamic lr
 	reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=0.0001, verbose=1)
-	early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=10, verbose=1)
+	early_stop = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1)
 
 	if FLAGS.label_smooth > 0:
 		Y_train = Y_train.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)

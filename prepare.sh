@@ -3,6 +3,13 @@
 # Install python dependencies
 pip install requirements.txt
 
+# Install cleverhans
+git clone https://github.com/tensorflow/cleverhans
+cd cleverhans
+sudo python setup.py install
+export PYTHONPATH=$('pwd'):$PYTHONPATH
+cd ..
+
 mkdir -p Code/SVHN
 cd Code/SVHN
 

@@ -12,22 +12,23 @@ import data_load
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
-flags.DEFINE_float('fgsm_eps', 0.1, 'Tunable parameter for FGSM')
+flags.DEFINE_float('epsilon', 0.1, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
-flags.DEFINE_string('adversary_path_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
-flags.DEFINE_string('adversary_path_xo', 'ADXO.npy', 'Path where original examples are to be saved')
-flags.DEFINE_string('adversary_path_y', 'ADY.npy', 'Path where original labels are to be saved')
+flags.DEFINE_string('data_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
+flags.DEFINE_string('data_y', 'ADY.npy', 'Path where original labels are to be saved')
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
+flags.DEFINE_string('mode', 'attack', 'Whethere attacking model or generating data for hardening')
 
 
 def main(argv=None):
 	# Initialize data object
+	keras.layers.core.K.set_learning_phase(0)
 	dataObject = data_load.get_appropriate_data(FLAGS.dataset)()
 
 	if dataObject is None:
 		print "Invalid dataset; exiting"
 		exit()
-	
+
 	if FLAGS.mode == 'attack':# Set seed for reproducability
 		(X, Y) = dataObject.get_attack_data()
 	else:
@@ -40,15 +41,15 @@ def main(argv=None):
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
 
-	madry = attacks.FastGradientMethod(model, sess=sess)
-	adv_x = madry.generate_np(X, eps=FLAGS.epsilon, clip_min=0.0, clip_max=1.0)
+	fgsm = FastGradientMethod(model, sess=keras.backend.get_session())
+	adv_x = fgsm.generate_np(X, eps=FLAGS.epsilon, clip_min=0.0, clip_max=1.0)
 
 	# Evaluate the accuracy of the blackbox model on adversarial examples
-	accuracy = raw_model.evaluate(adv_x, Y, FLAGS=batch_size=FLAGS.batch_size)
+	accuracy = raw_model.evaluate(adv_x, Y, batch_size=FLAGS.batch_size)
 	print('\nError on adversarial examples: ' + str(1.0 - accuracy[1]))
 
-	np.save(FLAGS.adversary_path_x, X)
-	np.save(FLAGS.adversary_path_y, Y)
+	np.save(FLAGS.data_x, adv_x)
+	np.save(FLAGS.data_y, Y)
 
 
 if __name__ == '__main__':

@@ -66,7 +66,7 @@ class Data:
 
 	def experimental_split(self):
 		# Add additonal data if present:
-		if self.extra_X:
+		if self.extra_X != None:
 			self.X_train = np.concatenate((self.X_train, self.extra_X))
 			self.Y_train = np.concatenate((self.Y_train, self.extra_Y))
 		# Extract training and test data for blackbox from original training data
