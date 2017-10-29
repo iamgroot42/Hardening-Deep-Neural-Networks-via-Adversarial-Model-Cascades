@@ -29,8 +29,8 @@ class Data:
 		num_points = len(X)
 		validation_indices = np.random.choice(num_points, int(num_points * validation_split))
 		train_indices = list(set(range(num_points)) - set(validation_indices))
-		X_train, y_train = X[train_indices], y[train_indices]
-		X_val, y_val = X[validation_indices], y[validation_indices]
+		X_train, y_train = X[train_indices], Y[train_indices]
+		X_val, y_val = X[validation_indices], Y[validation_indices]
 		return X_train, y_train, X_val, y_val
 
 	def data_split(self, X, Y, pool_split=0.8):
@@ -49,7 +49,7 @@ class Data:
 		X_pm_ret = []
 		Y_pm_ret = []
 		# Calculate minimum number of points per class
-		n_points = min([distr[i] for i in distr.keys()])
+		n_points = min([len(distr[i]) for i in distr.keys()])
 		for key in distr.keys():
 			st = np.random.choice(distr[key], n_points, replace=False)
 			bm = st[:int(len(st)*pool_split)]
@@ -62,7 +62,7 @@ class Data:
 		Y_bm_ret = np.concatenate(Y_bm_ret)
 		X_pm_ret = np.concatenate(X_pm_ret)
 		Y_pm_ret = np.concatenate(Y_pm_ret)
-		return X_train_bm_ret, Y_train_bm_ret, X_train_pm_ret, Y_train_pm_ret
+		return X_bm_ret, Y_bm_ret, X_pm_ret, Y_pm_ret
 
 	def experimental_split(self):
 		# Add additonal data if present:
@@ -70,9 +70,9 @@ class Data:
 			self.X_train = np.concatenate((self.X_train, self.extra_X))
 			self.Y_train = np.concatenate((self.Y_train, self.extra_Y))
 		# Extract training and test data for blackbox from original training data
-		(self.blackbox_Xtrain, self.blackbox_Ytrain), (self.blackbox_Xtest, self.blackbox_Ytest) = self.data_split(self.X_train, self.Y_train)
+		self.blackbox_Xtrain, self.blackbox_Ytrain, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_train, self.Y_train)
 		# Split test data into data for attacking and data used by blackbox for self-proxy hardening
-		(self.attack_X, self.attack_Y), (self.harden_X, self.harden_Y) = self.data_split(self.X_test, self.Y_test)
+		self.attack_X, self.attack_Y, self.harden_X, self.harden_Y = self.data_split(self.X_test, self.Y_test)
 
 	def get_blackbox_data(self):
 		return (self.blackbox_Xtrain, self.blackbox_Ytrain), (self.blackbox_Xtest, self.blackbox_Ytest)
@@ -84,7 +84,7 @@ class Data:
 		return (self.harden_X, self.harden_Y)
 
 
-class SVHN(Data):
+class SVHN(Data, object):
 	def __init__(self, extra_X=None, extra_Y=None):
 		super(SVHN, self).__init__("svhn", extra_X, extra_Y)
 		# the data, shuffled and split between train and test sets
@@ -113,7 +113,7 @@ class SVHN(Data):
 		return datagen
 
 
-class CIFAR10(Data):
+class CIFAR10(Data, object):
 	def __init__(self, extra_X=None, extra_Y=None):
 		super(CIFAR10, self).__init__("cifar10", extra_X, extra_Y)
 		# the data, shuffled and split between train and test sets
@@ -145,7 +145,7 @@ class CIFAR10(Data):
 		return datagen
 
 
-class MNIST(Data):
+class MNIST(Data, object):
 	def __init__(self, extra_X=None, extra_Y=None):
 		super(MNIST, self).__init__("mnist", extra_X, extra_Y)
 		# the data, shuffled and split between train and test sets
@@ -168,6 +168,6 @@ def get_appropriate_data(dataset):
 		"cifar10": CIFAR10,
 		"svhn": SVHN
 	}
-	if dataset.lower() not in dataset_mapping:
+	if dataset.lower() in dataset_mapping:
 		return dataset_mapping[dataset.lower()]
 	return None

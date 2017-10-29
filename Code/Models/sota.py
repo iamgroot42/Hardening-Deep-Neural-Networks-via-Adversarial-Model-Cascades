@@ -83,16 +83,16 @@ def mnist(learning_rate, n_classes=10):
 # As defined here: https://github.com/penny4860/SVHN-deep-digit-detector
 def svhn(learning_rate, n_classes=10):
 	model = Sequential()
-	model.add(Convolution2D(32, 3, 3, border_mode='same',
+	model.add(Conv2D(32, 3, 3, border_mode='same',
 			input_shape=(3, 32, 32)))
 	model.add(Activation('relu'))
-	model.add(Convolution2D(32, 3, 3))
+	model.add(Conv2D(32, 3, 3))
 	model.add(Activation('relu'))
 	model.add(MaxPooling2D(pool_size=(2, 2)))
 	model.add(Dropout(0.4))
-	model.add(Convolution2D(64, 3, 3, border_mode='same'))
+	model.add(Conv2D(64, 3, 3, border_mode='same'))
 	model.add(Activation('relu'))
-	model.add(Convolution2D(64, 3, 3))
+	model.add(Conv2D(64, 3, 3))
 	model.add(Activation('relu'))
 	model.add(MaxPooling2D(pool_size=(2, 2)))
 	model.add(Dropout(0.3))
@@ -100,7 +100,7 @@ def svhn(learning_rate, n_classes=10):
 	model.add(Dense(1024))
 	model.add(Activation('relu'))
 	model.add(Dropout(0.2))
-	model.add(Dense(nb_classes))
+	model.add(Dense(n_classes))
 	model.add(Activation('softmax'))
 	model.compile(loss=keras.losses.categorical_crossentropy,
 		optimizer=Adadelta(lr=learning_rate),
@@ -108,7 +108,7 @@ def svhn(learning_rate, n_classes=10):
 	return model
 
 
-def get_appropriate_model(dataset)
+def get_appropriate_model(dataset):
 	model_mapping = {
 		"mnist": mnist,
 		"cifar10": cifar,
