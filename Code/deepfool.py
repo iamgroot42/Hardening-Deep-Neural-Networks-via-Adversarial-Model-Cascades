@@ -5,7 +5,7 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 import keras
-from cleverhans.attacks import DeepFool 
+from cleverhans.attacks import DeepFool
 from cleverhans.utils_keras import KerasModelWrapper
 
 import data_load

@@ -11,8 +11,8 @@ class Data:
 		self.dataset = dataset
 		self.extra_X = None
 		self.extra_Y = None
-		if extra_X != None:
-			assert(extra_Y != None)
+		if extra_X is not None:
+			assert(extra_Y is not None)
 			self.extra_X = extra_X
 			self.extra_Y = extra_Y
 
@@ -66,7 +66,7 @@ class Data:
 
 	def experimental_split(self):
 		# Add additonal data if present:
-		if self.extra_X != None:
+		if self.extra_X is not None:
 			self.X_train = np.concatenate((self.X_train, self.extra_X))
 			self.Y_train = np.concatenate((self.Y_train, self.extra_Y))
 		# Extract training and test data for blackbox from original training data
@@ -118,8 +118,9 @@ class CIFAR10(Data, object):
 		super(CIFAR10, self).__init__("cifar10", extra_X, extra_Y)
 		# the data, shuffled and split between train and test sets
 		(self.X_train, self.Y_train), (self.X_test, self.Y_test) = cifar10.load_data()
-		self.X_train = self.X_train.reshape(self.X_train.shape[0], 3, 32, 32)
-		self.X_test = self.X_test.reshape(self.X_test.shape[0], 3, 32, 32)
+		#print self.X_train.shape
+		self.X_train = self.X_train.transpose((0, 3, 1, 2))
+		self.X_test = self.X_test.transpose((0, 3, 1, 2))
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
 		self.X_train /= 255

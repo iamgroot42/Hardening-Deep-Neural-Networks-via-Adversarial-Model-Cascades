@@ -28,6 +28,7 @@ def main(argv=None):
 	else:
 		X_test_adv = np.swapaxes(X_test_adv,0,2)
 		X_test_adv = np.swapaxes(X_test_adv,0,1)
+		X_test_adv = (255.0 * X_test_adv).astype('uint8')
 		plt.imshow(X_test_adv)
 		plt.savefig('adv_example.png')
 	print("Image saved!")

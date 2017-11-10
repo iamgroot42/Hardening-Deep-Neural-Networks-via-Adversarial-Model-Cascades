@@ -1,3 +1,5 @@
+import common
+
 import numpy as np
 
 import keras
@@ -9,6 +11,8 @@ from keras.utils import np_utils
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 import os
+
+import data_load
 
 import tensorflow as tf
 from tensorflow.python.platform import flags
@@ -35,28 +39,22 @@ class Bagging:
 		self.batch_size = batch_size
 		self.nb_epochs = nb_epochs
 
-	def train(self, X, Y, model):
+	def train(self, X, Y, dataObject, model):
 		subset = np.random.choice(len(Y), int(len(Y) * self.sample_ratio))
 		x_sub = X[subset]
 		y_sub = Y[subset]
-		if FLAGS.dataset == 'cifar100':
-			datagen = utils_cifar.augmented_data(x_sub)
-		elif FLAGS.dataset == 'svhn':
-			datagen = utils_svhn.augmented_data(x_sub)
-		X_tr, y_tr, X_val, y_val = helpers.validation_split(x_sub, y_sub, 0.2)
+		X_tr, y_tr, X_val, y_val = dataObject.validation_split(x_sub, y_sub, 0.2)
 		# Early stopping and dynamic lr
 		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001, verbose=1)
 		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=5, verbose=1)
-		if FLAGS.dataset != 'mnist':
-			model.fit_generator(datagen.flow(X_tr, y_tr,
-			  				batch_size=self.batch_size),
-							steps_per_epoch=X_tr.shape[0] // self.batch_size,
-							epochs=self.nb_epochs,
-							callbacks=[reduce_lr, early_stop],
-							validation_data=(X_val, y_val))
-		else:
-			model.fit(X_tr, y_tr, batch_size = self.batch_size, epochs=self.nb_epochs, validation_data=(X_val, y_val), 
-					callbacks=[reduce_lr, early_stop])
+		datagen = dataObject.date_generator()
+		datagen.fit(X_tr)
+		model.fit_generator(datagen.flow(X_tr, y_tr,
+			  			batch_size=self.batch_size),
+						steps_per_epoch=X_tr.shape[0] // self.batch_size,
+						epochs=self.nb_epochs,
+						callbacks=[reduce_lr, early_stop],
+						validation_data=(X_val, y_val))
 		accuracy = model.evaluate(X_val, y_val, batch_size=self.batch_size)
 		print("\nValidation accuracy: " + str(accuracy[1]*100))
 
@@ -84,62 +82,36 @@ class Bagging:
                         return predicted
 
 def main(argv=None):
-	bag = None
-	n_classes = 10
 
-	if FLAGS.dataset == 'cifar100':
-		bag = Bagging(100, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
-		n_classes = 100
-	elif FLAGS.dataset == 'mnist':
-		bag = Bagging(10, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
-	elif FLAGS.dataset == 'svhn':
-		bag = Bagging(10, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
-	else:
+	if FLAGS.dataset not in ['cifar10', 'mnist', 'svhn']:
 		print "Invalid dataset specified. Exiting"
 		exit()
+
+	bag = Bagging(10, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
 
 	# Image dimensions ordering should follow the Theano convention
 	if keras.backend.image_dim_ordering() != 'th':
 		keras.backend.set_image_dim_ordering('th')
-
-	#Don't hog GPU
-	config = tf.ConfigProto()
-	config.gpu_options.allow_growth=True
-	sess = tf.Session(config=config)
-	keras.backend.set_session(sess)
 
 	#Training mode
 	if FLAGS.mode in ['train', 'finetune']:
 		# Load model
 	        model = load_model(FLAGS.seed_model)
 
-		# Make only dense layers trainable for finetuning
-	        #for layer in model.layers:
-        	#        if "dense" not in layer.name:
-                # 	        layer.trainable=False
+		# Initialize data object
+	        dataObject = data_load.get_appropriate_data(FLAGS.dataset)(np.load(FLAGS.data_x), np.load(FLAGS.data_y))
 
-		# Load data
-		if FLAGS.dataset == 'cifar100':
-			X, Y, _, _ = utils_cifar.data_cifar()
-			X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 500, 100)
-		elif FLAGS.dataset == 'mnist':
-			X, Y, _, _ = utils_mnist.data_mnist()
-			X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 5000, 10)
-		else:
-			X, Y, _, _ = utils_svhn.data_svhn()
-			X_train_p, Y_train_p, _,  _ = helpers.jbda(X, Y, "train", 4000, 10)
-		X_train_p = np.concatenate((X_train_p, np.load(FLAGS.data_x)))
-		Y_train_p = np.concatenate((Y_train_p, np.load(FLAGS.data_y)))
+		# Black-box network
+	        (blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
 
 		# Train data
-		bag.train(X_train_p, Y_train_p, model)
+		bag.train(blackbox_Xtrain, blackbox_Ytrain, dataObject, model)
 
 		# Print validation accuracy
-		X_tr, y_tr, X_val, y_val = helpers.validation_split(X_train_p, Y_train_p, 0.2)
-		predicted = np.argmax(bag.predict(FLAGS.model_dir, X_val, FLAGS.predict_mode),1)
-		true = np.argmax(y_val,1)
-		acc = (100*(predicted==true).sum()) / float(len(y_val))
-		print "Whole bag's validation accuracy", acc
+		predicted = np.argmax(bag.predict(FLAGS.model_dir, X_test, FLAGS.predict_mode),1)
+		true = np.argmax(Y_test,1)
+		acc = (100*(predicted==true).sum()) / float(len(Y_test))
+		print "Bag level test accuracy", acc
 
 		#Save model
 		model.save(FLAGS.seed_model)

@@ -11,8 +11,8 @@ if [ $dataset == "mnist" ]
   		declare -a epsilon_values=(0.04 0.06 0.08 0.10 0.25)
 elif [ $dataset == "svhn" ]
 	then
-		declare -a epsilon_values=(0.007 0.015 0.03 0.6)
-elif [ $dataset == "cifar100" ]
+		declare -a epsilon_values=(0.007 0.015 0.03 0.06)
+elif [ $dataset == "cifar10" ]
 	then
 		declare -a epsilon_values=(0.005 0.010 0.015 0.020 0.025 0.030)
 else
@@ -24,9 +24,8 @@ for epsilon in "${epsilon_values[@]}"
 do
 
 	prefix=$(date -d "today" +"%Y%m%d%H%M%S")
-
+	echo "For epsilon $epsilon:"
 	python ../Code/fgsm.py --epsilon $epsilon --model_path $ppmodel --dataset $dataset --data_x $prefix"X" --data_y $prefix"Y"
 	python ../Code/cross_test.py --model_path $model --data_x $prefix"X.npy" --data_y $prefix"Y.npy" --dataset $dataset
 	rm  $prefix"X.npy" $prefix"Y.npy"
-	echo "Results above for " $epsilon
 done
