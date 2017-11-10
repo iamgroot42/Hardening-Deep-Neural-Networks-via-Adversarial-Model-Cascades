@@ -14,7 +14,7 @@ elif [ $dataset == "svhn" ]
 		declare -a epsilon_values=(0.007 0.015 0.03 0.06)
 elif [ $dataset == "cifar10" ]
 	then
-		declare -a epsilon_values=(0.005 0.010 0.015 0.020 0.025 0.030)
+		declare -a epsilon_values=(0.007 0.015 0.03 0.06)
 else
 	echo "Invalid dataset! Exiting"
 	exit

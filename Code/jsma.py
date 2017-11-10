@@ -32,7 +32,7 @@ def main(argv=None):
 		print "Invalid dataset; exiting"
 		exit()
 
-	if FLAGS.mode == 'attack':# Set seed for reproducability
+	if FLAGS.mode == 'attack':
 		(X, Y) = dataObject.get_attack_data()
 	else:
 		(X, Y) = dataObject.get_hardening_data()
@@ -45,7 +45,20 @@ def main(argv=None):
 	model = KerasModelWrapper(raw_model)
 
 	jsma = SaliencyMapMethod(model, sess=common.sess)
-	adv_x = jsma.generate_np(X, clip_min=0.0, clip_max=1.0, gamma=FLAGS.gamma, theta=FLAGS.theta)
+
+        adv_x = np.array([])
+        j = 0
+        for i in range(0, X.shape[0], FLAGS.batch_size):
+                mini_batch = X[i: i+FLAGS.batch_size,:]
+                if mini_batch.shape[0] == 0:
+                        break
+                adv_x_mini = jsma.generate_np(mini_batch, clip_min=0.0, clip_max=1.0, gamma=FLAGS.gamma, theta=FLAGS.theta)
+                if adv_x.shape[0] != 0:
+                        adv_x = np.append(adv_x, adv_x_mini, axis=0)
+                else:
+                        adv_x = adv_x_mini
+                j += FLAGS.batch_size
+		print("%d/%d samples attacked"%(j, X.shape[0]))
 
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = raw_model.evaluate(adv_x, Y, batch_size=FLAGS.batch_size)

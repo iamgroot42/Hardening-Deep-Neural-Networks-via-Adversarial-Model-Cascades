@@ -12,9 +12,9 @@ if [ $dataset == "mnist" ]
 elif [ $dataset == "svhn" ]
 	then
 		declare -a epsilon_values=(0 0.007 0.015 0.03 0.6)
-elif [ $dataset == "cifar100" ]
+elif [ $dataset == "cifar10" ]
 	then
-		declare -a epsilon_values=(0 0.005 0.010 0.015 0.020 0.025 0.030)
+		declare -a epsilon_values=(0 0.007 0.015 0.03 0.6)
 else
 	echo "Invalid dataset! Exiting"
 	exit
@@ -25,8 +25,8 @@ do
 
 	prefix=$(date -d "today" +"%Y%m%d%H%M%S")
 
-	python ../Code/madry.py --epsilon $epsilon --model_path $ppmodel --dataset $dataset --adversary_path_x $prefix"X" --adversary_path_y $prefix"Y"
-	python ../Code/cross_test.py --model_path $model --adversary_path_x $prefix"X.npy" --adversary_path_y $prefix"Y.npy" --dataset $dataset --proxy_data False
+	python ../Code/madry.py --epsilon $epsilon --model_path $ppmodel --dataset $dataset --data_x $prefix"X" --data_y $prefix"Y"
+	python ../Code/cross_test.py --model_path $model --data_x $prefix"X.npy" --data_y $prefix"Y.npy" --dataset $dataset --proxy_data False
 	rm  $prefix"X.npy" $prefix"Y.npy"
 	echo "Results above for " $epsilon
 done
