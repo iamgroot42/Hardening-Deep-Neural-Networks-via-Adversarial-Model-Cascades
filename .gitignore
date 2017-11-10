@@ -1,11 +1,5 @@
-Papers/*
-Data/*
-AM
-BM
-PM
+cleverhans/*
 *.pyc
 *.npy
 *.png
 *.pkl
-saved_model
-arch.json

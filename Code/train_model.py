@@ -50,15 +50,15 @@ def main(argv=None):
 	X_train, Y_train, X_validation, Y_validation = dataObject.validation_split(blackbox_Xtrain, blackbox_Ytrain, 0.2)
 
 	# Early stopping and dynamic lr
-	reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=0.0001, verbose=1)
-	early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=10, verbose=1)
+	reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=0.001, verbose=1)
+	early_stop = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=20, verbose=1)
 
 	if FLAGS.label_smooth > 0:
 		Y_train = Y_train.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
 
-	if FLAGS.mode == 'finetune':
+	if FLAGS.mode == 'train':
 		n_classes = Y_train.shape[1]
-		model = Models.sota.get_appropriate_model(FLAGS.dataset)(FLAGS.learning_rate, n_classes)
+		model = sota.get_appropriate_model(FLAGS.dataset)(FLAGS.learning_rate, n_classes)
 	else:
 		model = load_model(FLAGS.save_here)
 		model.optimizer.lr.assign(FLAGS.learning_rate)
@@ -71,7 +71,7 @@ def main(argv=None):
 		epochs=FLAGS.nb_epochs,
 		callbacks=[reduce_lr, early_stop],
 		validation_data=(X_validation, Y_validation))
-	
+
 	accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
 	print('\nTest accuracy for black-box model: ' + str(accuracy[1]))
 	model.save(FLAGS.save_here)

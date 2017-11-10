@@ -19,9 +19,8 @@ madry_eps=0.03
 #JSMA
 jsma_gamma=0.1
 theta=1.0
-n_subset_classes=10
 
-dataset=$1 # cifar100/mnist/svhn
+dataset=$1 # cifar10/mnist/svhn
 seedmodel=$2 # path to starting model
 bagfolder=$3 # new folder will be made to store bag of models here
 cumulative=$4 # cumulative (yes/no)
@@ -29,7 +28,7 @@ order=$5 # file containing order of attacks
 transfer=$6 #transfer of parameters (yes/no)
 
 hashmap["fgsm"]="python ../Code/fgsm.py --fgsm_eps $fgsm_eps "
-hashmap["jsma"]="python ../Code/jsma.py --gamma $jsma_gamma --theta $theta --n_subset_classes $n_subset_classes "
+hashmap["jsma"]="python ../Code/jsma.py --gamma $jsma_gamma --theta $theta "
 hashmap["elastic"]="python ../Code/elastic.py --gamma $elastic_gamma "
 hashmap["carlini"]="python ../Code/elastic.py --gamma 0 "
 hashmap["deepfool"]="python ../Code/deepfool.py --iters $iters "
@@ -43,7 +42,7 @@ if [ $dataset == "mnist" ]
 elif [ $dataset == "svhn" ]
         then
                 :
-elif [ $dataset == "cifar100" ]
+elif [ $dataset == "cifar10" ]
         then
               	:
 else
@@ -70,9 +69,9 @@ do
 
 	#Run attack (on original model if NO-NO, else on the latest model)
 	if [ $cumulative == "no" ] && [ $transfer == "no" ]; then
-		command="${hashmap[$attack]} --dataset $dataset --adversary_path_x $prefix""X.npy --adversary_path_y $prefix""Y.npy --model_path $seedmodel"
+		command="${hashmap[$attack]} --mode harden --dataset $dataset --data_x $prefix""X.npy --data_y $prefix""Y.npy --model_path $seedmodel"
 	else
-		command="${hashmap[$attack]} --dataset $dataset --adversary_path_x $prefix""X.npy --adversary_path_y $prefix""Y.npy --model_path $bagfolder/$COUNTER"
+		command="${hashmap[$attack]} --mode harden --dataset $dataset --data_x $prefix""X.npy --data_y $prefix""Y.npy --model_path $bagfolder/$COUNTER"
 	fi
 	$command
 
