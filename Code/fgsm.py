@@ -42,8 +42,6 @@ def main(argv=None):
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
 
-	#X = np.transpose(X,(0, 3, 1, 2))
-
 	fgsm = FastGradientMethod(model, sess=common.sess)
 
 	adv_x = np.array([])

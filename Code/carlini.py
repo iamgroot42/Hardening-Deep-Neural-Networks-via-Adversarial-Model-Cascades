@@ -5,15 +5,15 @@ from tensorflow.python.platform import app
 from tensorflow.python.platform import flags
 
 import keras
-from cleverhans.attacks import DeepFool
+import tensorflow as tf
+from cleverhans.attacks import CarliniWagnerL2
 from cleverhans.utils_keras import KerasModelWrapper
 
 import data_load
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
-flags.DEFINE_integer('iters', 50, 'Maximum iterations')
+flags.DEFINE_integer('batch_size', 256, 'Size of training batches')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('data_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('data_y', 'ADY.npy', 'Path where original labels are to be saved')
@@ -30,7 +30,7 @@ def main(argv=None):
 		print "Invalid dataset; exiting"
 		exit()
 
-	if FLAGS.mode == 'attack':# Set seed for reproducability
+	if FLAGS.mode == 'attack':
 		(X, Y) = dataObject.get_attack_data()
 	else:
 		(X, Y) = dataObject.get_hardening_data()
@@ -42,7 +42,7 @@ def main(argv=None):
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
 
-	deepfool = DeepFool(model, sess=common.sess)
+	carlini = CarliniWagnerL2(model, sess=common.sess)
 
         adv_x = np.array([])
         j = 0
@@ -50,13 +50,14 @@ def main(argv=None):
                 mini_batch = X[i: i+FLAGS.batch_size,:]
                 if mini_batch.shape[0] == 0:
                         break
-                adv_x_mini = deepfool.generate_np(mini_batch, clip_min=0.0, clip_max=1.0, nb_candidate=Y.shape[1], max_iter=mini_batch.shape[0])
+		adv_x_mini = carlini.generate_np(mini_batch, clip_min=0.0, clip_max=1, batch_size=mini_batch.shape[0])
                 if adv_x.shape[0] != 0:
                         adv_x = np.append(adv_x, adv_x_mini, axis=0)
                 else:
                         adv_x = adv_x_mini
                 j += FLAGS.batch_size
 		print("%d/%d samples attacked"%(j, X.shape[0]))
+
 
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = raw_model.evaluate(adv_x, Y, batch_size=FLAGS.batch_size)

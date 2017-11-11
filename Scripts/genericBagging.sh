@@ -7,7 +7,7 @@ declare -A hashmap
 #FGSM
 fgsm_eps=0.03
 #Elastic
-elastic_gamma=1e-3
+elastic_beta=1e-2
 #Deepfool
 iters=50
 #Virtual
@@ -29,8 +29,8 @@ transfer=$6 #transfer of parameters (yes/no)
 
 hashmap["fgsm"]="python ../Code/fgsm.py --fgsm_eps $fgsm_eps "
 hashmap["jsma"]="python ../Code/jsma.py --gamma $jsma_gamma --theta $theta "
-hashmap["elastic"]="python ../Code/elastic.py --gamma $elastic_gamma "
-hashmap["carlini"]="python ../Code/elastic.py --gamma 0 "
+hashmap["elastic"]="python ../Code/elastic.py --beta $elastic_beta "
+hashmap["carlini"]="python ../Code/carlini.py "
 hashmap["deepfool"]="python ../Code/deepfool.py --iters $iters "
 hashmap["madry"]="python ../Code/madry.py --epsilon $madry_eps "
 hashmap["virtual"]="python ../Code/virtual.py --num_iters $num_iters --xi $xi --eps $eps "

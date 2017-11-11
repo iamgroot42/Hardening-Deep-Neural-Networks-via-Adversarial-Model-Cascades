@@ -13,8 +13,8 @@ import data_load
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 9, 'Size of training batches')
-flags.DEFINE_float('beta', 1e-3, 'Value of Beta')
+flags.DEFINE_integer('batch_size', 256, 'Size of training batches')
+flags.DEFINE_float('beta', 1e-2, 'Value of Beta')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('data_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
 flags.DEFINE_string('data_y', 'ADY.npy', 'Path where original labels are to be saved')
@@ -44,8 +44,21 @@ def main(argv=None):
 	model = KerasModelWrapper(raw_model)
 
 	elasticnet = ElasticNetMethod(model, sess=common.sess)
-	elasticnet.parse_params(clip_min=0.0, clip_max=1.0, beta=FLAGS.beta, batch_size=FLAGS.batch_size)
-	adv_x = elasticnet.generate_np(X)
+
+	adv_x = np.array([])
+        j = 0
+        for i in range(0, X.shape[0], FLAGS.batch_size):
+                mini_batch = X[i: i+FLAGS.batch_size,:]
+                if mini_batch.shape[0] == 0:
+                        break
+                adv_x_mini = elasticnet.generate_np(mini_batch, clip_min=0.0, clip_max=1.0, beta=FLAGS.beta, batch_size=mini_batch.shape[0])
+                if adv_x.shape[0] != 0:
+                        adv_x = np.append(adv_x, adv_x_mini, axis=0)
+                else:
+                        adv_x = adv_x_mini
+                j += FLAGS.batch_size
+		print("%d/%d samples attacked"%(j, X.shape[0]))
+
 
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = raw_model.evaluate(adv_x, Y, batch_size=FLAGS.batch_size)

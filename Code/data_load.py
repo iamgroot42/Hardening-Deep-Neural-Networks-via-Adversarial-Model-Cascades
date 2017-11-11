@@ -11,6 +11,7 @@ class Data:
 		self.dataset = dataset
 		self.extra_X = None
 		self.extra_Y = None
+		self.threshold = 4000
 		if extra_X is not None:
 			assert(extra_Y is not None)
 			self.extra_X = extra_X
@@ -72,16 +73,18 @@ class Data:
 		# Extract training and test data for blackbox from original training data
 		self.blackbox_Xtrain, self.blackbox_Ytrain, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_train, self.Y_train)
 		# Split test data into data for attacking and data used by blackbox for self-proxy hardening
-		self.attack_X, self.attack_Y, self.harden_X, self.harden_Y = self.data_split(self.X_test, self.Y_test)
+		self.attack_X, self.attack_Y, self.harden_X, self.harden_Y = self.data_split(self.X_test, self.Y_test, 0.5)
 
 	def get_blackbox_data(self):
 		return (self.blackbox_Xtrain, self.blackbox_Ytrain), (self.blackbox_Xtest, self.blackbox_Ytest)
 
 	def get_attack_data(self):
-		return (self.attack_X, self.attack_Y)
+		p = np.random.permutation(len(self.attack_X))[:self.threshold]
+		return (self.attack_X[p], self.attack_Y[p])
 
 	def get_hardening_data(self):
-		return (self.harden_X, self.harden_Y)
+		p = np.random.permutation(len(self.harden_X))[:self.threshold]
+		return (self.harden_X[p], self.harden_Y[p])
 
 
 class SVHN(Data, object):
