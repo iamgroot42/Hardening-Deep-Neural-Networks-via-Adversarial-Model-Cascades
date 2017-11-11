@@ -7,7 +7,7 @@ declare -A hashmap
 #FGSM
 fgsm_eps=0.03
 #Elastic
-elastic_gamma=1e-3
+elastic_beta=1e-2
 #Deepfool
 iters=50
 #Virtual
@@ -19,7 +19,6 @@ madry_eps=0.03
 #JSMA
 jsma_gamma=0.1
 theta=1.0
-n_subset_classes=10
 
 dataset=$1 # cifar100/mnist/svhn
 seedmodel=$2 # path to starting model
@@ -35,9 +34,9 @@ cp $seedproxy $temp
 seedproxy=$temp
 
 hashmap["fgsm"]="python ../Code/fgsm.py --fgsm_eps $fgsm_eps "
-hashmap["jsma"]="python ../Code/jsma.py --gamma $jsma_gamma --theta $theta --n_subset_classes $n_subset_classes "
-hashmap["elastic"]="python ../Code/elastic.py --gamma $elastic_gamma "
-hashmap["carlini"]="python ../Code/elastic.py --gamma 0 "
+hashmap["jsma"]="python ../Code/jsma.py --gamma $jsma_gamma --theta $theta "
+hashmap["elastic"]="python ../Code/elastic.py --beta $elastic_beta "
+hashmap["carlini"]="python ../Code/carlini.py "
 hashmap["deepfool"]="python ../Code/deepfool.py --iters $iters "
 hashmap["madry"]="python ../Code/madry.py --epsilon $madry_eps "
 hashmap["virtual"]="python ../Code/virtual.py --num_iters $num_iters --xi $xi --eps $eps "
@@ -49,7 +48,7 @@ if [ $dataset == "mnist" ]
 elif [ $dataset == "svhn" ]
         then
                 :
-elif [ $dataset == "cifar100" ]
+elif [ $dataset == "cifar10" ]
         then
               	:
 else
@@ -78,7 +77,7 @@ do
 	prefix=$(date -d "today" +"%s") #Unique per dataset
 
 	# Run attack on proxy
-	command="${hashmap[$attack]} --dataset $dataset --adversary_path_x $prefix""X.npy --adversary_path_y $prefix""Y.npy --model_path $seedproxy"
+	command="${hashmap[$attack]} --mode harden --dataset $dataset --data_x $prefix""X.npy --data_y $prefix""Y.npy --model_path $seedproxy"
 	$command
 
 	# Make copy at proxy's end for finetuning itself
