@@ -24,6 +24,10 @@ flags.DEFINE_string('mode', 'attack', 'Whethere attacking model or generating da
 
 
 def main(argv=None):
+	# Image dimensions ordering should follow the Theano convention
+        if keras.backend.image_dim_ordering() != 'th':
+                keras.backend.set_image_dim_ordering('th')
+
 	# Initialize data object
 	keras.layers.core.K.set_learning_phase(0)
 	dataObject = data_load.get_appropriate_data(FLAGS.dataset)()
@@ -36,10 +40,6 @@ def main(argv=None):
 		(X, Y) = dataObject.get_attack_data()
 	else:
 		(X, Y) = dataObject.get_hardening_data()
-
-	# Image dimensions ordering should follow the Theano convention
-	if keras.backend.image_dim_ordering() != 'th':
-		keras.backend.set_image_dim_ordering('th')
 
 	raw_model = keras.models.load_model(FLAGS.model_path)
 	model = KerasModelWrapper(raw_model)
