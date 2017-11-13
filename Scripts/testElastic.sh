@@ -4,7 +4,7 @@ export TF_CPP_MIN_LOG_LEVEL="2"
 dataset=$1 #(cifar100,mnist,svhn)
 model=$2 #(path to blackbox model)
 ppmodel=$3 #(path to proxy model)
-beta=1e-3
+beta=1e-2
 
 #Determine set of epsilon values according to dataset
 if [ $dataset == "mnist" ]
