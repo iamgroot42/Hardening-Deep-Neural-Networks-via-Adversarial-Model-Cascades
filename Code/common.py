@@ -18,4 +18,3 @@ np.random.seed(42)
 
 # Set seed for reproducability
 tf.set_random_seed(42)
-

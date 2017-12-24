@@ -14,9 +14,9 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('batch_size', 64, 'Size of training batches')
 flags.DEFINE_float('epsilon', 0.1, 'Tunable parameter for FGSM')
-flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
-flags.DEFINE_string('data_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
-flags.DEFINE_string('data_y', 'ADY.npy', 'Path where original labels are to be saved')
+flags.DEFINE_string('model_path', '', 'Path where model is stored')
+flags.DEFINE_string('data_x', '', 'Path where adversarial examples are to be saved')
+flags.DEFINE_string('data_y', '', 'Path where original labels are to be saved')
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 flags.DEFINE_string('mode', 'attack', 'Whethere attacking model or generating data for hardening')
 

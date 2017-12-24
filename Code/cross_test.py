@@ -10,9 +10,9 @@ from tensorflow.python.platform import flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('batch_size', 64, 'Size of training batches')
-flags.DEFINE_string('model_path', 'BM', 'Path where model is stored')
-flags.DEFINE_string('data_x', 'ADX.npy', 'Path where adversarial examples are saved')
-flags.DEFINE_string('data_y', 'ADY.npy', 'Path where adversarial labels are saved')
+flags.DEFINE_string('model_path', '', 'Path where model is stored')
+flags.DEFINE_string('data_x', '', 'Path where adversarial examples are saved')
+flags.DEFINE_string('data_y', '', 'Path where adversarial labels are saved')
 
 
 def main(argv=None):

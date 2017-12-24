@@ -19,7 +19,7 @@ from tensorflow.python.platform import flags
 
 
 FLAGS = flags.FLAGS
-flags.DEFINE_integer('nb_epochs', 100, 'Number of epochs')
+flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs')
 flags.DEFINE_float('sample_ratio', 0.75, 'Percentage of sample to be taken per model for training')
 flags.DEFINE_integer('batch_size', 16, 'Batch size')
 flags.DEFINE_string('mode', 'finetune', '(test,finetune)')
@@ -29,7 +29,7 @@ flags.DEFINE_string('seed_model', ' ', 'path to seed model')
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
 flags.DEFINE_float('learning_rate', 0.001 ,'Learning rate for classifier')
-flags.DEFINE_string('predict_mode', 'voting', 'Method for prediction while testing (voting/weighted)')
+flags.DEFINE_string('predict_mode', 'weighted', 'Method for prediction while testing (voting/weighted)')
 
 
 class Bagging:
@@ -45,14 +45,14 @@ class Bagging:
 		y_sub = Y[subset]
 		X_tr, y_tr, X_val, y_val = dataObject.validation_split(x_sub, y_sub, 0.2)
 		# Early stopping and dynamic lr
-		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.0001, verbose=1)
+		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.01, verbose=1)
 		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=5, verbose=1)
 		datagen = dataObject.date_generator()
 		datagen.fit(X_tr)
 		model.fit_generator(datagen.flow(X_tr, y_tr,
 			  			batch_size=self.batch_size),
 						steps_per_epoch=X_tr.shape[0] // self.batch_size,
-						epochs=self.nb_epochs,
+						epochs= self.nb_epochs,
 						callbacks=[reduce_lr, early_stop],
 						validation_data=(X_val, y_val))
 		accuracy = model.evaluate(X_val, y_val, batch_size=self.batch_size)
@@ -60,11 +60,11 @@ class Bagging:
 
 	def predict(self, models_dir, predict_on, method='voting'):
 		models = []
-		for file in os.listdir(models_dir):
+		for file in os.listdir(models_dir)[:1]:
 			models.append(load_model(os.path.join(models_dir,file)))
 		predictions = []
 		for model in models:
-                                predictions.append(model.predict(predict_on))
+			predictions.append(model.predict(predict_on))
 		if method == 'voting':
 			ultimate = [ {i:0 for i in range(self.n_classes)} for j in range(len(predict_on))]
 			for prediction in predictions:
@@ -97,6 +97,7 @@ def main(argv=None):
 	if FLAGS.mode in ['train', 'finetune']:
 		# Load model
 	        model = load_model(FLAGS.seed_model)
+		model.optimizer.lr.assign(FLAGS.learning_rate)
 
 		# Initialize data object
 	        dataObject = data_load.get_appropriate_data(FLAGS.dataset)(np.load(FLAGS.data_x), np.load(FLAGS.data_y))
@@ -107,7 +108,7 @@ def main(argv=None):
 		# Train data
 		bag.train(blackbox_Xtrain, blackbox_Ytrain, dataObject, model)
 
-		# Print validation accuracy
+		# Compute bag-level test accuracy
 		predicted = np.argmax(bag.predict(FLAGS.model_dir, X_test, FLAGS.predict_mode),1)
 		true = np.argmax(Y_test,1)
 		acc = (100*(predicted==true).sum()) / float(len(Y_test))

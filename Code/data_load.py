@@ -66,12 +66,14 @@ class Data:
 		return X_bm_ret, Y_bm_ret, X_pm_ret, Y_pm_ret
 
 	def experimental_split(self):
-		# Add additonal data if present:
-		if self.extra_X is not None:
-			self.X_train = np.concatenate((self.X_train, self.extra_X))
-			self.Y_train = np.concatenate((self.Y_train, self.extra_Y))
 		# Extract training and test data for blackbox from original training data
 		self.blackbox_Xtrain, self.blackbox_Ytrain, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_train, self.Y_train)
+
+		# Add additonal data if present:
+                if self.extra_X is not None:
+                        self.blackbox_Xtrain = np.concatenate((self.blackbox_Xtrain, self.extra_X))
+                        self.blackbox_Ytrain = np.concatenate((self.blackbox_Ytrain, self.extra_Y))
+
 		# Split test data into data for attacking and data used by blackbox for self-proxy hardening
 		self.attack_X, self.attack_Y, self.harden_X, self.harden_Y = self.data_split(self.X_test, self.Y_test, 0.5)
 
