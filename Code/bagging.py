@@ -45,8 +45,8 @@ class Bagging:
 		y_sub = Y[subset]
 		X_tr, y_tr, X_val, y_val = dataObject.validation_split(x_sub, y_sub, 0.2)
 		# Early stopping and dynamic lr
-		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.01, verbose=1)
-		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=5, verbose=1)
+		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=0.01, verbose=1)
+		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=10, verbose=1)
 		datagen = dataObject.date_generator()
 		datagen.fit(X_tr)
 		model.fit_generator(datagen.flow(X_tr, y_tr,
@@ -60,7 +60,7 @@ class Bagging:
 
 	def predict(self, models_dir, predict_on, method='voting'):
 		models = []
-		for file in os.listdir(models_dir)[:1]:
+		for file in os.listdir(models_dir):
 			models.append(load_model(os.path.join(models_dir,file)))
 		predictions = []
 		for model in models:
