@@ -2,7 +2,7 @@
 
 export TF_CPP_MIN_LOG_LEVEL="2"
 dataset=$1 #(cifar100,mnist,svhn)
-model=$2 #(path to blackbox model)
+model=$2 #(path to blackbox bag)
 ppmodel=$3 #(path to proxy model)
 
 #Determine set of epsilon values according to dataset
