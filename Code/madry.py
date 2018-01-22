@@ -12,7 +12,7 @@ import data_load
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 64, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 256, 'Size of training batches')
 flags.DEFINE_float('epsilon', 0.1, 'Tunable parameter for FGSM')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('data_x', 'ADX.npy', 'Path where adversarial examples are to be saved')

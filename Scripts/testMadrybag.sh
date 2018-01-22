@@ -8,13 +8,13 @@ ppmodel=$3 #(path to proxy model)
 #Determine set of epsilon values according to dataset
 if [ $dataset == "mnist" ]
 	then
-  		declare -a epsilon_values=(0 0.04 0.06 0.08 0.10 0.25)
+  		declare -a epsilon_values=(0.04 0.06 0.08 0.10 0.25)
 elif [ $dataset == "svhn" ]
 	then
-		declare -a epsilon_values=(0 0.007 0.015 0.03 0.6)
+		declare -a epsilon_values=(0.007 0.015 0.03 0.6)
 elif [ $dataset == "cifar10" ]
 	then
-		declare -a epsilon_values=(0 0.007 0.015 0.03 0.6)
+		declare -a epsilon_values=(0.007 0.015 0.03 0.6)
 else
 	echo "Invalid dataset! Exiting"
 	exit
