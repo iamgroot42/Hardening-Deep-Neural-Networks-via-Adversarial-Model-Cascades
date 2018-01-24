@@ -13,7 +13,7 @@ import data_load
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 32, 'Size of training batches')
 flags.DEFINE_float('gamma', 0.1, 'Value of gamma for JSMA')
 flags.DEFINE_float('theta', 1.0, 'Value of theta for JSMA')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')

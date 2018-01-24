@@ -13,7 +13,7 @@ import data_load
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 16, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 64, 'Size of training batches')
 flags.DEFINE_float('xi', 1e-6, 'xi')
 flags.DEFINE_integer('num_iters', 1, 'Number of iterations')
 flags.DEFINE_float('eps', 2.0, 'Epsilon')

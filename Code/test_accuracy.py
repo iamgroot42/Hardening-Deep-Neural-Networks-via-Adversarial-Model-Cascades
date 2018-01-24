@@ -12,8 +12,9 @@ import data_load
 FLAGS = flags.FLAGS
 
 flags.DEFINE_integer('batch_size', 256, 'Size of training batches')
-flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
+flags.DEFINE_string('model_path', '', 'Path where model is stored')
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
+
 
 def main(argv=None):
 	# Image dimensions ordering should follow the Theano convention
@@ -41,8 +42,8 @@ def main(argv=None):
 	acc = (y_model==y_true).sum()
 	acc /= float(len(y_true))
 	print('Calculated other way (should be exactly same: ' + str(acc))
-	print('Length:  ' + str(len(y_true)))
 	print model.predict(X_test)
+
 
 if __name__ == '__main__':
 	app.run()
