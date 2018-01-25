@@ -26,7 +26,7 @@ do
 	prefix=$(date -d "today" +"%Y%m%d%H%M%S")
 
 	python ../Code/madry.py --epsilon $epsilon --model_path $ppmodel --dataset $dataset --data_x $prefix"X" --data_y $prefix"Y"
-	python ../Code/cross_test.py --model_path $model --data_x $prefix"X.npy" --data_y $prefix"Y.npy" --dataset $dataset --proxy_data False
+	python ../Code/cross_test.py --model_path $model --data_x $prefix"X.npy" --data_y $prefix"Y.npy" --dataset $dataset
 	rm  $prefix"X.npy" $prefix"Y.npy"
 	echo "Results above for " $epsilon
 done

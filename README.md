@@ -1,4 +1,5 @@
-# IBM
+# Hardening Deep Neural Networks _via_ Adversarial Model Cascades 
+Code base for full paper submission made to [IJCAI-ECAI,18](https://www.ijcai-18.org/)
 
 
 ### Working

@@ -37,13 +37,6 @@ def main(argv=None):
 	accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
 	print('\nTest accuracy: ' + str(accuracy[1]))
 
-	y_model = np.argmax(model.predict(X_test), axis=1)
-	y_true = np.argmax(Y_test, axis=1)
-	acc = (y_model==y_true).sum()
-	acc /= float(len(y_true))
-	print('Calculated other way (should be exactly same: ' + str(acc))
-	print model.predict(X_test)
-
 
 if __name__ == '__main__':
 	app.run()

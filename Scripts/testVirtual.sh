@@ -26,6 +26,6 @@ fi
 prefix=$(date -d "today" +"%Y%m%d%H%M%S")
 
 python ../Code/virtual.py --model_path $ppmodel --dataset $dataset --data_x $prefix"X" --data_y $prefix"Y" --num_iters $num_iters --xi $xi --eps $eps
-python ../Code/cross_test.py --model_path $model --data_x $prefix"X.npy" --data_y $prefix"Y.npy" --dataset $dataset --proxy_data False
+python ../Code/cross_test.py --model_path $model --data_x $prefix"X.npy" --data_y $prefix"Y.npy" --dataset $dataset
 rm  $prefix"X.npy" $prefix"Y.npy"
 echo $prefix
