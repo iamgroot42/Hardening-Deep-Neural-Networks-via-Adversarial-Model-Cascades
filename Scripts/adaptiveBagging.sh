@@ -106,10 +106,7 @@ do
 	# Make a copy of selected model for finetuning
 	cp $selectedmodel $seeddata"model"
 
-	lr=0.001
-        if [ $dataset == "mnist" ]; then
-                lr=0.1
-        fi
+	lr=0.1
 
 	# Finetune target model using proxy's attack-data
 	python ../Code/bagging.py --learning_rate $lr --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
