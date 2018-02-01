@@ -3,3 +3,4 @@ cleverhans/*
 *.npy
 *.png
 *.pkl
+models/*
