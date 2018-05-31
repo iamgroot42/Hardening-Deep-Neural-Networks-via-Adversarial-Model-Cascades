@@ -13,7 +13,7 @@ import data_load
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('batch_size', 2048, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 512, 'Size of training batches')
 flags.DEFINE_float('beta', 1e-2, 'Value of Beta')
 flags.DEFINE_string('model_path', 'PM', 'Path where model is stored')
 flags.DEFINE_string('data_x', 'ADX.npy', 'Path where adversarial examples are to be saved')
