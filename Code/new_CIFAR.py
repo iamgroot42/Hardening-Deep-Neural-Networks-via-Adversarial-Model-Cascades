@@ -39,15 +39,15 @@ weight_decay       = 1e-4
 
 def color_preprocessing(x_train, x_val, x_test):
 	# Let's see how normal goes
-	x_train = x_train.astype('float32') * 255.
-	x_val = x_val.astype('float32') * 255.
-	x_test = x_test.astype('float32') * 255.
-	mean = [125.307, 122.95, 113.865]
-	std  = [62.9932, 62.0887, 66.7048]
-	for i in range(3):
-		x_train[:,:,:,i] = (x_train[:,:,:,i] - mean[i]) / std[i]
-		x_test[:,:,:,i] = (x_test[:,:,:,i] - mean[i]) / std[i]
-		x_val[:,:,:,i] = (x_val[:,:,:,i] - mean[i]) / std[i]
+	#x_train = x_train.astype('float32') * 255.
+	#x_val = x_val.astype('float32') * 255.
+	#x_test = x_test.astype('float32') * 255.
+	#mean = [125.307, 122.95, 113.865]
+	#std  = [62.9932, 62.0887, 66.7048]
+	#for i in range(3):
+	#	x_train[:,:,:,i] = (x_train[:,:,:,i] - mean[i]) / std[i]
+	#	x_test[:,:,:,i] = (x_test[:,:,:,i] - mean[i]) / std[i]
+	#	x_val[:,:,:,i] = (x_val[:,:,:,i] - mean[i]) / std[i]
 	return x_train, x_val, x_test
 
 
@@ -126,10 +126,13 @@ if __name__ == '__main__':
 	# load data
 	global num_classes
 
+	# Image dimensions ordering should follow the Theano convention
+	if keras.backend.image_dim_ordering() != 'th':
+		keras.backend.set_image_dim_ordering('th')
+
 	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
 	(xt, yt), (x_test, y_test) = dataObject.get_blackbox_data()
 	x_train, y_train, x_val, y_val = dataObject.validation_split(xt, yt, 0.2)
-
 
 	print("== DONE! ==\n== COLOR PREPROCESSING... ==")
 	# color preprocessing
@@ -137,7 +140,7 @@ if __name__ == '__main__':
 
 	print("== DONE! ==\n== BUILD MODEL... ==")
 	# build network
-	img_input = Input(shape=(img_rows, img_cols, img_channels))
+	img_input = Input(shape=(img_channels, img_rows, img_cols))
 	output    = residual_network(img_input, num_classes, stack_n)
 	resnet    = Model(img_input, output)
 

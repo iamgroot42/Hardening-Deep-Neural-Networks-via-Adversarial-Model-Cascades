@@ -17,9 +17,9 @@ class Data:
 			self.extra_X = extra_X
 			self.extra_Y = extra_Y
 
-	def placeholder_shape(self):
-		data_shape = (None,) + self.data.X_train.shape[1:]
-		label_shape = (None,) + (self.data.Y_train.shape[1],)
+	def get_placeholder_shape(self):
+		data_shape = (None,) + self.X_train.shape[1:]
+		label_shape = (None,) + (self.Y_train.shape[1],)
 		return data_shape, label_shape
 
 	def date_generator(self):
