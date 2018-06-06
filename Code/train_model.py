@@ -63,7 +63,7 @@ def main(argv=None):
 		model = load_model(FLAGS.save_here)
 		model.optimizer.lr.assign(FLAGS.learning_rate)
 
-	datagen = dataObject.date_generator()
+	datagen = dataObject.data_generator()
 	datagen.fit(X_train)
 	model.fit_generator(datagen.flow(X_train, Y_train,
 		batch_size=FLAGS.batch_size),

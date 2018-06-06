@@ -22,7 +22,7 @@ class Data:
 		label_shape = (None,) + (self.Y_train.shape[1],)
 		return data_shape, label_shape
 
-	def date_generator(self):
+	def data_generator(self):
 		datagen = ImageDataGenerator()
 		return datagen
 
@@ -102,7 +102,7 @@ class SVHN(Data, object):
 		super(SVHN, self).experimental_split()
 
 
-	def date_generator(self):
+	def data_generator(self):
 		datagen = ImageDataGenerator(
 			featurewise_center=False,  # set input mean to 0 over the dataset
 			samplewise_center=False,  # set each sample mean to 0
@@ -135,7 +135,7 @@ class CIFAR10(Data, object):
 		self.Y_test = np_utils.to_categorical(self.Y_test, 10)
 		super(CIFAR10, self).experimental_split()
 
-	def date_generator(self):
+	def data_generator(self):
 		datagen = ImageDataGenerator(
 			featurewise_center=False,  # set input mean to 0 over the dataset
 			samplewise_center=False,  # set each sample mean to 0

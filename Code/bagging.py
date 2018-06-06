@@ -47,7 +47,7 @@ class Bagging:
 		# Early stopping and dynamic lr
 		reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=0.01, verbose=1)
 		early_stop = EarlyStopping(monitor='val_loss', min_delta=0.005, patience=10, verbose=1)
-		datagen = dataObject.date_generator()
+		datagen = dataObject.data_generator()
 		datagen.fit(X_tr)
 		model.fit_generator(datagen.flow(X_tr, y_tr,
 			  			batch_size=self.batch_size),
