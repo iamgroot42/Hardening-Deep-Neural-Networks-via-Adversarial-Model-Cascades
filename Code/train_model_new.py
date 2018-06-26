@@ -13,7 +13,7 @@ from keras import optimizers, regularizers
 from keras import backend as K
 
 import data_load
-from Models import resnet
+from Models import resnet, lenet
 
 # set parameters via parser
 parser = argparse.ArgumentParser()
@@ -57,10 +57,14 @@ if __name__ == '__main__':
 	(xt, yt), (x_test, y_test) = dataObject.get_blackbox_data()
 	x_train, y_train, x_val, y_val = dataObject.validation_split(xt, yt, 0.2)
 
-
 	print("== DONE! ==\n== BUILD MODEL... ==")
 	# build network
+
+	# RESNET:
 	resnet_model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n)
+
+	# LENET:
+	#resnet_model, cbks = lenet.lenet_network(n_classes=10)
 
 	# print model architecture if you need.
 	print(resnet_model.summary())

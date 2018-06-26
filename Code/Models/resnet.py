@@ -37,8 +37,8 @@ def residual_network(n_classes=10, stack_n=5):
 						kernel_regularizer=regularizers.l2(weight_decay))(o2)
 		if increase:
 			projection = Conv2D(o_filters,kernel_size=(1,1),strides=(2,2),padding='same',
-								kernel_initializer="he_normal",
-								kernel_regularizer=regularizers.l2(weight_decay))(o1)
+						kernel_initializer="he_normal",
+						kernel_regularizer=regularizers.l2(weight_decay))(o1)
 			block = add([conv_2, projection])
 		else:
 			block = add([conv_2, x])
@@ -53,17 +53,17 @@ def residual_network(n_classes=10, stack_n=5):
 
 	# input: 32x32x16 output: 32x32x16
 	for _ in range(stack_n):
-		x = residual_block(x,16,False)
+		x = residual_block(x, 16, False)
 
 	# input: 32x32x16 output: 16x16x32
-	x = residual_block(x,32,True)
-	for _ in range(1,stack_n):
-		x = residual_block(x,32,False)
+	x = residual_block(x, 32, True)
+	for _ in range(1, stack_n):
+		x = residual_block(x, 32, False)
 
 	# input: 16x16x32 output: 8x8x64
-	x = residual_block(x,64,True)
-	for _ in range(1,stack_n):
-		x = residual_block(x,64,False)
+	x = residual_block(x, 64, True)
+	for _ in range(1, stack_n):
+		x = residual_block(x, 64, False)
 
 	x = BatchNormalization(momentum=0.9, epsilon=1e-5)(x)
 	x = Activation('relu')(x)

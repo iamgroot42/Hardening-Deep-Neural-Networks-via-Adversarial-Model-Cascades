@@ -29,6 +29,9 @@ flags.DEFINE_integer('stack_n', 5, 'stack number n, total layers = 6 * n + 2 (de
 epoch_number = 0
 
 def main(argv=None):
+	# Set learning phase
+	keras.layers.core.K.set_learning_phase(0)
+
 	# Image dimensions ordering should follow the Theano convention
         if keras.backend.image_dim_ordering() != 'th':
                 keras.backend.set_image_dim_ordering('th')
@@ -44,14 +47,11 @@ def main(argv=None):
 	X_train, Y_train, X_validation, Y_validation = dataObject.validation_split(blackbox_Xtrain, blackbox_Ytrain, 0.2)
 	n_classes = Y_train.shape[1]
 
-	# Set learning phase to testing
-	keras.backend.set_learning_phase(False)
-
 	# Define number of iterations
 	iterations         = 50000 // FLAGS.batch_size + 1
 
-	model, _ = resnet.residual_network(n_classes=n_classes, stack_n=FLAGS.stack_n)
-	#model = sota.get_appropriate_model(FLAGS.dataset)(FLAGS.learning_rate, n_classes)
+	#model, _ = resnet.residual_network(n_classes=n_classes, stack_n=FLAGS.stack_n)
+	model = sota.get_appropriate_model(FLAGS.dataset)(FLAGS.learning_rate, n_classes)
 	wrap = KerasModelWrapper(model)
 
 	train_params = {
@@ -81,6 +81,9 @@ def main(argv=None):
 	# Define attack and its parameters
 	attack, attack_params = helpers.get_approproiate_attack(FLAGS.dataset, FLAGS.attack_name
 		,wrap, common.sess, harden=True, attack_type="None")
+
+	# Print model summary
+	print(model.summary())
 
 	# Run adversarial training
 	adversarial_predictions = model(attack.generate(x, **attack_params))
