@@ -85,11 +85,15 @@ def main(argv=None):
 	# Print model summary
 	print(model.summary())
 
+	# Define optimizer to be used while running adversarial training
+	optimizer = tf.train.MomentumOptimizer(learning_rate=FLAGS.learning_rate, momentum=0.9, use_nesterov=True)
+
 	# Run adversarial training
 	adversarial_predictions = model(attack.generate(x, **attack_params))
 	model_train(common.sess, x, y, preds, X_train, Y_train
 		,save=False, predictions_adv=adversarial_predictions
-		,args=train_params, evaluate=evaluate)
+		,args=train_params, evaluate=evaluate
+		,optimizer=optimizer)
 
 	# Save model
 	model.save(FLAGS.save_here)

@@ -25,6 +25,8 @@ parser.add_argument('-n','--stack_n', type=int, default=5, metavar='NUMBER',
 				help='stack number n, total layers = 6 * n + 2 (default: 5)')
 parser.add_argument('-d','--dataset', type=str, default="cifar10", metavar='STRING',
 				help='dataset. (default: cifar10)')
+parser.add_argument('-s','--smooth', type=float, default=0,
+				help='Amount of label smoothening to be applied')
 
 args = parser.parse_args()
 
@@ -61,7 +63,8 @@ if __name__ == '__main__':
 	# build network
 
 	# RESNET:
-	resnet_model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n)
+	is_mnist = (args.dataset == "mnist")
+	resnet_model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
 
 	# LENET:
 	#resnet_model, cbks = lenet.lenet_network(n_classes=10)
@@ -74,9 +77,13 @@ if __name__ == '__main__':
 	datagen = dataObject.data_generator()
 	datagen.fit(x_train)
 
+	# add label-noise as specifed
+	if args.smooth > 0:
+		y_train = y_train.clip(args.smooth / 9., 1. - args.smooth)
+
 	# start training
-	resnet_model.fit_generator(datagen.flow(x_train, y_train,batch_size=batch_size),
-						 steps_per_epoch=iterations,
+	generator = datagen.flow(x_train, y_train, batch_size=batch_size)
+	resnet_model.fit_generator(generator, steps_per_epoch=iterations,
 						 epochs=epochs,
 						 callbacks=cbks,
 						 validation_data=(x_val, y_val))

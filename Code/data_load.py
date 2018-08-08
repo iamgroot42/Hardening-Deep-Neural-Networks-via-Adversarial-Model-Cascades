@@ -11,7 +11,7 @@ class Data:
 		self.dataset = dataset
 		self.extra_X = None
 		self.extra_Y = None
-		self.threshold = 4000
+		self.threshold = 3300
 		if extra_X is not None:
 			assert(extra_Y is not None)
 			self.extra_X = extra_X
@@ -26,7 +26,7 @@ class Data:
 		datagen = ImageDataGenerator()
 		return datagen
 
-	def validation_split(self, X, Y, validation_split=0.2):
+	def validation_split(self, X, Y, validation_split=0.1):
 		num_points = len(X)
 		validation_indices = np.random.choice(num_points, int(num_points * validation_split))
 		train_indices = list(set(range(num_points)) - set(validation_indices))
@@ -34,8 +34,9 @@ class Data:
 		X_val, y_val = X[validation_indices], Y[validation_indices]
 		return X_train, y_train, X_val, y_val
 
-	def data_split(self, X, Y, pool_split=0.8):
+	def data_split(self, X, Y, these_many):
 		nb_classes = Y.shape[1]
+		these_many /= nb_classes
 		distr = {}
 		for i in range(nb_classes):
 			distr[i] = []
@@ -53,8 +54,8 @@ class Data:
 		n_points = min([len(distr[i]) for i in distr.keys()])
 		for key in distr.keys():
 			st = np.random.choice(distr[key], n_points, replace=False)
-			bm = st[:int(len(st)*pool_split)]
-			pm = st[int(len(st)*pool_split):]
+			bm = st[:these_many]
+			pm = st[these_many:]
 			X_bm_ret.append(X[bm])
 			Y_bm_ret.append(Y[bm])
 			X_pm_ret.append(X[pm])
@@ -67,26 +68,24 @@ class Data:
 
 	def experimental_split(self):
 		# Extract training and test data for blackbox from original training data
-		self.blackbox_Xtrain, self.blackbox_Ytrain, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_train, self.Y_train)
+		self.blackbox_Xtrain, self.blackbox_Ytrain = self.X_train, self.Y_train
 
 		# Add additonal data if present:
-                if self.extra_X is not None:
-                        self.blackbox_Xtrain = np.concatenate((self.blackbox_Xtrain, self.extra_X))
-                        self.blackbox_Ytrain = np.concatenate((self.blackbox_Ytrain, self.extra_Y))
+		if self.extra_X is not None:
+			self.blackbox_Xtrain = np.concatenate((self.blackbox_Xtrain, self.extra_X))
+			self.blackbox_Ytrain = np.concatenate((self.blackbox_Ytrain, self.extra_Y))
 
-		# Split test data into data for attacking and data used by blackbox for self-proxy hardening
-		self.attack_X, self.attack_Y, self.harden_X, self.harden_Y = self.data_split(self.X_test, self.Y_test, 0.5)
+		self.attack_X, self.attack_Y, other_data_X, other_data_Y = self.data_split(self.X_test, self.Y_test, self.threshold)
+		self.harden_X, self.harden_Y, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(other_data_X, other_data_Y, self.threshold)
 
 	def get_blackbox_data(self):
 		return (self.blackbox_Xtrain, self.blackbox_Ytrain), (self.blackbox_Xtest, self.blackbox_Ytest)
 
 	def get_attack_data(self):
-		p = np.random.permutation(len(self.attack_X))[:self.threshold]
-		return (self.attack_X[p], self.attack_Y[p])
+		return (self.attack_X, self.attack_Y)
 
 	def get_hardening_data(self):
-		p = np.random.permutation(len(self.harden_X))[:self.threshold]
-		return (self.harden_X[p], self.harden_Y[p])
+		return (self.harden_X, self.harden_Y)
 
 
 class SVHN(Data, object):
@@ -177,3 +176,4 @@ def get_appropriate_data(dataset):
 	if dataset.lower() in dataset_mapping:
 		return dataset_mapping[dataset.lower()]
 	return None
+

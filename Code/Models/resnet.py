@@ -18,9 +18,11 @@ def scheduler(epoch):
 	return 0.001
 
 
-def residual_network(n_classes=10, stack_n=5):
+def residual_network(n_classes=10, stack_n=5, mnist=False, get_logits=False):
 	weight_decay       = 1e-4
 	img_input = Input(shape=(3, 32, 32))
+	if mnist == True:
+		img_input = Input(shape=(1, 28, 28))
 
 	def residual_block(x, o_filters, increase=False):
 		stride = (1,1)
@@ -70,15 +72,20 @@ def residual_network(n_classes=10, stack_n=5):
 	x = GlobalAveragePooling2D()(x)
 
 	# input: 64 output: 10
-	x = Dense(n_classes,activation='softmax',kernel_initializer="he_normal",
+	logits = Dense(n_classes,activation='softmax',kernel_initializer="he_normal",
 			  kernel_regularizer=regularizers.l2(weight_decay))(x)
 
-	resnet    = Model(img_input, x)
-	sgd = optimizers.SGD(lr=.1, momentum=0.9, nesterov=True)
-	resnet.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+	output = Activation('softmax')(logits)
 	cbks = [LearningRateScheduler(scheduler),
-		ModelCheckpoint('./checkpoint-{epoch}.h5', save_best_only=False, mode='auto', period=10)]
-
+                ModelCheckpoint('./checkpoint-{epoch}.h5', save_best_only=False, mode='auto', period=10)]
+	resnet = None
+	if get_logits:
+		resnet = Model(img_input, logits)
+		return resnet, cbks
+	else:
+		resnet = Model(img_input, output)
+	sgd = optimizers.SGD(lr=1e-1, momentum=0.9, nesterov=True)
+	resnet.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 	return resnet, cbks
 
 
