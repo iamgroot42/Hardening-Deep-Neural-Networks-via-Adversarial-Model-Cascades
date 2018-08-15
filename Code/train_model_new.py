@@ -13,7 +13,7 @@ from keras import optimizers, regularizers
 from keras import backend as K
 
 import data_load
-from Models import resnet, lenet
+from Models import resnet, lenet, densenet
 
 # set parameters via parser
 parser = argparse.ArgumentParser()
@@ -51,26 +51,25 @@ if __name__ == '__main__':
 	# load data
 	global num_classes
 
-	# Image dimensions ordering should follow the Theano convention
-	if keras.backend.image_dim_ordering() != 'th':
-		keras.backend.set_image_dim_ordering('th')
-
 	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
 	(xt, yt), (x_test, y_test) = dataObject.get_blackbox_data()
 	x_train, y_train, x_val, y_val = dataObject.validation_split(xt, yt, 0.2)
 
 	print("== DONE! ==\n== BUILD MODEL... ==")
+	is_mnist = (args.dataset == "mnist")
 	# build network
 
 	# RESNET:
-	is_mnist = (args.dataset == "mnist")
-	resnet_model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
+	#model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
 
 	# LENET:
-	#resnet_model, cbks = lenet.lenet_network(n_classes=10)
+	#model, cbks = lenet.lenet_network(n_classes=10)
+
+	# DENSENET
+	model, cbks = densenet.densenet(n_classes=10, mnist=is_mnist)
 
 	# print model architecture if you need.
-	print(resnet_model.summary())
+	print(model.summary())
 
 	# set data augmentation
 	print("== USING REAL-TIME DATA AUGMENTATION, START TRAIN... ==")
@@ -83,10 +82,10 @@ if __name__ == '__main__':
 
 	# start training
 	generator = datagen.flow(x_train, y_train, batch_size=batch_size)
-	resnet_model.fit_generator(generator, steps_per_epoch=iterations,
+	model.fit_generator(generator, steps_per_epoch=iterations,
 						 epochs=epochs,
 						 callbacks=cbks,
 						 validation_data=(x_val, y_val))
 
-	resnet_model.save('resnet_{:d}_{}.h5'.format(layers,args.dataset))
-	print(resnet_model.evaluate(x_test, y_test))
+	model.save('densenet_{:d}_{}.h5'.format(layers,args.dataset))
+	print(model.evaluate(x_test, y_test))

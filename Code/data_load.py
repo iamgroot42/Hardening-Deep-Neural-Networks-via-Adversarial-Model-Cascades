@@ -113,7 +113,7 @@ class SVHN(Data, object):
 			height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=False,  # randomly flip images
 			vertical_flip=False,  # randomly flip images
-			data_format="channels_first") # (channel, row, col) format per image
+			data_format="channels_last") # (row, col, channel) format per image
 		return datagen
 
 
@@ -122,13 +122,15 @@ class CIFAR10(Data, object):
 		super(CIFAR10, self).__init__("cifar10", extra_X, extra_Y)
 		# the data, shuffled and split between train and test sets
 		(self.X_train, self.Y_train), (self.X_test, self.Y_test) = cifar10.load_data()
-		#print self.X_train.shape
 		#self.X_train = self.X_train.transpose((0, 3, 1, 2))
 		#self.X_test = self.X_test.transpose((0, 3, 1, 2))
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
-		self.X_train /= 255
-		self.X_test /= 255
+		mean = [125.307, 122.95, 113.865]
+		std  = [62.9932, 62.0887, 66.7048]
+		for i in range(3):
+			self.X_train[:,:,:,i] = (self.X_train[:,:,:,i] - mean[i]) / std[i]
+			self.X_test[:,:,:,i] = (self.X_test[:,:,:,i] - mean[i]) / std[i]
 		# convert class vectors to binary class matrices
 		self.Y_train = np_utils.to_categorical(self.Y_train, 10)
 		self.Y_test = np_utils.to_categorical(self.Y_test, 10)
@@ -146,7 +148,7 @@ class CIFAR10(Data, object):
 			height_shift_range=0.15,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=True,  # randomly flip images
 			vertical_flip=True,  # randomly flip images
-			data_format="channels_first") # (channel, row, col) format per image
+			data_format="channels_last") # (row, col, channel) format per image
 		return datagen
 
 

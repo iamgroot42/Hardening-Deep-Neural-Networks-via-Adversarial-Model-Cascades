@@ -17,10 +17,6 @@ flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 
 
 def main(argv=None):
-	# Image dimensions ordering should follow the Theano convention
-        if keras.backend.image_dim_ordering() != 'th':
-                keras.backend.set_image_dim_ordering('th')
-
 	# Initialize data object
 	keras.layers.core.K.set_learning_phase(0)
 	dataObject = data_load.get_appropriate_data(FLAGS.dataset)()
@@ -36,7 +32,6 @@ def main(argv=None):
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
 	print('\nTest accuracy: ' + str(accuracy[1]))
-
 
 if __name__ == '__main__':
 	app.run()

@@ -77,7 +77,7 @@ def residual_network(n_classes=10, stack_n=5, mnist=False, get_logits=False):
 
 	output = Activation('softmax')(logits)
 	cbks = [LearningRateScheduler(scheduler),
-                ModelCheckpoint('./checkpoint-{epoch}.h5', save_best_only=False, mode='auto', period=10)]
+                ModelCheckpoint('./checkpoint-resnet-{epoch}.h5', save_best_only=False, mode='auto', period=10)]
 	resnet = None
 	if get_logits:
 		resnet = Model(img_input, logits)

@@ -1,3 +1,4 @@
 SVHN/*
 *.h5
 *_cifar10/*
+new_models/*
