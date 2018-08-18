@@ -96,6 +96,9 @@ class SVHN(Data, object):
 		self.X_test, self.Y_test = np.load("../Code/SVHN/SVHNx_te.npy"), np.load("../Code/SVHN/SVHNy_te.npy")
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
+		# convert class vectors to binary class matrices
+                self.Y_train = np_utils.to_categorical(self.Y_train - 1, 10)
+                self.Y_test = np_utils.to_categorical(self.Y_test - 1, 10)
 		self.X_train /= 255.0
 		self.X_test /= 255.0
 		super(SVHN, self).experimental_split()

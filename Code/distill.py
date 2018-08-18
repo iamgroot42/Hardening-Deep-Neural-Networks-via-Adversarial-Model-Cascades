@@ -1,88 +1,90 @@
 import common
+
+import keras
+import argparse
 import numpy as np
 
-from keras.models import load_model
-from tensorflow.python.platform import app
-
-from keras.models import Sequential
+from keras.preprocessing.image import ImageDataGenerator
 from keras.layers import Activation
+from keras.models import Model, load_model
+from keras import backend as K
 
-import tensorflow as tf
-import keras
-from tensorflow.python.platform import flags
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+import data_load
+from Models import densenet, resnet
 
-from Models import cnn
+# set parameters via parser
+parser = argparse.ArgumentParser()
+parser.add_argument('-b','--batch_size', type=int, default=128, metavar='NUMBER',
+				help='batch size(default: 128)')
+parser.add_argument('-e','--epochs', type=int, default=200, metavar='NUMBER',
+				help='epochs(default: 200)')
+parser.add_argument('-n','--stack_n', type=int, default=5, metavar='NUMBER',
+				help='stack number n, total layers = 6 * n + 2 (default: 5)')
+parser.add_argument('-d','--dataset', type=str, default="cifar10", metavar='STRING',
+				help='dataset. (default: cifar10)')
+parser.add_argument('-t','--teacher', type=str, default="", metavar='STRING',
+				help='path to teacher model')
 
-FLAGS = flags.FLAGS
-flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs')
-flags.DEFINE_integer('batch_size', 16, 'Batch size')
-flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
-flags.DEFINE_float('learning_rate', 1 ,'Learning rate for classifier')
-flags.DEFINE_string('save_here', 'saved_model', 'Path where model is to be saved')
-flags.DEFINE_string('teacher_model', 'saved_model', 'Path where teacher model (blackbox) is stored')
-flags.DEFINE_string('unlabelled_data', 'X.npy', 'Unlabelled data used by student to get labels from teacher')
-flags.DEFINE_boolean('use_distillation', False, 'Whether model is based on distillation or a normal proxy')
-flags.DEFINE_float('label_smooth', 0, 'Amount of label smoothening to be applied')
+args = parser.parse_args()
 
-
-def main(argv=None):
-	"""
-	Train a network using defensive distillation (if distillation specified; use direct predictions otherwise)
-
-	Distillation as a Defense to Adversarial Perturbations against Deep Neural Networks
-	Nicolas Papernot, Patrick McDaniel, Xi Wu, Somesh Jha, Ananthram Swami
-	IEEE S&P, 2016.
-	"""
-
-	# Image dimensions ordering should follow the Theano convention
-	if keras.backend.image_dim_ordering() != 'th':
-		keras.backend.set_image_dim_ordering('th')
-
-	nb_classes = 10
-	shape = (3, 32, 32)
-	if FLAGS.dataset == "mnist":
-		shape = (1, 28, 28)
-	elif FLAGS.dataset not in ["cifar10", "svhn"]:
-		print("Invalid dataset!")
-		exit()
-
-	model = None
-	if FLAGS.use_distillation:
-		model = cnn.proxy(shape, nb_classes, FLAGS.learning_rate, True)
-	else:
-		model = cnn.proxy(shape, nb_classes, FLAGS.learning_rate)
-
-	# load teacher model, unlabelled data
-	X_train = np.load(FLAGS.unlabelled_data)
-	teacher = load_model(FLAGS.teacher_model)
-
-	# Convert to one-hot if not distillation
-	Y_train = teacher.predict(X_train)
-	if not FLAGS.use_distillation:
-		temp = np.zeros(Y_train.shape)
-		temp[np.arange(Y_train.shape[0]), np.argmax(Y_train, axis=1)] = 1
-		Y_train = temp
-		if FLAGS.label_smooth > 0:
-	                Y_train = Y_train.clip(FLAGS.label_smooth / 9., 1. - FLAGS.label_smooth)
-
-
-	# Early stopping and dynamic lr
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=0.001, verbose=1)
-        early_stop = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=20, verbose=1)
-
-	# train the student model
-	model.fit(X_train, Y_train,
-		batch_size=16,
-		validation_split=0.2,
-		epochs=FLAGS.nb_epochs,
-		callbacks=[reduce_lr, early_stop])
-
-	# save student model (add softmax if distillation model)
-	if FLAGS.use_distillation:
-		model.add(Activation('softmax'))
-	model.save(FLAGS.save_here)
+stack_n            = args.stack_n
+layers             = 6 * stack_n + 2
+batch_size         = args.batch_size
+epochs             = args.epochs
+iterations         = 50000 // batch_size + 1
+weight_decay       = 1e-4
 
 
 if __name__ == '__main__':
-	app.run()
+
+	print("========================================")
+	print("MODEL: Residual Network ({:2d} layers)".format(6*stack_n+2))
+	print("BATCH SIZE: {:3d}".format(batch_size))
+	print("WEIGHT DECAY: {:.4f}".format(weight_decay))
+	print("EPOCHS: {:3d}".format(epochs))
+	print("DATASET: {:}".format(args.dataset))
+
+	print("== LOADING DATA... ==")
+	# load data
+	global num_classes
+
+	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
+	(xt, yt), (x_test, y_test) = dataObject.get_blackbox_data()
+	x_train, _, x_val, _ = dataObject.validation_split(xt, yt, 0.2)
+
+	print("== DONE! ==\n== BUILD MODEL... ==")
+	is_mnist = (args.dataset == "mnist")
+	# build network
+
+	# RESNET:
+	#model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
+
+	# DENSENET
+	student, cbks = densenet.densenet(n_classes=10, mnist=is_mnist, get_logits=False)
+
+	# print model architecture if you need.
+	print(student.summary())
+
+	# Load teacher model
+	teacher_model = load_model(args.teacher)
+
+	# Get predictions from teacher_model
+	print("== GENERATING DATA FOR STUDENT MODEL... ==")
+	y_train = teacher_model.predict(x_train, batch_size=1024)
+	y_val = teacher_model.predict(x_val, batch_size=1024)
+
+	# set data augmentation
+	print("== USING REAL-TIME DATA AUGMENTATION, START TRAIN... ==")
+	datagen = dataObject.data_generator()
+	datagen.fit(x_train)
+
+	# start training student model
+	generator = datagen.flow(x_train, y_train, batch_size=batch_size)
+	student.fit_generator(generator, steps_per_epoch=iterations,
+						 epochs=epochs,
+						 callbacks=cbks,
+						 validation_data=(x_val, y_val))
+
+	student.save('densenet_{:d}_{}.h5'.format(layers,args.dataset))
+	print(student.evaluate(x_test, y_test))
+
