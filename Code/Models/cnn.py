@@ -10,10 +10,14 @@ from keras.initializers import he_normal
 import keras
 
 
-def proxy(shape, nb_classes, learning_rate, distill=False):
+def proxy(n_classes=10, mnist=False, learning_rate=1e-1):
+	img_input = (32, 32, 3)
+	if mnist == True:
+		img_input = (28, 28, 1)
+
 	model = Sequential()
 	model.add(Conv2D(32, 3, 3, border_mode='same', W_regularizer=l2(0.0001), init=he_normal(),
-			input_shape=(shape[0], shape[1], shape[2])))
+			input_shape=img_input))
 	model.add(Activation('relu'))
 	model.add(Conv2D(32, (3, 3), W_regularizer=l2(0.0001), init=he_normal()))
 	model.add(Activation('relu'))
@@ -29,18 +33,9 @@ def proxy(shape, nb_classes, learning_rate, distill=False):
 	model.add(Dense(512, W_regularizer=l2(0.0001), init=he_normal()))
 	model.add(Activation('relu'))
 	model.add(Dropout(0.2))
-	model.add(Dense(nb_classes))
-
-	if distill:
-		def fn(correct, predicted):
-			return tf.nn.softmax_cross_entropy_with_logits(labels=correct, logits=predicted)
-
-		model.compile(loss=fn,
-			optimizer=Adadelta(lr=learning_rate),
-			metrics=['accuracy'])
-	else:
-		model.add(Activation('softmax'))
-		model.compile(loss=keras.losses.categorical_crossentropy,
-			optimizer=Adadelta(lr=learning_rate),
-			metrics=['accuracy'])
+	model.add(Dense(10))
+	model.add(Activation('softmax'))
+	model.compile(loss=keras.losses.categorical_crossentropy,
+		optimizer=SGD(lr=learning_rate),
+		metrics=['accuracy'])
 	return model

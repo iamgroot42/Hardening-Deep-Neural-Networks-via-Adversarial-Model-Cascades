@@ -26,7 +26,7 @@ class Data:
 		datagen = ImageDataGenerator()
 		return datagen
 
-	def validation_split(self, X, Y, validation_split=0.1):
+	def validation_split(X, Y, validation_split=0.1):
 		num_points = len(X)
 		validation_indices = np.random.choice(num_points, int(num_points * validation_split))
 		train_indices = list(set(range(num_points)) - set(validation_indices))
@@ -97,8 +97,8 @@ class SVHN(Data, object):
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
 		# convert class vectors to binary class matrices
-                self.Y_train = np_utils.to_categorical(self.Y_train - 1, 10)
-                self.Y_test = np_utils.to_categorical(self.Y_test - 1, 10)
+		self.Y_train = np_utils.to_categorical(self.Y_train - 1, 10)
+		self.Y_test = np_utils.to_categorical(self.Y_test - 1, 10)
 		self.X_train /= 255.0
 		self.X_test /= 255.0
 		super(SVHN, self).experimental_split()
@@ -160,8 +160,8 @@ class MNIST(Data, object):
 		super(MNIST, self).__init__("mnist", extra_X, extra_Y)
 		# the data, shuffled and split between train and test sets
 		(self.X_train, self.Y_train), (self.X_test, self.Y_test) = mnist.load_data()
-		self.X_train = self.X_train.reshape(self.X_train.shape[0], 1, 28, 28)
-		self.X_test = self.X_test.reshape(self.X_test.shape[0], 1, 28, 28)
+		self.X_train = self.X_train.reshape(self.X_train.shape[0], 28, 28, 1)
+		self.X_test = self.X_test.reshape(self.X_test.shape[0], 28, 28, 1)
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
 		self.X_train /= 255
@@ -180,5 +180,20 @@ def get_appropriate_data(dataset):
 	}
 	if dataset.lower() in dataset_mapping:
 		return dataset_mapping[dataset.lower()]
+	return None
+
+
+def get_proxy_data(dataset):
+	X = None
+	path = {
+		"mnist": "MNIST/data.npy",
+		"cifar10": "CIFAR10new/data.npy",
+		"svhn": "SVHN/data.npy"
+	}
+	if dataset.lower() in path:
+		data = np.load("../Code/SVHN/UnlabelledData/" + path[dataset.lower()])
+		data = (255 * data)
+		data = data.transpose((0, 2, 3, 1))
+		return data
 	return None
 
