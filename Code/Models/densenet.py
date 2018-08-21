@@ -85,11 +85,11 @@ def densenet(n_classes=10, mnist=False, get_logits=False):
 	model = None
 	if get_logits:
 		densenet = Model(img_input, logits)
-		return densenet, cbks
+		return (img_input, logits), densenet, cbks
 	else:
 		output = Activation('softmax')(logits)
 		densenet = Model(img_input, output)
 
 	sgd = optimizers.SGD(lr=1e-1, momentum=0.9, nesterov=True)
 	densenet.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
-	return densenet, cbks
+	return (img_input, output), densenet, cbks

@@ -26,7 +26,7 @@ class Data:
 		datagen = ImageDataGenerator()
 		return datagen
 
-	def validation_split(X, Y, validation_split=0.1):
+	def validation_split(self, X, Y, validation_split=0.1):
 		num_points = len(X)
 		validation_indices = np.random.choice(num_points, int(num_points * validation_split))
 		train_indices = list(set(range(num_points)) - set(validation_indices))

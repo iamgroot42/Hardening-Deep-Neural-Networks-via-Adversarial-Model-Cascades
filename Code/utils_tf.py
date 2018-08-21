@@ -1,5 +1,3 @@
-import common
-
 import math
 import numpy as np
 import os
@@ -9,7 +7,16 @@ import six
 import tensorflow as tf
 import time
 
-from utils import batch_indices
+def batch_indices(batch_nb, data_length, batch_size):
+	start = int(batch_nb * batch_size)
+	end = int((batch_nb + 1) * batch_size)
+
+	if end > data_length:
+		shift = end - data_length
+		start -= shift
+		end -= shift
+
+	return start, end
 
 def tf_model_loss(y, model, mean=True):
 	op = model.op
@@ -17,191 +24,106 @@ def tf_model_loss(y, model, mean=True):
 		logits, = op.inputs
 	else:
 		logits = model
-	out = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y))
+	out = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y)
+	if mean:
+		out = tf.reduce_mean(out)
 	return out
 
 
-def tf_model_train(sess, x, y, predictions, X_train, Y_train, save=False,
-				   predictions_adv=None, verbose=True):
+def tf_model_train(sess, model, x, y, predictions, X_train, Y_train, FLAGS, evaluate, scheduler, data_generator,
+				   predictions_adv=None, verbose=True, optimizer=None):
+
 	# Define loss
 	loss = tf_model_loss(y, predictions)
 	if predictions_adv is not None:
-		loss = (loss + tf_model_loss(y, predictions_adv)) / 2
+		print("Using lambda = " + str(FLAGS.eta))
+		loss = (loss + FLAGS.eta * tf_model_loss(y, predictions_adv)) / 2
 
-	train_step = tf.train.AdadeltaOptimizer(learning_rate=FLAGS.learning_rate, rho=0.95, epsilon=1e-08).minimize(loss)
-	# train_step = tf.train.GradientDescentOptimizer(FLAGS.learning_rate).minimize(loss)
+	lr_placeholder = tf.placeholder(tf.float32, [], name='learning_rate')
+	update_ops = model.updates
+
+	if optimizer is None:
+		optimizer = tf.train.MomentumOptimizer(learning_rate=lr_placeholder, momentum=0.9, use_nesterov=True)
+	else:
+		if not isinstance(optimizer, tf.train.Optimizer):
+			raise ValueError("optimizer object must be from a child class of "
+				"tf.train.Optimizer")
+
+	with tf.control_dependencies(update_ops):
+		train_step = tf.train.MomentumOptimizer(learning_rate=lr_placeholder, momentum=0.9, use_nesterov=True).minimize(loss)
+
 	with sess.as_default():
-		init = tf.global_variables_initializer()
-		# init = tf.initialize_all_variables()
-		sess.run(init)
-
+		sess.run([tf.global_variables_initializer(), tf.local_variables_initializer()])
 		for epoch in six.moves.xrange(FLAGS.nb_epochs):
-			if verbose:
-				print("Epoch " + str(epoch))
-
+			iterator = data_generator.flow(X_train, Y_train, batch_size=FLAGS.batch_size)
+			learning_rate = scheduler(epoch)
 			# Compute number of batches
 			nb_batches = int(math.ceil(float(len(X_train)) / FLAGS.batch_size))
 			assert nb_batches * FLAGS.batch_size >= len(X_train)
-
+			avg_loss = 0
 			prev = time.time()
 			for batch in range(nb_batches):
-
 				# Compute batch start and end indices
-				start, end = batch_indices(batch, len(X_train), FLAGS.batch_size)
-
-				# Perform one training step
-				train_step.run(feed_dict={x: X_train[start:end],
-										  y: Y_train[start:end],
-										  keras.backend.learning_phase(): 1})
-			assert end >= len(X_train) # Check that all examples were used
+				(currX, currY) = next(iterator)
+				train_step.run(feed_dict={x:currX, y:currY, keras.backend.learning_phase():1, lr_placeholder:learning_rate})
+				l = sess.run(loss, feed_dict={x: currX, y: currY, keras.backend.learning_phase(): 0})
+				avg_loss += l / nb_batches
 			cur = time.time()
+			val_acc = evaluate()
 			if verbose:
-				print("\tEpoch took " + str(cur - prev) + " seconds")
+				print("Epoch " + str(epoch) + " took " + str(cur - prev) + " seconds, lr = " + str(learning_rate) + ", validation accuracy is " + str(val_acc) + ", loss is " + str(avg_loss))
 			prev = cur
 
-		if save:
-			save_path = os.path.join(FLAGS.train_dir, FLAGS.filename)
-			saver = tf.train.Saver()
-			saver.save(sess, save_path)
-			if verbose:
-				print("Completed model training and model saved at:" + str(save_path))
-		else:
-			if verbose:
-				print("Completed model training.")
+		if verbose:
+			print("Completed model training.")
 
 	return True
 
+def model_argmax(sess, x, predictions, samples, feed=None):
+	feed_dict = {x: samples}
+	if feed is not None:
+		feed_dict.update(feed)
+	probabilities = sess.run(predictions, feed_dict)
 
-def tf_model_eval(sess, x, y, model, X_test, Y_test, verbose=True):
-	acc_value = keras.metrics.categorical_accuracy(y, model)
+	if samples.shape[0] == 1:
+		return np.argmax(probabilities)
+	else:
+		return np.argmax(probabilities, axis=1)
+
+def model_eval(sess, x, y, predictions, args, X_test=None, Y_test=None, feed=None):
+	correct_preds = tf.equal(tf.argmax(y, axis=-1), tf.argmax(predictions, axis=-1))
 	accuracy = 0.0
-	batch_size = 32
+
 	with sess.as_default():
-		nb_batches = int(math.ceil(float(len(X_test)) / batch_size))
-		assert nb_batches * batch_size >= len(X_test)
+		# Compute number of batches
+		nb_batches = int(math.ceil(float(len(X_test)) / args.batch_size))
+		assert nb_batches * args.batch_size >= len(X_test)
+
+		X_cur = np.zeros((args.batch_size,) + X_test.shape[1:],
+						 dtype=X_test.dtype)
+		Y_cur = np.zeros((args.batch_size,) + Y_test.shape[1:],
+						 dtype=Y_test.dtype)
 		for batch in range(nb_batches):
-			if batch % 100 == 0 and batch > 0:
-				if verbose:
-					print("Batch " + str(batch))
 			# Must not use the `batch_indices` function here, because it
 			# repeats some examples.
-			start = batch * batch_size
-			end = min(len(X_test), start + batch_size)
+			# It's acceptable to repeat during training, but not eval.
+			start = batch * args.batch_size
+			end = min(len(X_test), start + args.batch_size)
+
+			# The last batch may be smaller than all others. This should not
+			# affect the accuarcy disproportionately.
 			cur_batch_size = end - start
-			# The last batch may be smaller than all others, so we need to
-			# account for variable batch size here
-			accuracy += cur_batch_size * acc_value.eval(feed_dict={x: X_test[start:end],
-											y: Y_test[start:end],
-											keras.backend.learning_phase(): 0})
+			X_cur[:cur_batch_size] = X_test[start:end]
+			Y_cur[:cur_batch_size] = Y_test[start:end]
+			feed_dict = {x: X_cur, y: Y_cur, keras.backend.learning_phase(): 0}
+			if feed is not None:
+				feed_dict.update(feed)
+			cur_corr_preds = correct_preds.eval(feed_dict=feed_dict)
+
+			accuracy += cur_corr_preds[:cur_batch_size].sum()
 		assert end >= len(X_test)
+
+		# Divide by number of examples to get final value
 		accuracy /= len(X_test)
+
 	return accuracy
-
-
-def batch_eval(sess, tf_inputs, tf_outputs, numpy_inputs, verbose=True):
-	n = len(numpy_inputs)
-	batch_size=32
-	assert n > 0
-	assert n == len(tf_inputs)
-	m = numpy_inputs[0].shape[0]
-	for i in six.moves.xrange(1, n):
-		assert numpy_inputs[i].shape[0] == m
-	out = []
-	for _ in tf_outputs:
-		out.append([])
-	with sess.as_default():
-		for start in six.moves.xrange(0, m, batch_size):
-			batch = start // batch_size
-			if batch % 100 == 0 and batch > 0:
-				if verbose:
-					print("Batch " + str(batch+1))
-
-			start = batch * batch_size
-			end = start + batch_size
-			numpy_input_batches = [numpy_input[start:end] for numpy_input in numpy_inputs]
-			cur_batch_size = numpy_input_batches[0].shape[0]
-			assert cur_batch_size <= batch_size
-			for e in numpy_input_batches:
-				assert e.shape[0] == cur_batch_size
-
-			feed_dict = dict(zip(tf_inputs, numpy_input_batches))
-			feed_dict[keras.backend.learning_phase()] = 0
-			numpy_output_batches = sess.run(tf_outputs, feed_dict=feed_dict)
-			for e in numpy_output_batches:
-				assert e.shape[0] == cur_batch_size, e.shape
-			for out_elem, numpy_output_batch in zip(out, numpy_output_batches):
-				out_elem.append(numpy_output_batch)
-
-	out = [np.concatenate(x, axis=0) for x in out]
-	for e in out:
-		assert e.shape[0] == m, e.shape
-	return out
-
-
-def model_argmax(sess, x, predictions, samples, feed=None):
-    feed_dict = {x: samples}
-    if feed is not None:
-        feed_dict.update(feed)
-    probabilities = sess.run(predictions, feed_dict)
-
-    if samples.shape[0] == 1:
-        return np.argmax(probabilities)
-    else:
-        return np.argmax(probabilities, axis=1)
-
-
-def l2_batch_normalize(x, epsilon=1e-12, scope=None):
-    """
-    Helper function to normalize a batch of vectors.
-    :param x: the input placeholder
-    :param epsilon: stabilizes division
-    :return: the batch of l2 normalized vector
-    """
-    with tf.name_scope(scope, "l2_batch_normalize") as scope:
-        x_shape = tf.shape(x)
-        x = tf.contrib.layers.flatten(x)
-        x /= (epsilon + tf.reduce_max(tf.abs(x), 1, keep_dims=True))
-        square_sum = tf.reduce_sum(tf.square(x), 1, keep_dims=True)
-        x_inv_norm = tf.rsqrt(np.sqrt(epsilon) + square_sum)
-        x_norm = tf.multiply(x, x_inv_norm)
-        return tf.reshape(x_norm, x_shape, scope)
-
-
-def kl_with_logits(p_logits, q_logits, scope=None,
-                   loss_collection=tf.GraphKeys.REGULARIZATION_LOSSES):
-    """Helper function to compute kl-divergence KL(p || q)
-    """
-    with tf.name_scope(scope, "kl_divergence") as name:
-        p = tf.nn.softmax(p_logits)
-        p_log = tf.nn.log_softmax(p_logits)
-        q_log = tf.nn.log_softmax(q_logits)
-        loss = tf.reduce_mean(tf.reduce_sum(p * (p_log - q_log), axis=1),
-                              name=name)
-        tf.losses.add_loss(loss, loss_collection)
-        return loss
-
-def clip_eta(eta, ord, eps):
-    """
-    Helper function to clip the perturbation to epsilon norm ball.
-    :param eta: A tensor with the current perturbation.
-    :param ord: Order of the norm (mimics Numpy).
-                Possible values: np.inf, 1 or 2.
-    :param eps: Epilson, bound of the perturbation.
-    """
-    # Clipping perturbation eta to self.ord norm ball
-    if ord not in [np.inf, 1, 2]:
-        raise ValueError('ord must be np.inf, 1, or 2.')
-    if ord == np.inf:
-        eta = tf.clip_by_value(eta, -eps, eps)
-    elif ord in [1, 2]:
-        reduc_ind = list(xrange(1, len(eta.get_shape())))
-        if ord == 1:
-            norm = tf.reduce_sum(tf.abs(eta),
-                                 reduction_indices=reduc_ind,
-                                 keep_dims=True)
-        elif ord == 2:
-            norm = tf.sqrt(tf.reduce_sum(tf.square(eta),
-                                         reduction_indices=reduc_ind,
-                                         keep_dims=True))
-        eta = eta * eps / norm
-    return eta
