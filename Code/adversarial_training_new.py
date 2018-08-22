@@ -42,10 +42,9 @@ def customTrainModel(model,
 		train_loss, val_loss = 0, 0
 		train_acc, val_acc = 0, 0
 		iterator = dataGen.flow(X_train, Y_train, batch_size=batch_size)
-		#print(dir(iterator), "\n\n", dir(dataGen))
 		nb_batches = int(math.ceil(float(len(X_train)) / batch_size))
 		assert nb_batches * batch_size >= len(X_train)
-		model.optimizer.lr.assign(scheduler(j))
+		K.set_value(model.optimizer.lr, scheduler(j))
 		print("Learning rate for epoch %d : %f" % (j+1, K.eval(model.optimizer.lr)))
 		for batch in range(nb_batches):
 			plainX, plainY = next(iterator)
@@ -69,8 +68,7 @@ def customTrainModel(model,
 			sys.stdout.write("%d / %d : Tr loss: %f, Tr acc: %f  \r" % (batch+1, nb_batches, train_loss/(batch+1), train_acc/(batch+1)))
 		val_metrics = model.evaluate(X_val, Y_val, batch_size=1024, verbose=0)
 		sys.stdout.flush()
-		print("Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
-		print("\n")
+		print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
 	return True
 
 
