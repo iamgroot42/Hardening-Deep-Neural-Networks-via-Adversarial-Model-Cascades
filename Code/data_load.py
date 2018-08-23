@@ -12,6 +12,8 @@ class Data:
 		self.extra_X = None
 		self.extra_Y = None
 		self.threshold = 3300
+		self.clip_min = 0.
+		self.clip_max = 1.
 		if extra_X is not None:
 			assert(extra_Y is not None)
 			self.extra_X = extra_X
@@ -21,6 +23,9 @@ class Data:
 		data_shape = (None,) + self.X_train.shape[1:]
 		label_shape = (None,) + (self.Y_train.shape[1],)
 		return data_shape, label_shape
+
+	def get_range(self):
+		return (self.clip_min, self.clip_max)
 
 	def data_generator(self):
 		datagen = ImageDataGenerator()
@@ -131,6 +136,8 @@ class CIFAR10(Data, object):
 		self.X_test = self.X_test.astype('float32')
 		mean = [125.307, 122.95, 113.865]
 		std  = [62.9932, 62.0887, 66.7048]
+		self.clip_min = min([(-mean[i])/std[i] for i in range(3)])
+		self.clip_max = max([(255-mean[i])/std[i] for i in range(3)])
 		for i in range(3):
 			self.X_train[:,:,:,i] = (self.X_train[:,:,:,i] - mean[i]) / std[i]
 			self.X_test[:,:,:,i] = (self.X_test[:,:,:,i] - mean[i]) / std[i]

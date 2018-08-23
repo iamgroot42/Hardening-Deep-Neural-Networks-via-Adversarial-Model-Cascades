@@ -87,7 +87,7 @@ def main(argv=None):
 	_, model, _ = densenet.densenet(n_classes=n_classes, mnist=(FLAGS.dataset=="mnist"), get_logits=False)
 
 	# Define attack and its parameters
-	attack, attack_params = helpers.get_approproiate_attack(FLAGS.dataset, FLAGS.attack_name
+	attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name
 		,KerasModelWrapper(model), common.sess, harden=True, attack_type="None")
 
 	# Run adversarial training
