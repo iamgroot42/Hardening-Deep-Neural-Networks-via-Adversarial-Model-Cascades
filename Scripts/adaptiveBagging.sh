@@ -2,24 +2,6 @@
 
 export TF_CPP_MIN_LOG_LEVEL="2"
 
-declare -A hashmap
-
-#FGSM
-fgsm_eps=0.03
-#Elastic
-elastic_beta=1e-2
-#Deepfool
-iters=50
-#Virtual
-num_iters=1
-xi=1e-6
-eps=2.0
-#Madry
-madry_eps=0.03
-#JSMA
-jsma_gamma=0.1
-theta=1.0
-
 dataset=$1 # cifar100/mnist/svhn
 seedmodel=$2 # path to starting model
 bagfolder=$3 # new folder will be made to store bag of models here
@@ -33,18 +15,9 @@ temp=$(date -d "today" +"%s")
 cp $seedproxy $temp
 seedproxy=$temp
 
-hashmap["fgsm"]="python ../Code/fgsm.py --fgsm_eps $fgsm_eps "
-hashmap["jsma"]="python ../Code/jsma.py --gamma $jsma_gamma --theta $theta "
-hashmap["elastic"]="python ../Code/elastic.py --beta $elastic_beta "
-hashmap["carlini"]="python ../Code/carlini.py "
-hashmap["deepfool"]="python ../Code/deepfool.py --iters $iters "
-hashmap["madry"]="python ../Code/madry.py --epsilon $madry_eps "
-hashmap["virtual"]="python ../Code/virtual.py --num_iters $num_iters --xi $xi --eps $eps "
-
 if [ $dataset == "mnist" ]
         then
-                fgsm_eps=0.1
-		madry_eps=0.1
+                :
 elif [ $dataset == "svhn" ]
         then
                 :
@@ -77,24 +50,24 @@ do
 	prefix=$(date -d "today" +"%s") #Unique per dataset
 
 	# Run attack on proxy
-	command="${hashmap[$attack]} --mode harden --dataset $dataset --data_x $prefix""X.npy --data_y $prefix""Y.npy --model_path $seedproxy"
+	command="python ../Code/attack.py --mode harden --attack_name $attack --dataset $dataset --save_here $prefix --model_path $seedproxy"
 	$command
 
 	# Make copy at proxy's end for finetuning itself
-	cp $prefix"X.npy" $prefix"Xproxy.npy"
-	cp $prefix"Y.npy" $prefix"Yproxy.npy"
+	cp $prefix"_x.npy" $prefix"_xproxy.npy"
+	cp $prefix"_y.npy" $prefix"_yproxy.npy"
 
 	# Accumulate data
 	if [ $cumulative == "yes" ]; then
 		if [ "$COUNTER" -gt "1" ]; then
-			python coalesce.py $seeddata"X.npy" $seeddata"Y.npy" $prefix"X.npy" $prefix"Y.npy" $seeddata"X.npy" $seeddata"Y.npy"
+			python coalesce.py $seeddata"_x.npy" $seeddata"_y.npy" $prefix"_x.npy" $prefix"_y.npy" $seeddata"_x.npy" $seeddata"_y.npy"
 		else
-			mv $prefix"X.npy" $seeddata"X.npy"
-			mv $prefix"Y.npy" $seeddata"Y.npy"
+			mv $prefix"_x.npy" $seeddata"_x.npy"
+			mv $prefix"_y.npy" $seeddata"_y.npy"
 		fi
 	else
-		mv $prefix"X.npy" $seeddata"X.npy"
-		mv $prefix"Y.npy" $seeddata"Y.npy"
+		mv $prefix"_x.npy" $seeddata"_x.npy"
+		mv $prefix"_y.npy" $seeddata"_y.npy"
 	fi
 
 	selectedmodel=$seedmodel
@@ -109,11 +82,11 @@ do
 	lr=1
 
 	# Finetune target model using proxy's attack-data
-	python ../Code/bagging.py --learning_rate $lr --nb_epochs 150 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
+	python ../Code/bagging.py --learning_rate $lr --nb_epochs 150 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"_x.npy" --data_y $seeddata"_y.npy" --model_dir $bagfolder
 
 	if [ $cumulative == "no" ]; then
 		# Remove temporary data
-		rm $seeddata"X.npy" $seeddata"Y.npy"
+		rm $seeddata"_x.npy" $seeddata"_y.npy"
 	fi
 
 	# Update model counter
@@ -123,12 +96,12 @@ do
 	mv $seeddata"model" $bagfolder/$COUNTER
 
 	# Keras specific change to make sure target model can be loaded in future
-	python fix.py $bagfolder/$COUNTER
+	# python fix.py $bagfolder/$COUNTER
 
 	# Finetine proxy (make it adapt)
-	python ../Code/train_model.py --mode finetune --nb_epochs 100 --learning_rate $lr --save_here $seedproxy --proxy_x $prefix"Xproxy.npy" --proxy_y $prefix"Yproxy.npy" --level blackbox --dataset $dataset
+	python ../Code/train_model.py --mode finetune --nb_epochs 100 --learning_rate $lr --save_here $seedproxy --proxy_x $prefix"_xproxy.npy" --proxy_y $prefix"_yproxy.npy" --level blackbox --dataset $dataset
 
 	# Keras specific change to make sure proxy model can be loaded in future
-        python fix.py $seedproxy
+        # python fix.py $seedproxy
 
 done < $order

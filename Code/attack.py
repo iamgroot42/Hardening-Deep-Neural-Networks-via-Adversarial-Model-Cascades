@@ -18,6 +18,7 @@ flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
 flags.DEFINE_string('model', 'saved_model.h5', 'Path where model is saved')
 flags.DEFINE_string('attack_name', 'fgsm', 'Name of attack against which adversarial hardening is to be performed')
 flags.DEFINE_string('save_here', None, 'Path to save perturbed examples')
+flags.DEFINE_string('mode', 'attack', '(attack/harden)')
 
 def main(argv=None):
 	# Initialize data object
@@ -25,7 +26,14 @@ def main(argv=None):
 	datagen = dataObject.data_generator()
 
 	# Load attack data
-	attack_X, attack_Y = dataObject.get_attack_data()
+	atack_X, attack_Y = None, None
+	if FLAGS.mode == "harden":
+		attack_X, attack_Y = dataObject.get_hardening_data()
+	elif FLAGS.mode == "attack":
+		attack_X, attack_Y = dataObject.get_attack_data()
+	else:
+		raise Exception("Invalid mode specified!")
+		exit()
 	n_classes = attack_Y.shape[1]
 
 	# Load model

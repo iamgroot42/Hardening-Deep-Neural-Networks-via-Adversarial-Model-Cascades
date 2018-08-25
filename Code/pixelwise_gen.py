@@ -47,9 +47,6 @@ def transform_data(X, forward=True):
 def main(argv=None):
 	n_classes = 100
 	tf.set_random_seed(1234)
-	# Image dimensions ordering should follow the Theano convention
-	if keras.backend.image_dim_ordering() != 'th':
-		keras.backend.set_image_dim_ordering('th')
 	# Create TF session and set as Keras backend session
 	sess = tf.Session()
 	keras.backend.set_session(sess)
