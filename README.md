@@ -1,5 +1,5 @@
 # Hardening Deep Neural Networks _via_ Adversarial Model Cascades 
-Code base for full paper submission made to [IJCAI-ECAI,18](https://www.ijcai-18.org/)
+Code base for full paper submission made to [AAAI,19](http://www.aaai.org/Conferences/conferences.php)
 
 
 ### Working
@@ -16,7 +16,6 @@ Code base for full paper submission made to [IJCAI-ECAI,18](https://www.ijcai-18
 - JSMA
 - Virtual
 - Carlini
-- Deepfool
 - Madry
 - Elastic
 
@@ -25,10 +24,10 @@ Code base for full paper submission made to [IJCAI-ECAI,18](https://www.ijcai-18
 - `bash prepare.sh` to download required data and models
 - `python Code/test_accuracy.py --model_path <target_model> --dataset <dataset>` to get test accuracy ,from Code/ folder 
 - `bash test*.sh <dataset> <target_model> <proxy_model>`, where * denotes anoy of the 7 attacks given in the repo ,from the Scripts/ folder
-- For the basic bagging setup, run `bash genericBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?>` ,from the Scripts/ folder
+- For the basic bagging setup, run `bash genericBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag>    <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?>` ,from the Scripts/ folder
 
 For example, `bash genericBagging.sh mnist PlainModel MYBAG/ no ORDER no`
-- For the adaptive bagging setup, run `bash adaptiveBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <cumulative data for finetuning?> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?> <path_to_proxy_model>`
+- For the adaptive bagging setup, run `bash adaptiveBagging.sh <dataset> <path_to_seed_model> <new_folder_for_bag> <path_to_file_containing_order_of_attacks> <transfer_parameters_per_bag?> <path_to_proxy_model>`
 
 For example, `bash adaptiveBagging.sh mnist PlainModel MYBAG/ no ORDER no ProxyNormal`
 - For testing bagging on your own attack data, run `python ../Code/bagging.py --mode test --dataset <dataset> --model_dir <model_bag_directory> --data_x <data_X> --data_y <data_Y>  --predict_mode <voting/weighted>`
