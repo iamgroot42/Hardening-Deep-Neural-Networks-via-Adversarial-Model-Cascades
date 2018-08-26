@@ -48,7 +48,16 @@ class Bagging:
 		# Get and fit generator
 		datagen = dataObject.data_generator()
 		datagen.fit(X_tr)
-		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, self.batch_size, attacks=FLAGS.attack.split(','))
+		attacks = args.attack.split(',')
+		if len(attacks) > 0:
+			attack_pairs = []
+			clever_wrapper = KerasModelWrapper(proxy)
+			for attack in attacks:
+			attack_params.append(helpers.get_appropriate_attack(args.dataset, dataObject.get_range(), attack,
+				clever_wrapper, common.sess, harden=True, attack_type="black"))
+		else:
+			attack_params=None
+		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, None, self.batch_size, attacks=attack_params)
 		accuracy = model.evaluate(X_val, y_val, batch_size=self.batch_size)
 		print("\nValidation accuracy: %f" % accuracy[1])
 
@@ -84,13 +93,13 @@ def main(argv=None):
 	bag = Bagging(10, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
 
 	#Training mode
-	if FLAGS.mode in ['train', 'finetune']:
+	if FLAGS.mode in ['finetune']:
 		# Load model
 	        model = load_model(FLAGS.seed_model)
 		K.set_value(model.optimizer.lr, FLAGS.learning_rate)
 
 		# Initialize data object
-	        dataObject = data_load.get_appropriate_data(FLAGS.dataset)(np.load(FLAGS.data_x), np.load(FLAGS.data_y))
+	        dataObject = data_load.get_appropriate_data(FLAGS.dataset)(None, None)
 
 		# Black-box network
 	        (blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()

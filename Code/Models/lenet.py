@@ -18,11 +18,14 @@ def scheduler(epoch):
 	return 0.0004
 
 
-def lenet_network(n_classes=10):
+def lenet_network(n_classes=10, is_mnist=False):
 	weight_decay = 0.0001
 
 	model = Sequential()
-	model.add(Conv2D(6, (5, 5), padding='valid', activation = 'relu', kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay), input_shape=(3,32,32)))
+	input_shape=(32,32,3)
+	if is_mnist:
+		input_shape=(28,28,1)
+	model.add(Conv2D(6, (5, 5), padding='valid', activation = 'relu', kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay), input_shape=input_shape))
 	model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 	model.add(Conv2D(16, (5, 5), padding='valid', activation = 'relu', kernel_initializer='he_normal', kernel_regularizer=l2(weight_decay)))
 	model.add(MaxPooling2D((2, 2), strides=(2, 2)))

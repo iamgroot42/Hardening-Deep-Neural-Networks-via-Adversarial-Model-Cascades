@@ -83,7 +83,8 @@ def customTrainModel(model,
 		iterator = dataGen.flow(X_train, Y_train, batch_size=batch_size)
 		nb_batches = int(math.ceil(float(len(X_train)) / batch_size))
 		assert nb_batches * batch_size >= len(X_train)
-		K.set_value(model.optimizer.lr, scheduler(j))
+		if scheduler:
+			K.set_value(model.optimizer.lr, scheduler(j))
 		for batch in range(nb_batches):
 			plainX, plainY = next(iterator)
 			batchX, batchY = plainX, plainY
@@ -107,4 +108,5 @@ def customTrainModel(model,
 		val_metrics = model.evaluate(X_val, Y_val, batch_size=1024, verbose=0)
 		sys.stdout.flush()
 		print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
+		print()
 	return True

@@ -10,7 +10,9 @@ from keras.models import Model, load_model
 from keras.utils import np_utils
 from keras import backend as K
 
-import data_load
+from cleverhans.utils_keras import KerasModelWrapper
+
+import data_load, helpers
 from Models import densenet, resnet, cnn
 
 # set parameters via parser
@@ -25,6 +27,16 @@ parser.add_argument('-t','--blackbox', type=str, default="", metavar='STRING',
 				help='path to blackbox model')
 parser.add_argument('-k','--distill', type=bool, default=False, metavar='BOOLEAN',
 				help='use distillation (probabilities) while training proxy?')
+parser.add_argument('-s','--save_here', type=str, default="", metavar='STRING',
+				 help='path where trained model should be saved')
+parser.add_argument('-m','--mode', type=str, default="train", metavar='STRING',
+				help='train/finetune model')
+parser.add_argument('-l','--learning_rate', type=float, default=1e-1, metavar='FLOAT',
+				help='learning rate')
+parser.add_argument('-a','--attack', type=str, default="", metavar='STRING',
+				help='attacks to be used while adversarial training')
+parser.add_argument('-z','--label_smooth', type=float, default=0.0, metavar='FLOAT',
+				help='amount of label smoothening to be applied')
 
 args = parser.parse_args()
 
@@ -33,6 +45,7 @@ if __name__ == '__main__':
 
 	batch_size         = args.batch_size
 	epochs             = args.epochs
+	assert(len(args.save_here) > 0, "Provide a path to save model")
 
 	print("========================================")
 	print("MODEL: Proxy Model")
@@ -62,12 +75,17 @@ if __name__ == '__main__':
 	_, (x_test, y_test) = dataObject.get_blackbox_data()
 	x_train, y_train, x_val, y_val = dataObject.validation_split(x_data, y_data, 0.2)
 	iterations         = len(x_train) // batch_size + 1
+	if args.label_smooth:
+		y_train = np_train.clip(args.label_smooth / 9., 1. - args.label_smooth)
 
 	print("== DONE! ==\n== BUILD MODEL... ==")
 
-	# build proxy model
+	# build proxy model (or load if fine-tuning)
 	is_mnist = (args.dataset == "mnist")
-	proxy = cnn.proxy(n_classes=10, mnist=is_mnist, learning_rate=1e-1)
+	proxy = cnn.proxy(n_classes=10, mnist=is_mnist, learning_rate=args.learning_rate)
+	if args.mode == "finetune":
+		proxy = load_model(args.save_here)
+		K.set_value(proxy.optimizer.lr, args.learning_rate)
 
 	# print model architecture if you need.
 	print(proxy.summary())
@@ -78,11 +96,18 @@ if __name__ == '__main__':
 	datagen.fit(x_train)
 
 	# start training proxy model
-	generator = datagen.flow(x_train, y_train, batch_size=batch_size)
-	proxy.fit_generator(generator, steps_per_epoch=iterations,
-						 epochs=epochs,
-						 validation_data=(x_val, y_val))
+	attacks = args.attack.split(',')
+	if attacks[0] != '':
+		attack_params = []
+		clever_wrapper = KerasModelWrapper(proxy)
+		for attack in attacks:
+			attack_params.append(helpers.get_appropriate_attack(args.dataset, dataObject.get_range(), attack,
+				clever_wrapper, common.sess, harden=True, attack_type="black"))
+	else:
+		attack_params=None
+	helpers.customTrainModel(proxy, x_train, y_train, x_val, y_val, datagen, epochs, None, batch_size, attack_params)
 
-	proxy.save('proxy_{}.h5'.format(args.dataset))
+	print("== SAVING AND EVALUATING MODEL ==")
+	proxy.save(args.save_here)
 	print(proxy.evaluate(x_test, y_test))
 

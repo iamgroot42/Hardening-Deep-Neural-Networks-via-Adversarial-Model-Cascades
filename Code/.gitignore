@@ -2,3 +2,7 @@ SVHN/*
 *.h5
 *_cifar10/*
 new_models/*
+
+
+# Custom (ideally should not be here) gitignore rules
+BCD/*

@@ -27,6 +27,8 @@ parser.add_argument('-d','--dataset', type=str, default="cifar10", metavar='STRI
 				help='dataset. (default: cifar10)')
 parser.add_argument('-s','--smooth', type=float, default=0,
 				help='Amount of label smoothening to be applied')
+parser.add_argument('-g','--save_here', type=str, default="", metavar='STRING',
+				 help='path where trained model should be saved')
 
 args = parser.parse_args()
 
@@ -63,10 +65,10 @@ if __name__ == '__main__':
 	#model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
 
 	# LENET:
-	#model, cbks = lenet.lenet_network(n_classes=10)
+	model, cbks = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
 
 	# DENSENET
-	model, cbks = densenet.densenet(n_classes=10, mnist=is_mnist)
+	#model, cbks = densenet.densenet(n_classes=10, mnist=is_mnist)
 
 	# print model architecture if you need.
 	print(model.summary())
@@ -87,5 +89,6 @@ if __name__ == '__main__':
 						 callbacks=cbks,
 						 validation_data=(x_val, y_val))
 
-	model.save('densenet_{:d}_{}.h5'.format(layers,args.dataset))
+	print("== SAVING AND EVALUATING MODEL ==")
+	model.save(args.save_here)
 	print(model.evaluate(x_test, y_test))
