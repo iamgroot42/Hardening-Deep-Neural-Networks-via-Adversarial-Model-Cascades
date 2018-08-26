@@ -3,12 +3,12 @@ import common
 import tensorflow as tf
 import numpy as np
 import copy, math, sys
-from cleverhans.attacks import FastGradientMethod, CarliniWagnerL2, DeepFool, ElasticNetMethod, SaliencyMapMethod, MadryEtAl, MomentumIterativeMethod
+from cleverhans.attacks import FastGradientMethod, CarliniWagnerL2, DeepFool, ElasticNetMethod, SaliencyMapMethod, MadryEtAl, MomentumIterativeMethod, VirtualAdversarialMethod
 from keras import backend as K
 
 
 def get_appropriate_attack(dataset, clip_range, attack_name, model, session, harden, attack_type):
-	# CHeck if valid dataset specified
+	# Check if valid dataset specified
 	if dataset not in ["mnist", "svhn", "cifar10"]:
 		raise ValueError('Mentioned dataset not implemented')
 
@@ -77,6 +77,20 @@ def customTrainModel(model,
 			X_val, Y_val,
 			dataGen, epochs,
 			scheduler, batch_size, attacks=None):
+
+	# Helper function to generate adversarial data
+	def get_adv_mixed(P, Q):
+		additionalX, additionalY = [], []
+		attack_indices = np.array_split(np.random.permutation(len(Q)), len(attacks))
+		# Add equal amount of data per attack
+		for i, (attack, attack_params) in enumerate(attacks):
+			adv_data = attack.generate_np(P[attack_indices[i]], **attack_params)
+			additionalX.append(adv_data)
+			additionalY.append(Q[attack_indices[i]])
+		additionalX = np.concatenate(additionalX, axis=0)
+		additionalY = np.concatenate(additionalY, axis=0)
+		return additionalX, additionalY
+
 	for j in range(epochs):
 		train_loss, val_loss = 0, 0
 		train_acc, val_acc = 0, 0
@@ -99,14 +113,15 @@ def customTrainModel(model,
 					additionalY.append(plainY[attack_indices[i]])
 				additionalX = np.concatenate(additionalX, axis=0)
 				additionalY = np.concatenate(additionalY, axis=0)
+				#additionalX, additionalY = get_adv_mixed(plainX, plainY)
 				batchX = np.concatenate((batchX, additionalX), axis=0)
 				batchY = np.concatenate((batchY, additionalY), axis=0)
 			train_metrics = model.train_on_batch(batchX, batchY)
 			train_loss += train_metrics[0]
 			train_acc += train_metrics[1]
 			sys.stdout.write("Epoch %d: %d / %d : Tr loss: %f, Tr acc: %f  \r" % (j+1, batch+1, nb_batches, train_loss/(batch+1), train_acc/(batch+1)))
+			sys.stdout.flush()
 		val_metrics = model.evaluate(X_val, Y_val, batch_size=1024, verbose=0)
-		sys.stdout.flush()
+		print
 		print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
-		print()
 	return True

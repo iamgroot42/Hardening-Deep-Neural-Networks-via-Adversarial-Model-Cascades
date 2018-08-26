@@ -87,9 +87,6 @@ if __name__ == '__main__':
 		proxy = load_model(args.save_here)
 		K.set_value(proxy.optimizer.lr, args.learning_rate)
 
-	# print model architecture if you need.
-	print(proxy.summary())
-
 	# set data augmentation
 	print("== USING REAL-TIME DATA AUGMENTATION, START TRAIN... ==")
 	datagen = dataObject.data_generator()
@@ -97,7 +94,8 @@ if __name__ == '__main__':
 
 	# start training proxy model
 	attacks = args.attack.split(',')
-	if attacks[0] != '':
+	if len(attacks) > 1:
+		attacks = attacks[1:]
 		attack_params = []
 		clever_wrapper = KerasModelWrapper(proxy)
 		for attack in attacks:

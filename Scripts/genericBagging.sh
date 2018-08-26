@@ -2,43 +2,20 @@
 
 export TF_CPP_MIN_LOG_LEVEL="2"
 
-declare -A hashmap
+dataset=$1    # cifar100/mnist/svhn
+seedmodel=$2  # path to starting model
+bagfolder=$3  # new folder will be made to store bag of models here
+order=$4      # file containing order of attacks
+transfer=$5   # transfer of parameters (yes/no)
 
-#FGSM
-fgsm_eps=0.03
-#Elastic
-elastic_beta=1e-2
-#Deepfool
-iters=50
-#Virtual
-num_iters=1
-xi=1e-6
-eps=2.0
-#Madry
-madry_eps=0.03
-#JSMA
-jsma_gamma=0.1
-theta=1.0
-
-dataset=$1 # cifar10/mnist/svhn
-seedmodel=$2 # path to starting model
-bagfolder=$3 # new folder will be made to store bag of models here
-cumulative=$4 # cumulative (yes/no)
-order=$5 # file containing order of attacks
-transfer=$6 #transfer of parameters (yes/no)
-
-hashmap["fgsm"]="python ../Code/fgsm.py --fgsm_eps $fgsm_eps "
-hashmap["jsma"]="python ../Code/jsma.py --gamma $jsma_gamma --theta $theta "
-hashmap["elastic"]="python ../Code/elastic.py --beta $elastic_beta "
-hashmap["carlini"]="python ../Code/carlini.py "
-hashmap["deepfool"]="python ../Code/deepfool.py --iters $iters "
-hashmap["madry"]="python ../Code/madry.py --epsilon $madry_eps "
-hashmap["virtual"]="python ../Code/virtual.py --num_iters $num_iters --xi $xi --eps $eps "
+# Make a copy of proxy seed for ending up with new adaptive proxy
+temp=$(date -d "today" +"%s")
+cp $seedproxy $temp
+seedproxy=$temp
 
 if [ $dataset == "mnist" ]
         then
-                fgsm_eps=0.1
-		madry_eps=0.1
+                :
 elif [ $dataset == "svhn" ]
         then
                 :
@@ -56,37 +33,20 @@ mkdir -p $bagfolder
 python fix.py $seedmodel
 cp $seedmodel $bagfolder/1
 
-COUNTER=1 #Counting models
-seeddata=$(date -d "today" +"%s") #Required if cumulative data is to be used
-sleep 2 #Make sure name does not clash with prefix inside loop
+echo "Seed proxy model will be stored by the name $seedproxy.hdf5"
+
+COUNTER=1 # Counting models
+
+seeddata=$(date -d "today" +"%s") # Required if cumulative data is to be used
+sleep 2                           # Make sure name does not clash with prefix inside loop
+attackssofar=""                   # Keep track of attacks so far
 
 # Read order of attacks
 while read attack
 do
 	echo "Running attack $COUNTER : $attack"
 
-	prefix=$(date -d "today" +"%s") #Unique per dataset
-
-	#Run attack (on original model if NO-NO, else on the latest model)
-	if [ $cumulative == "no" ] && [ $transfer == "no" ]; then
-		command="${hashmap[$attack]} --mode harden --dataset $dataset --data_x $prefix""X.npy --data_y $prefix""Y.npy --model_path $seedmodel"
-	else
-		command="${hashmap[$attack]} --mode harden --dataset $dataset --data_x $prefix""X.npy --data_y $prefix""Y.npy --model_path $bagfolder/$COUNTER"
-	fi
-	$command
-
-	# Accumulate data
-	if [ $cumulative == "yes" ]; then
-		if [ "$COUNTER" -gt "1" ]; then
-			python coalesce.py $seeddata"X.npy" $seeddata"Y.npy" $prefix"X.npy" $prefix"Y.npy" $seeddata"X.npy" $seeddata"Y.npy"
-		else
-			mv $prefix"X.npy" $seeddata"X.npy"
-			mv $prefix"Y.npy" $seeddata"Y.npy"
-		fi
-	else
-		mv $prefix"X.npy" $seeddata"X.npy"
-		mv $prefix"Y.npy" $seeddata"Y.npy"
-	fi
+	prefix=$(date -d "today" +"%s") # Unique per dataset
 
 	selectedmodel=$seedmodel
 	# Pick model according to desired option
@@ -97,14 +57,16 @@ do
 	# Make a copy of selected model for finetuning
 	cp $selectedmodel $seeddata"model"
 
-	lr=0.1
+	lr=0.01
 
-	# Finetune data
-	python ../Code/bagging.py --learning_rate $lr --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --data_x $seeddata"X.npy" --data_y $seeddata"Y.npy" --model_dir $bagfolder
+	# Update attacks so far
+	attackssofar="$attackssofar,$attack"
 
-	if [ $cumulative == "no" ]; then
-		# Remove temporary data
-		rm $seeddata"X.npy" $seeddata"Y.npy"
+	# Finetune target model against given attack
+	if [ -n "$attackssofar" ]; then
+		python ../Code/bagging.py --learning_rate $lr --nb_epochs 50 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
+	else
+		python ../Code/bagging.py --learning_rate $lr --nb_epochs 50 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
 	fi
 
 	# Update model counter
@@ -113,7 +75,7 @@ do
 	# Add this model to bag
 	mv $seeddata"model" $bagfolder/$COUNTER
 
-	#Keras specific change to make sure model can be loaded in future
-	python fix.py $bagfolder/$COUNTER
+	# Keras specific change to make sure target model can be loaded in future
+	# python fix.py $bagfolder/$COUNTER
 
 done < $order

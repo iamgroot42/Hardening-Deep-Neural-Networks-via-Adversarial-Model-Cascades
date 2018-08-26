@@ -9,10 +9,12 @@ from keras.objectives import categorical_crossentropy
 from tensorflow.python.platform import app
 from keras.utils import np_utils
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from cleverhans.utils_keras import KerasModelWrapper
 
 import os
 
 import data_load, helpers
+from keras import backend as K
 
 import tensorflow as tf
 from tensorflow.python.platform import flags
@@ -30,7 +32,7 @@ flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
 flags.DEFINE_float('learning_rate', 0.01 ,'Learning rate for classifier')
 flags.DEFINE_string('predict_mode', 'weighted', 'Method for prediction while testing (voting/weighted)')
-flags.DEFINE_string('attack', '', "Attack against which adversarial training is to be done")
+flags.DEFINE_string('attack', "" , "Attack against which adversarial training is to be done")
 
 
 class Bagging:
@@ -48,13 +50,14 @@ class Bagging:
 		# Get and fit generator
 		datagen = dataObject.data_generator()
 		datagen.fit(X_tr)
-		attacks = args.attack.split(',')
-		if len(attacks) > 0:
-			attack_pairs = []
-			clever_wrapper = KerasModelWrapper(proxy)
+		attacks = FLAGS.attack.split(',')
+		if len(attacks) > 1:
+			attacks = attacks[1:]
+			attack_params = []
+			clever_wrapper = KerasModelWrapper(model)
 			for attack in attacks:
-			attack_params.append(helpers.get_appropriate_attack(args.dataset, dataObject.get_range(), attack,
-				clever_wrapper, common.sess, harden=True, attack_type="black"))
+				attack_params.append(helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), attack,
+					clever_wrapper, common.sess, harden=True, attack_type="black"))
 		else:
 			attack_params=None
 		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, None, self.batch_size, attacks=attack_params)

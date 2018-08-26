@@ -49,10 +49,6 @@ do
 
 	prefix=$(date -d "today" +"%s") # Unique per dataset
 
-	# Run attack on proxy
-	command="python ../Code/attack.py --mode harden --attack_name $attack --dataset $dataset --save_here $prefix --model $seedproxy"
-	$command
-
 	selectedmodel=$seedmodel
 	# Pick model according to desired option
 	if [ $transfer == "yes" ]; then
@@ -64,11 +60,15 @@ do
 
 	lr=0.01
 
-	# Finetune target model using proxy's attack-data
-	python ../Code/bagging.py --learning_rate $lr --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
-
 	# Update attacks so far
 	attackssofar="$attackssofar,$attack"
+
+	# Finetune target model against given attack
+	if [ -n "$attackssofar" ]; then
+		python ../Code/bagging.py --learning_rate $lr --nb_epochs 50 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
+	else
+		python ../Code/bagging.py --learning_rate $lr --nb_epochs 50 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
+	fi
 
 	# Update model counter
 	COUNTER=$[$COUNTER +1]
@@ -80,7 +80,7 @@ do
 	# python fix.py $bagfolder/$COUNTER
 
 	# Finetine proxy (make it adapt)
-	python ../Code/train_model_proxy.py -e 100 -l $lr -s $seedproxy -m finetune -d $dataset -k True -t $bagfolder/$COUNTER -b 128 -a $attackssofar
+	python ../Code/train_model_proxy.py -e 1 -l $lr -s $seedproxy -m finetune -d $dataset -k True -t $bagfolder/$COUNTER -b 128 -a $attackssofar
 
 	# Keras specific change to make sure proxy model can be loaded in future
         # python fix.py $seedproxy

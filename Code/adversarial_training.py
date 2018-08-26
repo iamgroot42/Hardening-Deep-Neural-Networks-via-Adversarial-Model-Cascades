@@ -23,7 +23,7 @@ from Models import resnet, sota, densenet
 FLAGS = flags.FLAGS
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 flags.DEFINE_integer('nb_epochs', 200, 'Number of epochs to train model')
-flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 64, 'Size of training batches')
 flags.DEFINE_float('learning_rate', 1e-1, 'Learning rate for training')
 flags.DEFINE_string('save_here', 'saved_model.h5', 'Path where model is to be saved')
 flags.DEFINE_string('attack_name', 'fgsm', 'Name of attack against which adversarial hardening is to be performed')
