@@ -44,16 +44,7 @@ def main(argv=None):
 		,KerasModelWrapper(model), common.sess, harden=True, attack_type="None")
 
 	# Generate attack data in batches
-	perturbed_X = np.array([])
-	for i in range(0, attack_X.shape[0], FLAGS.batch_size):
-		mini_batch = attack_X[i: i+FLAGS.batch_size,:]
-		if mini_batch.shape[0] == 0:
-			break
-		adv_x_mini = attack.generate_np(mini_batch, **attack_params)
-		if perturbed_X.shape[0] != 0:
-			perturbed_X = np.append(perturbed_X, adv_x_mini, axis=0)
-		else:
-			perturbed_X = adv_x_mini
+	perturbed_X = helpers.performBatchwiseAttack(attack_X, attack, attack_params, FLAGS.batch_size)
 
 	# Calculate attack success rate (1 - classification rate)
 	fooled_rate = 1 - model.evaluate(perturbed_X, attack_Y, batch_size=FLAGS.batch_size)[1]
@@ -65,4 +56,4 @@ def main(argv=None):
 		np.save(FLAGS.save_here + "_y.npy", attack_Y)
 
 if __name__ == "__main__":
-	app.run()	
+	app.run()

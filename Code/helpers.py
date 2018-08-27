@@ -7,6 +7,7 @@ from cleverhans.attacks import FastGradientMethod, CarliniWagnerL2, DeepFool, El
 from keras import backend as K
 
 
+# Return attack object and its appropriate attack parameters for the given attack and dataset
 def get_appropriate_attack(dataset, clip_range, attack_name, model, session, harden, attack_type):
 	# Check if valid dataset specified
 	if dataset not in ["mnist", "svhn", "cifar10"]:
@@ -72,6 +73,22 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 	return attack_object, attack_params
 
 
+# Given an adversarial attack object, perform it batch-wise
+def performBatchwiseAttack(attack_X, attack, attack_params, batch_size):
+	perturbed_X = np.array([])
+	for i in range(0, attack_X.shape[0], batch_size):
+		mini_batch = attack_X[i: i + batch_size,:]
+		if mini_batch.shape[0] == 0:
+			break
+		adv_x_mini = attack.generate_np(mini_batch, **attack_params)
+		if perturbed_X.shape[0] != 0:
+			perturbed_X = np.append(perturbed_X, adv_x_mini, axis=0)
+		else:
+			perturbed_X = adv_x_mini
+	return perturbed_X
+
+
+# Custom training model (supports adversarial training)
 def customTrainModel(model,
 			X_train, Y_train,
 			X_val, Y_val,
@@ -123,5 +140,17 @@ def customTrainModel(model,
 			sys.stdout.flush()
 		val_metrics = model.evaluate(X_val, Y_val, batch_size=1024, verbose=0)
 		print
-		print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
+		if attacks:
+			attack_indices = np.array_split(np.random.permutation(len(Y_val)), len(attacks))
+			adv_val_x, adv_val_y = [], []
+			for i, (attack, attack_params) in enumerate(attacks):
+				adv_data = performBatchwiseAttack(X_val[attack_indices[i]], attack, attack_params, batch_size)
+				adv_val_x.append(adv_data)
+				adv_val_y.append(Y_val[attack_indices[i]])
+			adv_val_x = np.concatenate(adv_val_x, axis=0)
+			adv_val_y = np.concatenate(adv_val_y, axis=0)
+			adv_val_metrics = model.evaluate(adv_val_x, adv_val_y, batch_size=1024, verbose=0)
+			print(">> Val loss: %f, Val acc: %f, Adv loss: %f, Adv acc: %f"% (val_metrics[0], val_metrics[1], adv_val_metrics[0], adv_val_metrics[1]))
+		else:
+			print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
 	return True
