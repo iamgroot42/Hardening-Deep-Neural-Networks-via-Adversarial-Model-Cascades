@@ -62,10 +62,10 @@ if __name__ == '__main__':
 	# build network
 
 	# RESNET:
-	#model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
+	model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
 
 	# LENET:
-	model, cbks = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
+	#model, cbks = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
 
 	# DENSENET
 	#model, cbks = densenet.densenet(n_classes=10, mnist=is_mnist)

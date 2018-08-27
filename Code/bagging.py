@@ -60,7 +60,12 @@ class Bagging:
 					clever_wrapper, common.sess, harden=True, attack_type="black"))
 		else:
 			attack_params=None
-		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, None, self.batch_size, attacks=attack_params)
+		# Scheduler, assuming RESNET
+		def scheduler(epoch):
+			if epoch < 31:
+				return 0.1
+			return 0.01
+		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, scheduler, self.batch_size, attacks=attack_params)
 		accuracy = model.evaluate(X_val, y_val, batch_size=self.batch_size)
 		print("\nValidation accuracy: %f" % accuracy[1])
 

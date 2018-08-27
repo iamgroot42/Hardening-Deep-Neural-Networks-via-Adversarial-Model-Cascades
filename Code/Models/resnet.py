@@ -20,9 +20,9 @@ def scheduler(epoch):
 
 def residual_network(n_classes=10, stack_n=5, mnist=False, get_logits=False):
 	weight_decay       = 1e-4
-	img_input = Input(shape=(3, 32, 32))
+	img_input = Input(shape=(32, 32, 3))
 	if mnist == True:
-		img_input = Input(shape=(1, 28, 28))
+		img_input = Input(shape=(28, 28, 1))
 
 	def residual_block(x, o_filters, increase=False):
 		stride = (1,1)

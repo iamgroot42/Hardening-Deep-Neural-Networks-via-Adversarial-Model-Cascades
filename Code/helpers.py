@@ -21,8 +21,8 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_object = MomentumIterativeMethod(model, sess=session)
 		attack_params['eps'] = 0.3
 		attack_params['eps_iter'] = 0.06
-		attack_params['nb_iter'] = 10
-	if attack_name == "fgsm":
+		attack_params['nb_iter'] = 3
+	elif attack_name == "fgsm":
 		attack_object = FastGradientMethod(model, sess=session)
 		if harden:
 			if dataset == "mnist":

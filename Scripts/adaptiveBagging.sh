@@ -65,9 +65,9 @@ do
 
 	# Finetune target model against given attack
 	if [ -n "$attackssofar" ]; then
-		python ../Code/bagging.py --learning_rate $lr --nb_epochs 50 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
+		python ../Code/bagging.py --learning_rate $lr --nb_epochs 60 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
 	else
-		python ../Code/bagging.py --learning_rate $lr --nb_epochs 50 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
+		python ../Code/bagging.py --learning_rate $lr --nb_epochs 60 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
 	fi
 
 	# Update model counter
@@ -80,7 +80,7 @@ do
 	# python fix.py $bagfolder/$COUNTER
 
 	# Finetine proxy (make it adapt)
-	python ../Code/train_model_proxy.py -e 1 -l $lr -s $seedproxy -m finetune -d $dataset -k True -t $bagfolder/$COUNTER -b 128 -a $attackssofar
+	python ../Code/train_model_proxy.py -e 50 -l $lr -s $seedproxy -m finetune -d $dataset -k True -t $bagfolder/$COUNTER -b 64 -a $attackssofar
 
 	# Keras specific change to make sure proxy model can be loaded in future
         # python fix.py $seedproxy

@@ -42,8 +42,8 @@ def main(argv=None):
 	datagen.fit(X_train)
 	n_classes = Y_train.shape[1]
 
-	#model, _ = resnet.residual_network(n_classes=n_classes, stack_n=FLAGS.stack_n)
-	_, model, _ = densenet.densenet(n_classes=n_classes, mnist=(FLAGS.dataset=="mnist"), get_logits=False)
+	model, _ = resnet.residual_network(n_classes=n_classes, stack_n=FLAGS.stack_n, mnist=(FLAGS.dataset=="mnist"), get_logits=False)
+	#_, model, _ = densenet.densenet(n_classes=n_classes, mnist=(FLAGS.dataset=="mnist"), get_logits=False)
 
 	# Define attack and its parameters
 	attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name
