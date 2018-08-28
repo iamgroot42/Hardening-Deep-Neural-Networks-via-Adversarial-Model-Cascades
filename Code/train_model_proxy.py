@@ -73,10 +73,10 @@ if __name__ == '__main__':
 
 	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
 	_, (x_test, y_test) = dataObject.get_blackbox_data()
-	x_train, y_train, x_val, y_val = dataObject.validation_split(x_data, y_data, 0.2)
+	x_train, y_train, x_val, y_val = dataObject.validation_split(x_data, y_data, 0.1)
 	iterations         = len(x_train) // batch_size + 1
 	if args.label_smooth:
-		y_train = np_train.clip(args.label_smooth / 9., 1. - args.label_smooth)
+		y_train = y_train.clip(args.label_smooth / 9., 1. - args.label_smooth)
 
 	print("== DONE! ==\n== BUILD MODEL... ==")
 

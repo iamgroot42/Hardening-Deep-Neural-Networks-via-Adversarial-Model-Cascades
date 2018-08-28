@@ -11,7 +11,7 @@ class Data:
 		self.dataset = dataset
 		self.extra_X = None
 		self.extra_Y = None
-		self.threshold = 300 #Adversarial examples per class. 300*10 = 3000 examples total
+		self.threshold = 3000 # Total Adversarial examples
 		self.clip_min = 0.
 		self.clip_max = 1.
 		if extra_X is not None:
@@ -22,7 +22,7 @@ class Data:
 	def make_val_data(self):
 		# Class balanced: 30% validation, 70% test
 		assert(self.X_test is not None and self.Y_test is not None)
-		self.X_test, self.Y_test, self.X_val, self.Y_val = self.data_split(self.X_test, self.Y_test, these_many=int(0.7 * len(self.X_test)) / self.Y_test.shape[1])
+		self.X_test, self.Y_test, self.X_val, self.Y_val = self.data_split(self.X_test, self.Y_test, these_many=int(0.7 * len(self.X_test)))
 
 	def get_placeholder_shape(self):
 		data_shape = (None,) + self.X_train.shape[1:]
@@ -204,7 +204,6 @@ def get_proxy_data(dataset):
 	}
 	if dataset.lower() in path:
 		data = np.load("../Code/SVHN/UnlabelledData/" + path[dataset.lower()])
-		data = (255 * data)
 		data = data.transpose((0, 2, 3, 1))
 		return data
 	return None

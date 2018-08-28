@@ -10,8 +10,6 @@ transfer=$5   # transfer of parameters (yes/no)
 
 # Make a copy of proxy seed for ending up with new adaptive proxy
 temp=$(date -d "today" +"%s")
-cp $seedproxy $temp
-seedproxy=$temp
 
 if [ $dataset == "mnist" ]
         then
@@ -32,8 +30,6 @@ mkdir -p $bagfolder
 # Copy initial seed model to directory
 python fix.py $seedmodel
 cp $seedmodel $bagfolder/1
-
-echo "Seed proxy model will be stored by the name $seedproxy.hdf5"
 
 COUNTER=1 # Counting models
 
