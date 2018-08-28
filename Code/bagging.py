@@ -22,7 +22,6 @@ from tensorflow.python.platform import flags
 
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('nb_epochs', 100, 'Number of epochs')
-flags.DEFINE_float('sample_ratio', 0.75, 'Percentage of sample to be taken per model for training')
 flags.DEFINE_integer('batch_size', 64, 'Batch size')
 flags.DEFINE_string('mode', 'finetune', '(test,finetune)')
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
@@ -36,17 +35,13 @@ flags.DEFINE_string('attack', "" , "Attack against which adversarial training is
 
 
 class Bagging:
-	def __init__(self, n_classes, sample_ratio, batch_size, nb_epochs):
+	def __init__(self, n_classes, batch_size, nb_epochs):
 		self.n_classes = n_classes
-		self.sample_ratio = sample_ratio
 		self.batch_size = batch_size
 		self.nb_epochs = nb_epochs
 
 	def train(self, X, Y, dataObject, model):
-		subset = np.random.choice(len(Y), int(len(Y) * self.sample_ratio))
-		x_sub = X[subset]
-		y_sub = Y[subset]
-		X_tr, y_tr, X_val, y_val = dataObject.validation_split(x_sub, y_sub, 0.2)
+		X_tr, y_tr, X_val, y_val = dataObject.validation_split(X, Y, 0.2)
 		# Get and fit generator
 		datagen = dataObject.data_generator()
 		datagen.fit(X_tr)
@@ -98,7 +93,7 @@ def main(argv=None):
 		print "Invalid dataset specified. Exiting"
 		exit()
 
-	bag = Bagging(10, FLAGS.sample_ratio, FLAGS.batch_size, FLAGS.nb_epochs)
+	bag = Bagging(10, FLAGS.batch_size, FLAGS.nb_epochs)
 
 	#Training mode
 	if FLAGS.mode in ['finetune']:
