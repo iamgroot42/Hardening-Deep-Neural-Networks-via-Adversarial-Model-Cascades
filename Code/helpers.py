@@ -61,7 +61,7 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_object = SaliencyMapMethod(model, sess=session)
 		attack_params['gamma'] = 0.1
 		attack_params['theta'] = 1.0
-	elif attack_name == "c&w":
+	elif attack_name == "carlini":
 		attack_object = CarliniWagnerL2(model, sess=session)
 	else:
 		raise ValueError('Mentioned attack not implemented')

@@ -37,8 +37,8 @@ def main(argv=None):
 	datagen = dataObject.data_generator()
 
 	# Black-box network
-	(blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
-	X_train, Y_train, X_validation, Y_validation = dataObject.validation_split(blackbox_Xtrain, blackbox_Ytrain, 0.2)
+	(X_train, Y_train), (X_test, Y_test) = dataObject.get_blackbox_data()
+	(X_validation, Y_validation) = dataObject.get_validation_data()
 	datagen.fit(X_train)
 	n_classes = Y_train.shape[1]
 

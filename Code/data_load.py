@@ -11,13 +11,18 @@ class Data:
 		self.dataset = dataset
 		self.extra_X = None
 		self.extra_Y = None
-		self.threshold = 3300
+		self.threshold = 300 #Adversarial examples per class. 300*10 = 3000 examples total
 		self.clip_min = 0.
 		self.clip_max = 1.
 		if extra_X is not None:
 			assert(extra_Y is not None)
 			self.extra_X = extra_X
 			self.extra_Y = extra_Y
+
+	def make_val_data(self):
+		# Class balanced: 30% validation, 70% test
+		assert(self.X_test is not None and self.Y_test is not None)
+		self.X_test, self.Y_test, self.X_val, self.Y_val = self.data_split(self.X_test, self.Y_test, these_many=int(0.7 * len(self.X_test)) / self.Y_test.shape[1])
 
 	def get_placeholder_shape(self):
 		data_shape = (None,) + self.X_train.shape[1:]
@@ -80,8 +85,7 @@ class Data:
 			self.blackbox_Xtrain = np.concatenate((self.blackbox_Xtrain, self.extra_X))
 			self.blackbox_Ytrain = np.concatenate((self.blackbox_Ytrain, self.extra_Y))
 
-		self.attack_X, self.attack_Y, other_data_X, other_data_Y = self.data_split(self.X_test, self.Y_test, self.threshold)
-		self.harden_X, self.harden_Y, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(other_data_X, other_data_Y, self.threshold)
+		self.attack_X, self.attack_Y, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_test, self.Y_test, self.threshold)
 
 	def get_blackbox_data(self):
 		return (self.blackbox_Xtrain, self.blackbox_Ytrain), (self.blackbox_Xtest, self.blackbox_Ytest)
@@ -89,8 +93,8 @@ class Data:
 	def get_attack_data(self):
 		return (self.attack_X, self.attack_Y)
 
-	def get_hardening_data(self):
-		return (self.harden_X, self.harden_Y)
+	def get_validation_data(self):
+		return (self.X_val, self.Y_val)
 
 
 class SVHN(Data, object):
@@ -106,6 +110,7 @@ class SVHN(Data, object):
 		self.Y_test = np_utils.to_categorical(self.Y_test - 1, 10)
 		self.X_train /= 255.0
 		self.X_test /= 255.0
+		super(SVHN, self).make_val_data()
 		super(SVHN, self).experimental_split()
 
 
@@ -130,8 +135,6 @@ class CIFAR10(Data, object):
 		super(CIFAR10, self).__init__("cifar10", extra_X, extra_Y)
 		# the data, shuffled and split between train and test sets
 		(self.X_train, self.Y_train), (self.X_test, self.Y_test) = cifar10.load_data()
-		#self.X_train = self.X_train.transpose((0, 3, 1, 2))
-		#self.X_test = self.X_test.transpose((0, 3, 1, 2))
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
 		mean = [125.307, 122.95, 113.865]
@@ -144,6 +147,7 @@ class CIFAR10(Data, object):
 		# convert class vectors to binary class matrices
 		self.Y_train = np_utils.to_categorical(self.Y_train, 10)
 		self.Y_test = np_utils.to_categorical(self.Y_test, 10)
+		super(CIFAR10, self).make_val_data()
 		super(CIFAR10, self).experimental_split()
 
 	def data_generator(self):
@@ -176,6 +180,7 @@ class MNIST(Data, object):
 		# convert class vectors to binary class matrices
 		self.Y_train = np_utils.to_categorical(self.Y_train, 10)
 		self.Y_test = np_utils.to_categorical(self.Y_test, 10)
+		super(MNIST, self).make_val_data()
 		super(MNIST, self).experimental_split()
 
 

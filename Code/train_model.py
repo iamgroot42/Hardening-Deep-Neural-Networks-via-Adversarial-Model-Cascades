@@ -54,8 +54,8 @@ if __name__ == '__main__':
 	global num_classes
 
 	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
-	(xt, yt), (x_test, y_test) = dataObject.get_blackbox_data()
-	x_train, y_train, x_val, y_val = dataObject.validation_split(xt, yt, 0.2)
+	(x_train, y_train), (x_test, y_test) = dataObject.get_blackbox_data()
+	(x_val, y_val) = dataObject.get_validation_data()
 
 	print("== DONE! ==\n== BUILD MODEL... ==")
 	is_mnist = (args.dataset == "mnist")

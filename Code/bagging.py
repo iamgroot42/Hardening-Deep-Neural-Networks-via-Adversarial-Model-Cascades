@@ -40,8 +40,7 @@ class Bagging:
 		self.batch_size = batch_size
 		self.nb_epochs = nb_epochs
 
-	def train(self, X, Y, dataObject, model):
-		X_tr, y_tr, X_val, y_val = dataObject.validation_split(X, Y, 0.2)
+	def train(self, X_tr, y_tr, X_val, y_val, dataObject, model):
 		# Get and fit generator
 		datagen = dataObject.data_generator()
 		datagen.fit(X_tr)
@@ -61,8 +60,6 @@ class Bagging:
 				return 0.1
 			return 0.01
 		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, scheduler, self.batch_size, attacks=attack_params)
-		accuracy = model.evaluate(X_val, y_val, batch_size=self.batch_size)
-		print("\nValidation accuracy: %f" % accuracy[1])
 
 	def predict(self, models_dir, predict_on, method='voting'):
 		models = []
@@ -106,15 +103,16 @@ def main(argv=None):
 
 		# Black-box network
 	        (blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
+		(X_val, Y_val) = dataObject.get_validation_data()
 
 		# Train data
-		bag.train(blackbox_Xtrain, blackbox_Ytrain, dataObject, model)
+		bag.train(blackbox_Xtrain, blackbox_Ytrain, X_val, Y_val, dataObject, model)
 
 		# Compute bag-level test accuracy
 		predicted = np.argmax(bag.predict(FLAGS.model_dir, X_test, FLAGS.predict_mode),1)
 		true = np.argmax(Y_test,1)
 		acc = (100*(predicted==true).sum()) / float(len(Y_test))
-		print "Bag level test accuracy", acc
+		print("Bag level test accuracy: %f\n" % acc)
 
 		#Save model
 		model.save(FLAGS.seed_model)
