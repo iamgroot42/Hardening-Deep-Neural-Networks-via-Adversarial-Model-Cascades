@@ -48,6 +48,7 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['eps'] = 2.0
 	elif attack_name == "madry":
 		attack_object = MadryEtAl(model, sess=session)
+		attack_params['nb_iter'] = 5
 		if harden:
 			if dataset == "mnist":
 				attack_params['eps'] = 0.1
