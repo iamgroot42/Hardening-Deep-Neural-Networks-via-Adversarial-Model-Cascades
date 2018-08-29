@@ -116,6 +116,7 @@ def customTrainModel(model,
 
 	# Variables for early stopping
 	best_loss = 1e6
+	best_acc = 0
 	wait      = 0
 	if early_stop:
 		min_delta, patience = early_stop
@@ -126,6 +127,7 @@ def customTrainModel(model,
 		return
 	lrp_wait      = 0
 	lrp_best_loss = 1e6
+	lrp_best_acc = 0
 	if lr_plateau:
 		min_lr, factor, lrp_patience, lrp_min_delta = lr_plateau
 
@@ -185,12 +187,18 @@ def customTrainModel(model,
 		# Early stopping check
 		if early_stop:
 			current_loss = val_metrics[0]
+			current_acc = val_metrics[1]
 			if attacks:
-				current_loss + adv_val_metrics[0]
-			print(best_loss, current_loss, min_delta, wait)
-			if  best_loss - current_loss > min_delta:
+				current_loss += adv_val_metrics[0]
+				current_acc  += adv_val_metrics[1]
+				current_acc  /= 2
+			#print(best_loss, current_loss, min_delta, wait)
+			print("Best acc: %f, current acc: %f, wait value: %d" % (best_acc, current_acc, wait))
+			#if  best_loss - current_loss > min_delta:
+			if best_acc - current_acc > min_delta:
 				wait = 0
 				best_loss = current_loss
+				best_acc = current_acc
 			else:
 				wait += 1
 				if wait >= patience:
@@ -200,13 +208,19 @@ def customTrainModel(model,
 		# LR Pleateau check
 		if lr_plateau:
 			current_loss = val_metrics[0]
+			current_acc  = val_metrics[1]
 			if attacks:
-				current_loss + adv_val_metrics[0]
-			print(lrp_best_loss, current_loss, lrp_min_delta, lrp_wait)
+				current_loss += adv_val_metrics[0]
+				current_acc  += adv_val_metrics[1]
+				current_acc  /= 2
+			#print(lrp_best_loss, current_loss, lrp_min_delta, lrp_wait)
+			print("Best acc: %f, current acc: %f, wait value: %d" % (lrp_best_acc, current_acc, lrp_wait))
 			current_lr = float(K.get_value(model.optimizer.lr))
-			if lrp_best_loss - current_loss > lrp_min_delta:
+			#if lrp_best_loss - current_loss > lrp_min_delta:
+			if lrp_best_acc - current_acc > lrp_min_delta:
 				lrp_wait = 0
 				lrp_best_loss = current_loss
+				lrp_best_acc = current_acc
 			else:
 				lrp_wait += 1
 				if lrp_wait >= lrp_patience:

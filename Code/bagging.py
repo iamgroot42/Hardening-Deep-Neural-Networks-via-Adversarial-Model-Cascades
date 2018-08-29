@@ -58,19 +58,27 @@ class Bagging:
 
 		# Scheduler, assuming RESNET
 		def scheduler(epoch):
-			if epoch < 31:
+			if epoch <= 50:
 				return 0.1
-			return 0.01
+			if epoch <= 75:
+				return 0.01
+			return 0.001
 
 		# Early stopping
 		early_stop = None
 		if FLAGS.early_stopping:
+			print("Early stopping activated")
 			early_stop = (0.01, 10) # min_delta, patience
 
 		# Learning rate plateau
 		lr_plateau = None
 		if FLAGS.lr_plateau:
-			lr_plateau = (0.001, 0.1, 5, 0.01) # min_lr, factor, patience, min_delta
+			print("Dynamic LR activated")
+			lr_plateau = (0.001, 0.1, 10, 0.01) # min_lr, factor, patience, min_delta
+
+		# If none of the dynamic schedulers specified, switch to custom scheduler
+		if not (FLAGS.lr_plateau or FLAGS.early_stopping):
+			print("LR scheduler activated")
 			scheduler = None # Override scheduler
 
 		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, scheduler, self.batch_size, attacks=attack_params, early_stop=early_stop, lr_plateau=lr_plateau)
@@ -99,7 +107,6 @@ class Bagging:
                         return predicted
 
 def main(argv=None):
-
 	if FLAGS.dataset not in ['cifar10', 'mnist', 'svhn']:
 		print "Invalid dataset specified. Exiting"
 		exit()
