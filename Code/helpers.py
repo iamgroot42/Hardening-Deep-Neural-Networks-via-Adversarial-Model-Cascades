@@ -123,7 +123,7 @@ def customTrainModel(model,
 
 	# Variables for lerning rate decay based on le_plateau
 	if lr_plateau and scheduler:
-		print("Cannot have scheduler and le_plateau together. Pick one of them and use")
+		print("Cannot have scheduler and lr_plateau together. Pick one of them and use")
 		return
 	lrp_wait      = 0
 	lrp_best_loss = 1e6

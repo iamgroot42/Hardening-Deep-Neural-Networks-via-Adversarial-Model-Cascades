@@ -77,8 +77,8 @@ class Bagging:
 			lr_plateau = (0.001, 0.1, 10, 0.01) # min_lr, factor, patience, min_delta
 
 		# If none of the dynamic schedulers specified, switch to custom scheduler
-		if not (FLAGS.lr_plateau or FLAGS.early_stopping):
-			print("LR scheduler activated")
+		if FLAGS.lr_plateau or FLAGS.early_stopping:
+			print("LR scheduler disabled")
 			scheduler = None # Override scheduler
 
 		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, scheduler, self.batch_size, attacks=attack_params, early_stop=early_stop, lr_plateau=lr_plateau)
