@@ -201,7 +201,7 @@ def customTrainModel(model,
 			#print(best_loss, current_loss, min_delta, wait)
 			print("Best acc: %f, current acc: %f, wait value: %d" % (best_acc, current_acc, wait))
 			#if  best_loss - current_loss > min_delta:
-			if best_acc - current_acc > min_delta:
+			if current_acc - best_acc > min_delta:
 				wait = 0
 				best_loss = current_loss
 				best_acc = current_acc
@@ -223,7 +223,7 @@ def customTrainModel(model,
 			print("Best acc: %f, current acc: %f, wait value: %d" % (lrp_best_acc, current_acc, lrp_wait))
 			current_lr = float(K.get_value(model.optimizer.lr))
 			#if lrp_best_loss - current_loss > lrp_min_delta:
-			if lrp_best_acc - current_acc > lrp_min_delta:
+			if current_acc - lrp_best_acc > lrp_min_delta:
 				lrp_wait = 0
 				lrp_best_loss = current_loss
 				lrp_best_acc = current_acc
