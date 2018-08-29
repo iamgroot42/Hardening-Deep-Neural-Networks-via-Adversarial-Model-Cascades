@@ -68,13 +68,13 @@ class Bagging:
 		early_stop = None
 		if FLAGS.early_stopping:
 			print("Early stopping activated")
-			early_stop = (0.01, 10) # min_delta, patience
+			early_stop = (0.005, 10) # min_delta, patience
 
 		# Learning rate plateau
 		lr_plateau = None
 		if FLAGS.lr_plateau:
 			print("Dynamic LR activated")
-			lr_plateau = (0.001, 0.1, 10, 0.01) # min_lr, factor, patience, min_delta
+			lr_plateau = (0.001, 0.1, 10, 0.005) # min_lr, factor, patience, min_delta
 
 		# If none of the dynamic schedulers specified, switch to custom scheduler
 		if FLAGS.lr_plateau or FLAGS.early_stopping:

@@ -22,7 +22,7 @@ class Data:
 	def make_val_data(self):
 		# Class balanced: 30% validation, 70% test
 		assert(self.X_test is not None and self.Y_test is not None)
-		self.X_test, self.Y_test, self.X_val, self.Y_val = self.data_split(self.X_test, self.Y_test, these_many=int(0.7 * len(self.X_test)))
+		self.X_val, self.Y_val, self.X_test, self.Y_test = self.data_split(self.X_test, self.Y_test, these_many=int(0.3 * len(self.X_test)))
 
 	def get_placeholder_shape(self):
 		data_shape = (None,) + self.X_train.shape[1:]
@@ -85,7 +85,7 @@ class Data:
 			self.blackbox_Xtrain = np.concatenate((self.blackbox_Xtrain, self.extra_X))
 			self.blackbox_Ytrain = np.concatenate((self.blackbox_Ytrain, self.extra_Y))
 
-		self.attack_X, self.attack_Y, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_test, self.Y_test, self.threshold)
+		self.attack_X, self.attack_Y, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_test, self.Y_test, int(0.3 * len(self.X_test)))
 
 	def get_blackbox_data(self):
 		return (self.blackbox_Xtrain, self.blackbox_Ytrain), (self.blackbox_Xtest, self.blackbox_Ytest)
