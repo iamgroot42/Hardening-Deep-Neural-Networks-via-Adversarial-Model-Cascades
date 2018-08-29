@@ -14,7 +14,7 @@ import helpers
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
-flags.DEFINE_integer('batch_size', 128, 'Size of training batches')
+flags.DEFINE_integer('batch_size', 64, 'Size of training batches')
 flags.DEFINE_string('model', 'saved_model.h5', 'Path where model is saved')
 flags.DEFINE_string('attack_name', 'fgsm', 'Name of attack against which adversarial hardening is to be performed')
 flags.DEFINE_string('save_here', None, 'Path to save perturbed examples')
