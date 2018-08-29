@@ -53,16 +53,14 @@ do
 	# Make a copy of selected model for finetuning
 	cp $selectedmodel $seeddata"model"
 
-	lr=0.01
-
 	# Update attacks so far
 	attackssofar="$attackssofar,$attack"
 
 	# Finetune target model against given attack
 	if [ -n "$attackssofar" ]; then
-		python ../Code/bagging.py --learning_rate $lr --nb_epochs 60 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
+		python ../Code/bagging.py --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
 	else
-		python ../Code/bagging.py --learning_rate $lr --nb_epochs 60 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
+		python ../Code/bagging.py --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
 	fi
 
 	# Update model counter

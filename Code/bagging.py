@@ -29,9 +29,10 @@ flags.DEFINE_string('model_dir', './', 'path to output directory of models')
 flags.DEFINE_string('seed_model', ' ', 'path to seed model')
 flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
-flags.DEFINE_float('learning_rate', 0.01 ,'Learning rate for classifier')
 flags.DEFINE_string('predict_mode', 'weighted', 'Method for prediction while testing (voting/weighted)')
 flags.DEFINE_string('attack', "" , "Attack against which adversarial training is to be done")
+flags.DEFINE_boolean('early_stopping', True, "Implement early stopping while training?")
+flags.DEFINE_boolean('lr_plateau', True, "Implement learning rate pleateau while training?")
 
 
 class Bagging:
@@ -54,12 +55,25 @@ class Bagging:
 					clever_wrapper, common.sess, harden=True, attack_type="black"))
 		else:
 			attack_params=None
+
 		# Scheduler, assuming RESNET
 		def scheduler(epoch):
 			if epoch < 31:
 				return 0.1
 			return 0.01
-		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, scheduler, self.batch_size, attacks=attack_params)
+
+		# Early stopping
+		early_stop = None
+		if FLAGS.early_stopping:
+			early_stop = (0.01, 10) # min_delta, patience
+
+		# Learning rate plateau
+		lr_plateau = None
+		if FLAGS.lr_plateau:
+			lr_plateau = (0.001, 0.1, 5, 0.01) # min_lr, factor, patience, min_delta
+			scheduler = None # Override scheduler
+
+		helpers.customTrainModel(model, X_tr, y_tr, X_val, y_val, datagen, self.nb_epochs, scheduler, self.batch_size, attacks=attack_params, early_stop=early_stop, lr_plateau=lr_plateau)
 
 	def predict(self, models_dir, predict_on, method='voting'):
 		models = []
@@ -92,17 +106,16 @@ def main(argv=None):
 
 	bag = Bagging(10, FLAGS.batch_size, FLAGS.nb_epochs)
 
+	# Initialize data object
+	dataObject = data_load.get_appropriate_data(FLAGS.dataset)(None, None)
+	(blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
+
 	#Training mode
 	if FLAGS.mode in ['finetune']:
 		# Load model
 	        model = load_model(FLAGS.seed_model)
-		K.set_value(model.optimizer.lr, FLAGS.learning_rate)
 
-		# Initialize data object
-	        dataObject = data_load.get_appropriate_data(FLAGS.dataset)(None, None)
-
-		# Black-box network
-	        (blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
+		# Get validation data
 		(X_val, Y_val) = dataObject.get_validation_data()
 
 		# Train data
@@ -119,14 +132,14 @@ def main(argv=None):
 
 	#Testing mode
 	elif FLAGS.mode == 'test':
-		X = np.load(FLAGS.data_x)
-		Y = np.load(FLAGS.data_y)
-		predicted = np.argmax(bag.predict(FLAGS.model_dir, X, FLAGS.predict_mode),1)
-		Y = np.argmax(Y, 1)
-		acc = (100*(predicted==Y).sum()) / float(len(Y))
-		print "Misclassification accuracy",(100-acc)
+		#X = np.load(FLAGS.data_x)
+		#Y = np.load(FLAGS.data_y)
+		predicted = np.argmax(bag.predict(FLAGS.model_dir, X_test, FLAGS.predict_mode),1)
+		Y_test = np.argmax(Y_test, 1)
+		acc = (100*(predicted == Y_test).sum()) / float(len(Y_test))
+		print("Misclassification accuracy: %f" % (acc))
 	else:
-		print "Invalid option"
+		print("Invalid option")
 
 
 if __name__ == '__main__':

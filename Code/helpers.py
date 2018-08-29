@@ -5,7 +5,7 @@ import numpy as np
 import copy, math, sys
 from cleverhans.attacks import FastGradientMethod, CarliniWagnerL2, DeepFool, ElasticNetMethod, SaliencyMapMethod, MadryEtAl, MomentumIterativeMethod, VirtualAdversarialMethod
 from keras import backend as K
-
+from tqdm import tqdm
 
 # Return attack object and its appropriate attack parameters for the given attack and dataset
 def get_appropriate_attack(dataset, clip_range, attack_name, model, session, harden, attack_type):
@@ -62,6 +62,12 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['gamma'] = 0.1
 		attack_params['theta'] = 1.0
 	elif attack_name == "carlini":
+		if dataset == "cifar10":
+			attack_params["confidence"] = 0.0
+			attack_params["max_iterations"] = 100
+			attack_params["binary_search_steps"] = 20
+			attack_params["abort_early"] = False
+			attack_params["initial_const"] = 1e-4
 		attack_object = CarliniWagnerL2(model, sess=session)
 	else:
 		raise ValueError('Mentioned attack not implemented')
@@ -76,7 +82,7 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 # Given an adversarial attack object, perform it batch-wise
 def performBatchwiseAttack(attack_X, attack, attack_params, batch_size):
 	perturbed_X = np.array([])
-	for i in range(0, attack_X.shape[0], batch_size):
+	for i in tqdm(range(0, attack_X.shape[0], batch_size)):
 		mini_batch = attack_X[i: i + batch_size,:]
 		if mini_batch.shape[0] == 0:
 			break
@@ -93,7 +99,7 @@ def customTrainModel(model,
 			X_train, Y_train,
 			X_val, Y_val,
 			dataGen, epochs,
-			scheduler, batch_size, attacks=None):
+			scheduler, batch_size, attacks=None, early_stop=None, lr_plateau=None):
 
 	# Helper function to generate adversarial data
 	def get_adv_mixed(P, Q):
@@ -108,14 +114,34 @@ def customTrainModel(model,
 		additionalY = np.concatenate(additionalY, axis=0)
 		return additionalX, additionalY
 
+	# Variables for early stopping
+	best_loss = 1e6
+	wait      = 0
+	if early_stop:
+		min_delta, patience = early_stop
+
+	# Variables for lerning rate decay based on le_plateau
+	if lr_plateau and scheduler:
+		print("Cannot have scheduler and le_plateau together. Pick one of them and use")
+		return
+	lrp_wait      = 0
+	lrp_best_loss = 1e6
+	if lr_plateau:
+		min_lr, factor, lrp_patience, lrp_min_delta = lr_plateau
+
+	# Iterate over epochs
 	for j in range(epochs):
 		train_loss, val_loss = 0, 0
 		train_acc, val_acc = 0, 0
 		iterator = dataGen.flow(X_train, Y_train, batch_size=batch_size)
 		nb_batches = int(math.ceil(float(len(X_train)) / batch_size))
 		assert nb_batches * batch_size >= len(X_train)
+
+		# Use scheduler (if provided) to schedule learning rate
 		if scheduler:
 			K.set_value(model.optimizer.lr, scheduler(j))
+
+		# Iterate over batches
 		for batch in range(nb_batches):
 			plainX, plainY = next(iterator)
 			batchX, batchY = plainX, plainY
@@ -138,8 +164,10 @@ def customTrainModel(model,
 			train_acc += train_metrics[1]
 			sys.stdout.write("Epoch %d: %d / %d : Tr loss: %f, Tr acc: %f  \r" % (j+1, batch+1, nb_batches, train_loss/(batch+1), train_acc/(batch+1)))
 			sys.stdout.flush()
+
 		val_metrics = model.evaluate(X_val, Y_val, batch_size=1024, verbose=0)
 		print
+		# Calculate validation accuracy for adversarial data as well (if attacks provided)
 		if attacks:
 			attack_indices = np.array_split(np.random.permutation(len(Y_val)), len(attacks))
 			adv_val_x, adv_val_y = [], []
@@ -153,4 +181,40 @@ def customTrainModel(model,
 			print(">> Val loss: %f, Val acc: %f, Adv loss: %f, Adv acc: %f"% (val_metrics[0], val_metrics[1], adv_val_metrics[0], adv_val_metrics[1]))
 		else:
 			print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
+
+		# Early stopping check
+		if early_stop:
+			current_loss = val_metrics[0]
+			if attacks:
+				current_loss + adv_val_metrics[0]
+			print(best_loss, current_loss, min_delta, wait)
+			if  best_loss - current_loss > min_delta:
+				wait = 0
+				best_loss = current_loss
+			else:
+				wait += 1
+				if wait >= patience:
+					# Stop training
+					return True
+
+		# LR Pleateau check
+		if lr_plateau:
+			current_loss = val_metrics[0]
+			if attacks:
+				current_loss + adv_val_metrics[0]
+			print(lrp_best_loss, current_loss, lrp_min_delta, lrp_wait)
+			current_lr = float(K.get_value(model.optimizer.lr))
+			if lrp_best_loss - current_loss > lrp_min_delta:
+				lrp_wait = 0
+				lrp_best_loss = current_loss
+			else:
+				lrp_wait += 1
+				if lrp_wait >= lrp_patience:
+					if current_lr >= min_lr:
+						# Reduce LR
+						new_lr = max(current_lr * factor, min_lr)
+						K.set_value(model.optimizer.lr, new_lr)
+						print("\n Reduced learning rate to %f" % (new_lr))
+						lrp_wait = 0
 	return True
+
