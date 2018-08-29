@@ -86,6 +86,7 @@ def performBatchwiseAttack(attack_X, attack, attack_params, batch_size):
 		mini_batch = attack_X[i: i + batch_size,:]
 		if mini_batch.shape[0] == 0:
 			break
+		attack_params['batch_size'] = mini_batch.shape[0]
 		adv_x_mini = attack.generate_np(mini_batch, **attack_params)
 		if perturbed_X.shape[0] != 0:
 			perturbed_X = np.append(perturbed_X, adv_x_mini, axis=0)
