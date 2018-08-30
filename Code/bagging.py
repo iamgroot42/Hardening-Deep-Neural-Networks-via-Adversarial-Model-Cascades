@@ -22,7 +22,7 @@ from tensorflow.python.platform import flags
 
 FLAGS = flags.FLAGS
 flags.DEFINE_integer('nb_epochs', 100, 'Number of epochs')
-flags.DEFINE_integer('batch_size', 64, 'Batch size')
+flags.DEFINE_integer('batch_size', 256, 'Batch size')
 flags.DEFINE_string('mode', 'finetune', '(test,finetune)')
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
 flags.DEFINE_string('model_dir', './', 'path to output directory of models')

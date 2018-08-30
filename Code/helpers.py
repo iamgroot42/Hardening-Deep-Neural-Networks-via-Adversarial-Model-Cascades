@@ -153,12 +153,17 @@ def customTrainModel(model,
 		for batch in range(nb_batches):
 			plainX, plainY = next(iterator)
 			batchX, batchY = plainX, plainY
+			if attacks:
+				# If given batch cannot be split for attacks (extreme case, at max 1/epoch), skip batch
+				if batchX.shape[0] < len(attacks):
+					continue
 			# Add attack data if attacks specified
 			if attacks:
 				additionalX, additionalY = [], []
 				attack_indices = np.array_split(np.random.permutation(len(plainY)), len(attacks))
 				# Add equal amount of data per attack
 				for i, (attack, attack_params) in enumerate(attacks):
+					attack_params['batch_size'] = plainX[attack_indices[i]].shape[0]
 					adv_data = attack.generate_np(plainX[attack_indices[i]], **attack_params)
 					additionalX.append(adv_data)
 					additionalY.append(plainY[attack_indices[i]])
