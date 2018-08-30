@@ -68,7 +68,7 @@ class Bagging:
 		early_stop = None
 		if FLAGS.early_stopping:
 			print("Early stopping activated")
-			early_stop = (0.005, 10) # min_delta, patience
+			early_stop = (0.005, 20) # min_delta, patience
 
 		# Learning rate plateau
 		lr_plateau = None

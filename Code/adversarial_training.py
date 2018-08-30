@@ -18,7 +18,7 @@ from cleverhans.utils_keras import KerasModelWrapper
 
 import data_load
 import helpers
-from Models import resnet, sota, densenet
+from Models import resnet, sota, densenet, lenet
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
@@ -42,8 +42,12 @@ def main(argv=None):
 	datagen.fit(X_train)
 	n_classes = Y_train.shape[1]
 
-	model, _ = resnet.residual_network(n_classes=n_classes, stack_n=FLAGS.stack_n, mnist=(FLAGS.dataset=="mnist"), get_logits=False)
-	#_, model, _ = densenet.densenet(n_classes=n_classes, mnist=(FLAGS.dataset=="mnist"), get_logits=False)
+	is_mnist = (FLAGS.dataset=="mnist")
+	if is_mnist:
+		model, _ = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
+	else:
+		model, _ = resnet.residual_network(n_classes=n_classes, stack_n=FLAGS.stack_n, mnist=is_mnist, get_logits=False)
+		#_, model, _ = densenet.densenet(n_classes=n_classes, mnist=is_mnist, get_logits=False)
 
 	# Define attack and its parameters
 	attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name

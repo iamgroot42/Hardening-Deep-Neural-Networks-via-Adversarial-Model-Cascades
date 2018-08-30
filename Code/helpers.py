@@ -24,16 +24,10 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['nb_iter'] = 3
 	elif attack_name == "fgsm":
 		attack_object = FastGradientMethod(model, sess=session)
-		if harden:
-			if dataset == "mnist":
-				attack_params['eps'] = 0.1
-			else:
-				attack_params['eps'] = 0.03
+		if dataset == "mnist":
+			attack_params['eps'] = 0.1
 		else:
-			if dataset == "mnist":
-				attack_params['eps'] = 0.25
-			else:
-				attack_params['eps'] = 0.06
+			attack_params['eps'] = 0.03
 	elif attack_name == "elastic":
 		attack_object = ElasticNetMethod(model, sess=session)
 		attack_params['beta'] = 1e-2
@@ -41,27 +35,28 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['max_iterations'] = 5
 		attack_params['initial_const'] = 1e-1
 		attack_params['learning_rate'] = 1e-1
+		if dataset == "mnist":
+			attack_params['learning_rate'] = 1e-1
+			attack_params['initial_const'] = 1e-3
+			attack_params['binary_search_steps'] = 4
+			attack_params['max_iterations'] = 8
 	elif attack_name == "virtual":
 		attack_object = VirtualAdversarialMethod(model, sess=session)
 		attack_params['xi'] = 1e-6
 		attack_params['num_iterations'] = 1
 		attack_params['eps'] = 2.0
+		if dataset == "mnist":
+			attack_params['num_iterations'] = 6
+			attack_params['xi'] = 1e0
+			attack_params['eps'] = 5.0
 	elif attack_name == "madry":
 		attack_object = MadryEtAl(model, sess=session)
 		attack_params['nb_iter'] = 5
-		if harden:
-			if dataset == "mnist":
-				attack_params['eps'] = 0.1
-			else:
-				attack_params['eps'] = 0.03
+		if dataset == "mnist":
+			attack_params['eps'] = 0.3
+			attack_params['nb_iter'] = 15
 		else:
-			if dataset == "mnist":
-				attack_params['eps'] = 0.1
-			else:
-				if attack_type == "white":
-					attack_params['eps'] = 0.06
-				else:
-					attack_params['eps'] = 0.03
+			attack_params['eps'] = 0.03
 	elif attack_name == "jsma":
 		attack_object = SaliencyMapMethod(model, sess=session)
 		attack_params['gamma'] = 0.1
