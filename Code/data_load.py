@@ -2,7 +2,7 @@ import common
 
 from keras.utils import np_utils
 import numpy as np
-from keras.preprocessing.image import ImageDataGenerator
+from image import ImageDataGenerator
 from keras.datasets import cifar10, mnist
 
 
@@ -33,7 +33,8 @@ class Data:
 		return (self.clip_min, self.clip_max)
 
 	def data_generator(self):
-		datagen = ImageDataGenerator()
+		datagen = ImageDataGenerator(
+			get_normal_also=True) # Get indeces for unaugmented data as well
 		return datagen
 
 	def validation_split(self, X, Y, validation_split=0.1):
@@ -126,7 +127,8 @@ class SVHN(Data, object):
 			height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=False,  # randomly flip images
 			vertical_flip=False,  # randomly flip images
-			data_format="channels_last") # (row, col, channel) format per image
+			data_format="channels_last", # (row, col, channel) format per image
+			get_normal_also=True) # Get indeces for unaugmented data as well
 		return datagen
 
 
@@ -157,7 +159,8 @@ class CIFAR10(Data, object):
 			height_shift_range=0.15,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=True,  # randomly flip images
 			vertical_flip=True,  # randomly flip images
-			data_format="channels_last") # (row, col, channel) format per image
+			data_format="channels_last", # (row, col, channel) format per image
+			get_normal_also=True) # Get indeces for unaugmented data as well
 		return datagen
 
 
