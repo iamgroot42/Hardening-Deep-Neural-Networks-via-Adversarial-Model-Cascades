@@ -181,6 +181,7 @@ def customTrainModel(model,
 		adv_loss, adv_acc = 0, 0
 		if attacks:
 			for i, (attack, attack_params) in enumerate(attacks):
+				attack_params['batch_size'] = X_val.shape[0]
 				adv_data = performBatchwiseAttack(X_val, attack, attack_params, batch_size)
 				adv_val_metrics = model.evaluate(adv_data, Y_val, batch_size=1024, verbose=0)
 				adv_loss += adv_val_metrics[0]
