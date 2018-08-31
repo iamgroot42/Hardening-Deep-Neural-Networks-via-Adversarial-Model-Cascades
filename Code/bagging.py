@@ -31,8 +31,8 @@ flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
 flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
 flags.DEFINE_string('predict_mode', 'weighted', 'Method for prediction while testing (voting/weighted)')
 flags.DEFINE_string('attack', "" , "Attack against which adversarial training is to be done")
-flags.DEFINE_boolean('early_stopping', True, "Implement early stopping while training?")
-flags.DEFINE_boolean('lr_plateau', True, "Implement learning rate pleateau while training?")
+flags.DEFINE_boolean('early_stopping', False, "Implement early stopping while training?")
+flags.DEFINE_boolean('lr_plateau', False, "Implement learning rate pleateau while training?")
 
 
 class Bagging:
@@ -58,9 +58,9 @@ class Bagging:
 
 		# Scheduler, assuming RESNET
 		def scheduler(epoch):
-			if epoch <= 50:
-				return 0.1
 			if epoch <= 75:
+				return 0.1
+			if epoch <= 115:
 				return 0.01
 			return 0.001
 
@@ -68,7 +68,7 @@ class Bagging:
 		early_stop = None
 		if FLAGS.early_stopping:
 			print("Early stopping activated")
-			early_stop = (0.005, 10) # min_delta, patience
+			early_stop = (0.005, 20) # min_delta, patience
 
 		# Learning rate plateau
 		lr_plateau = None

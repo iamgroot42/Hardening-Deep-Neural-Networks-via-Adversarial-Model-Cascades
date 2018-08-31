@@ -26,14 +26,9 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_object = FastGradientMethod(model, sess=session)
 		if harden:
 			if dataset == "mnist":
+				attack_params['eps'] = 0.3
+			else:
 				attack_params['eps'] = 0.1
-			else:
-				attack_params['eps'] = 0.03
-		else:
-			if dataset == "mnist":
-				attack_params['eps'] = 0.25
-			else:
-				attack_params['eps'] = 0.06
 	elif attack_name == "elastic":
 		attack_object = ElasticNetMethod(model, sess=session)
 		attack_params['beta'] = 1e-2
@@ -48,20 +43,12 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['eps'] = 2.0
 	elif attack_name == "madry":
 		attack_object = MadryEtAl(model, sess=session)
-		attack_params['nb_iter'] = 5
+		attack_params['nb_iter'] = 10
 		if harden:
 			if dataset == "mnist":
 				attack_params['eps'] = 0.1
 			else:
 				attack_params['eps'] = 0.03
-		else:
-			if dataset == "mnist":
-				attack_params['eps'] = 0.1
-			else:
-				if attack_type == "white":
-					attack_params['eps'] = 0.06
-				else:
-					attack_params['eps'] = 0.03
 	elif attack_name == "jsma":
 		attack_object = SaliencyMapMethod(model, sess=session)
 		attack_params['gamma'] = 0.1

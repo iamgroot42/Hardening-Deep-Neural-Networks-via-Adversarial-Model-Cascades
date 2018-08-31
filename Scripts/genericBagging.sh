@@ -58,9 +58,9 @@ do
 
 	# Finetune target model against given attack
 	if [ -n "$attackssofar" ]; then
-		python ../Code/bagging.py --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
+		python ../Code/bagging.py --nb_epochs 150 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder --attack $attackssofar
 	else
-		python ../Code/bagging.py --nb_epochs 100 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
+		python ../Code/bagging.py --nb_epochs 150 --mode finetune --dataset $dataset --seed_model $seeddata"model" --model_dir $bagfolder
 	fi
 
 	# Update model counter
