@@ -2,7 +2,7 @@ import common
 
 from keras.utils import np_utils
 import numpy as np
-from keras.preprocessing.image import ImageDataGenerator
+from image import ImageDataGenerator
 from keras.datasets import cifar10, mnist
 
 
@@ -32,8 +32,9 @@ class Data:
 	def get_range(self):
 		return (self.clip_min, self.clip_max)
 
-	def data_generator(self):
-		datagen = ImageDataGenerator()
+	def data_generator(self, indeces=True):
+		datagen = ImageDataGenerator(
+			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
 	def validation_split(self, X, Y, validation_split=0.1):
@@ -114,7 +115,7 @@ class SVHN(Data, object):
 		super(SVHN, self).experimental_split()
 
 
-	def data_generator(self):
+	def data_generator(self, indeces=True):
 		datagen = ImageDataGenerator(
 			featurewise_center=False,  # set input mean to 0 over the dataset
 			samplewise_center=False,  # set each sample mean to 0
@@ -126,7 +127,8 @@ class SVHN(Data, object):
 			height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=False,  # randomly flip images
 			vertical_flip=False,  # randomly flip images
-			data_format="channels_last") # (row, col, channel) format per image
+			data_format="channels_last", # (row, col, channel) format per image
+			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
 
@@ -145,7 +147,7 @@ class CIFAR10(Data, object):
 		super(CIFAR10, self).make_val_data()
 		super(CIFAR10, self).experimental_split()
 
-	def data_generator(self):
+	def data_generator(self, indeces=True):
 		datagen = ImageDataGenerator(
 			featurewise_center=False,  # set input mean to 0 over the dataset
 			samplewise_center=False,  # set each sample mean to 0
@@ -157,7 +159,8 @@ class CIFAR10(Data, object):
 			height_shift_range=0.15,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=True,  # randomly flip images
 			vertical_flip=True,  # randomly flip images
-			data_format="channels_last") # (row, col, channel) format per image
+			data_format="channels_last", # (row, col, channel) format per image
+			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
 

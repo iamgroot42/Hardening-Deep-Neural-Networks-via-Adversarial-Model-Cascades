@@ -59,23 +59,23 @@ if __name__ == '__main__':
 
 	print("== DONE! ==\n== BUILD MODEL... ==")
 	is_mnist = (args.dataset == "mnist")
+
 	# build network
-
-	# RESNET:
-	model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
-
-	# LENET:
-	#model, cbks = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
-
-	# DENSENET
-	#model, cbks = densenet.densenet(n_classes=10, mnist=is_mnist)
+	if is_mnist:
+		# LENET
+		model, cbks = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
+	else:
+		# RESNET
+		model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
+		# DENSENET
+		#model, cbks = densenet.densenet(n_classes=10, mnist=is_mnist)
 
 	# print model architecture if you need.
 	print(model.summary())
 
 	# set data augmentation
 	print("== USING REAL-TIME DATA AUGMENTATION, START TRAIN... ==")
-	datagen = dataObject.data_generator()
+	datagen = dataObject.data_generator(indeces=False)
 	datagen.fit(x_train)
 
 	# add label-noise as specifed
