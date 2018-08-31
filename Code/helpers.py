@@ -53,11 +53,10 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 	elif attack_name == "madry":
 		attack_object = MadryEtAl(model, sess=session)
 		attack_params['nb_iter'] = 10
+		attack_params['eps'] = 0.3
 		if harden:
 			if dataset == "mnist":
-				attack_params['eps'] = 0.1
-			else:
-				attack_params['eps'] = 0.03
+				attack_params['nb_iter'] = 15
 	elif attack_name == "jsma":
 		attack_object = SaliencyMapMethod(model, sess=session)
 		attack_params['gamma'] = 0.1
