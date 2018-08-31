@@ -177,27 +177,25 @@ def customTrainModel(model,
 		val_metrics = model.evaluate(X_val, Y_val, batch_size=1024, verbose=0)
 		print
 		# Calculate validation accuracy for adversarial data as well (if attacks provided)
+		print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
+		adv_loss, adv_acc = 0, 0
 		if attacks:
-			attack_indices = np.array_split(np.random.permutation(len(Y_val)), len(attacks))
-			adv_val_x, adv_val_y = [], []
 			for i, (attack, attack_params) in enumerate(attacks):
-				adv_data = performBatchwiseAttack(X_val[attack_indices[i]], attack, attack_params, batch_size)
-				adv_val_x.append(adv_data)
-				adv_val_y.append(Y_val[attack_indices[i]])
-			adv_val_x = np.concatenate(adv_val_x, axis=0)
-			adv_val_y = np.concatenate(adv_val_y, axis=0)
-			adv_val_metrics = model.evaluate(adv_val_x, adv_val_y, batch_size=1024, verbose=0)
-			print(">> Val loss: %f, Val acc: %f, Adv loss: %f, Adv acc: %f"% (val_metrics[0], val_metrics[1], adv_val_metrics[0], adv_val_metrics[1]))
-		else:
-			print(">> Val loss: %f, Val acc: %f"% (val_metrics[0], val_metrics[1]))
-
+				adv_data = performBatchwiseAttack(X_val, attack, attack_params, batch_size)
+				adv_val_metrics = model.evaluate(adv_data, Y_val, batch_size=1024, verbose=0)
+				adv_loss += adv_val_metrics[0]
+				adv_acc += adv_val_metrics[1]
+				print(">> Attack %s: loss: %f, acc: %f"% (attack, adv_val_metrics[0], adv_val_metrics[1]))
+			adv_loss /= len(attacks)
+			adv_acc /= len(attacks)
+			print
 		# Early stopping check
 		if early_stop:
 			current_loss = val_metrics[0]
 			current_acc = val_metrics[1]
 			if attacks:
-				current_loss += adv_val_metrics[0]
-				current_acc  += adv_val_metrics[1]
+				current_loss += adv_loss
+				current_acc  += adv_acc
 				current_acc  /= 2
 			#print(best_loss, current_loss, min_delta, wait)
 			print("Best acc: %f, current acc: %f, wait value: %d" % (best_acc, current_acc, wait))
@@ -217,8 +215,8 @@ def customTrainModel(model,
 			current_loss = val_metrics[0]
 			current_acc  = val_metrics[1]
 			if attacks:
-				current_loss += adv_val_metrics[0]
-				current_acc  += adv_val_metrics[1]
+				current_loss += adv_loss
+				current_acc  += adv_acc
 				current_acc  /= 2
 			#print(lrp_best_loss, current_loss, lrp_min_delta, lrp_wait)
 			print("Best acc: %f, current acc: %f, wait value: %d" % (lrp_best_acc, current_acc, lrp_wait))
