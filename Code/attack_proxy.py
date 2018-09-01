@@ -36,6 +36,11 @@ def main(argv=None):
 		exit()
 	n_classes = attack_Y.shape[1]
 
+	# Switch to TH mode if cifar10 (models trained in TH)
+	if FLAGS.dataset == "cifar10":
+		keras.backend.set_image_dim_ordering('th')
+		attack_X = attack_X.transpose((0, 3, 1, 2))
+
 	# Load model
 	model = load_model(FLAGS.model)
 
@@ -50,7 +55,10 @@ def main(argv=None):
 	fooled_rate = 1 - model.evaluate(perturbed_X, attack_Y, batch_size=FLAGS.batch_size)[1]
 	print("\nError on adversarial examples: %f" % (fooled_rate))
 
-	# Save examplesi if specified
+	if FLAGS.dataset == "cifar10":
+		perturbed_X = perturbed_X.transpose((0, 2, 3, 1))
+
+	# Save examples if specified
 	if FLAGS.save_here:
 		np.save(FLAGS.save_here + "_x.npy", perturbed_X)
 		np.save(FLAGS.save_here + "_y.npy", attack_Y)
