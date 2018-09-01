@@ -23,7 +23,7 @@ def main(argv=None):
 	dataObject = data_load.get_appropriate_data(FLAGS.dataset)()
 
 	if dataObject is None:
-		print "Invalid dataset; exiting"
+		print("Invalid dataset; exiting")
 		exit()
 
 	(blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()

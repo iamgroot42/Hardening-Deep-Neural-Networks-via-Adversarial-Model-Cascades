@@ -107,5 +107,5 @@ if __name__ == '__main__':
 
 	print("== SAVING AND EVALUATING MODEL ==")
 	proxy.save(args.save_here)
-	print(proxy.evaluate(x_test, y_test))
+	print("Test accuracy %f" % (proxy.evaluate(x_test, y_test)[1]))
 

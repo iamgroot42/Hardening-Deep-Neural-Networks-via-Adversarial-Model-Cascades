@@ -25,10 +25,10 @@ flags.DEFINE_integer('nb_epochs', 100, 'Number of epochs')
 flags.DEFINE_integer('batch_size', 256, 'Batch size')
 flags.DEFINE_string('mode', 'finetune', '(test,finetune)')
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
-flags.DEFINE_string('model_dir', './', 'path to output directory of models')
-flags.DEFINE_string('seed_model', ' ', 'path to seed model')
-flags.DEFINE_string('data_x', './', 'path to numpy file of data for prediction')
-flags.DEFINE_string('data_y', './', 'path to numpy file of labels for prediction')
+flags.DEFINE_string('model_dir', '', 'path to output directory of models')
+flags.DEFINE_string('seed_model', '', 'path to seed model')
+flags.DEFINE_string('data_x', '', 'path to numpy file of data for prediction')
+flags.DEFINE_string('data_y', '', 'path to numpy file of labels for prediction')
 flags.DEFINE_string('predict_mode', 'weighted', 'Method for prediction while testing (voting/weighted)')
 flags.DEFINE_string('attack', "" , "Attack against which adversarial training is to be done")
 flags.DEFINE_boolean('early_stopping', False, "Implement early stopping while training?")
@@ -113,8 +113,13 @@ def main(argv=None):
 
 	bag = Bagging(10, FLAGS.batch_size, FLAGS.nb_epochs)
 
+	# Check if custom data provided
+	custom_X, custom_Y = None, None
+	if len(FLAGS.data_x) > 1 and len(FLAGS.data_y) > 1 and FLAGS.mode in ['finetune']:
+		custom_X, custom_Y = np.load(FLAGS.data_x), np.load(FLAGS.data_y)
+
 	# Initialize data object
-	dataObject = data_load.get_appropriate_data(FLAGS.dataset)(None, None)
+	dataObject = data_load.get_appropriate_data(FLAGS.dataset)(custom_X, custom_Y)
 	(blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
 
 	#Training mode

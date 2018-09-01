@@ -9,8 +9,7 @@ import numpy as np
 from tensorflow.python.platform import flags
 from cleverhans.utils_keras import KerasModelWrapper
 
-import data_load
-import helpers
+import data_load, helpers
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
@@ -18,7 +17,9 @@ flags.DEFINE_integer('batch_size', 64, 'Size of training batches')
 flags.DEFINE_string('model', 'saved_model.h5', 'Path where model is saved')
 flags.DEFINE_string('attack_name', 'fgsm', 'Name of attack against which adversarial hardening is to be performed')
 flags.DEFINE_string('save_here', None, 'Path to save perturbed examples')
-flags.DEFINE_string('mode', 'attack', '(attack/harden)')
+flags.DEFINE_string('mode', 'attack', '(attack/harden/multiple)')
+flags.DEFINE_boolean('multiattacks', False, 'Single attack against proxy, or multiple attacks?')
+
 
 def main(argv=None):
 	# Initialize data object
@@ -28,7 +29,7 @@ def main(argv=None):
 	# Load attack data
 	atack_X, attack_Y = None, None
 	if FLAGS.mode == "harden":
-		attack_X, attack_Y = dataObject.get_hardening_data()
+		(attack_X, attack_Y), _ = dataObject.get_blackbox_data()
 	elif FLAGS.mode == "attack":
 		attack_X, attack_Y = dataObject.get_attack_data()
 	else:
@@ -44,12 +45,35 @@ def main(argv=None):
 	# Load model
 	model = load_model(FLAGS.model)
 
-	# Define attack and its parameters
-	attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name
-		,KerasModelWrapper(model), common.sess, harden=True, attack_type="black")
+	# Single attack mode
+	if not FLAGS.multiattacks:
 
-	# Generate attack data in batches
-	perturbed_X = helpers.performBatchwiseAttack(attack_X, attack, attack_params, FLAGS.batch_size)
+		# Define attack and its parameters
+		attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name
+			,KerasModelWrapper(model), common.sess, harden=True, attack_type="black")
+
+		# Generate attack data in batches
+		perturbed_X = helpers.performBatchwiseAttack(attack_X, attack, attack_params, FLAGS.batch_size)
+	else:
+		# Multi attack mode
+		attacks = FLAGS.attack_name.split(',')
+		attacks = attacks[1:]
+		attack_params = []
+		clever_wrapper = KerasModelWrapper(model)
+		for attack in attacks:
+			attack_params.append(helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), attack,
+				clever_wrapper, common.sess, harden=True, attack_type="black"))
+
+		attack_Y_shuffled = []
+		perturbed_X = []
+		# Add equal amount of data per attack
+		attack_indices = np.array_split(np.random.permutation(len(attack_Y)), len(attacks))
+		for i, (at, atp) in enumerate(attack_params):
+			adv_data = helpers.performBatchwiseAttack(attack_X[attack_indices[i]], at, atp, FLAGS.batch_size)
+			perturbed_X.append(adv_data)
+			attack_Y_shuffled.append(attack_Y[attack_indices[i]])
+		perturbed_X = np.vstack(perturbed_X)
+		attack_Y = np.vstack(attack_Y)
 
 	# Calculate attack success rate (1 - classification rate)
 	fooled_rate = 1 - model.evaluate(perturbed_X, attack_Y, batch_size=FLAGS.batch_size)[1]

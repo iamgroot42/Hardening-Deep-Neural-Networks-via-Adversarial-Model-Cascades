@@ -2,7 +2,7 @@
 
 export TF_CPP_MIN_LOG_LEVEL="2"
 
-dataset=$1    # cifar100/mnist/svhn
+dataset=$1    # cifar10/mnist/svhn
 seedmodel=$2  # path to starting model
 bagfolder=$3  # new folder will be made to store bag of models here
 order=$4      # file containing order of attacks
@@ -68,8 +68,5 @@ do
 
 	# Add this model to bag
 	mv $seeddata"model" $bagfolder/$COUNTER
-
-	# Keras specific change to make sure target model can be loaded in future
-	# python fix.py $bagfolder/$COUNTER
 
 done < $order
