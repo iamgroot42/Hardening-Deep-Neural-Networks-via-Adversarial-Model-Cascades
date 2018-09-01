@@ -27,6 +27,8 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		if harden:
 			if dataset == "mnist":
 				attack_params['eps'] = 0.3
+				if attack_type == "black":
+					attack_params['eps'] = 0.3
 			else:
 				attack_params['eps'] = 0.1
 	elif attack_name == "elastic":
@@ -41,6 +43,9 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 			attack_params['initial_const'] = 1e-3
 			attack_params['binary_search_steps'] = 4
 			attack_params['max_iterations'] = 8
+			if attack_type == "black":
+				attack_params["max_iterations"] = 12
+				attack_params['binary_search_steps'] = 5
 	elif attack_name == "virtual":
 		attack_object = VirtualAdversarialMethod(model, sess=session)
 		attack_params['xi'] = 1e-6
@@ -50,6 +55,9 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 			attack_params['num_iterations'] = 6
 			attack_params['xi'] = 1e0
 			attack_params['eps'] = 5.0
+			if attack_type == "black":
+				attack_params['num_iterations'] = 10
+				attack_params['eps'] = 8.0
 	elif attack_name == "madry":
 		attack_object = MadryEtAl(model, sess=session)
 		attack_params['nb_iter'] = 10
@@ -57,6 +65,8 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		if harden:
 			if dataset == "mnist":
 				attack_params['nb_iter'] = 15
+				if attack_type == "black":
+					attack_params['nb_iter'] = 20
 	elif attack_name == "jsma":
 		attack_object = SaliencyMapMethod(model, sess=session)
 		attack_params['gamma'] = 0.1

@@ -14,6 +14,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('batch_size', 256, 'Size of training batches')
 flags.DEFINE_string('model_path', '', 'Path where model is stored')
 flags.DEFINE_string('dataset', 'cifar10', '(cifar10,svhn,mnist)')
+flags.DEFINE_string('test_prefix', "", 'Prefix path for custom generated test data')
 
 
 def main(argv=None):
@@ -26,8 +27,10 @@ def main(argv=None):
 		exit()
 
 	(blackbox_Xtrain, blackbox_Ytrain), (X_test, Y_test) = dataObject.get_blackbox_data()
-
 	model = keras.models.load_model(FLAGS.model_path)
+	if len(FLAGS.test_prefix):
+		X_test, Y_test = np.load(FLAGS.test_prefix + "_x.npy"), np.load(FLAGS.test_prefix + "_y.npy")
+		print("Custom test data found")
 
 	# Evaluate the accuracy of the blackbox model on adversarial examples
 	accuracy = model.evaluate(X_test, Y_test, batch_size=FLAGS.batch_size)
