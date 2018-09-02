@@ -176,7 +176,8 @@ def customTrainModel(model,
 			# Add attack data if attacks specified
 			if attacks:
 				additionalX, additionalY = [], []
-				attack_indices = np.array_split(np.random.permutation(len(clean_Y)), len(attacks))
+				permutation = np.random.permutation(len(clean_Y))
+				attack_indices = np.array_split(permutation, len(attacks))
 				# 80:20 current : all previous attack split
 				if len(attacks) > 1:
 					current_attack = permutation[int(len(clean_Y) * 0.2):]
