@@ -177,7 +177,12 @@ def customTrainModel(model,
 			if attacks:
 				additionalX, additionalY = [], []
 				attack_indices = np.array_split(np.random.permutation(len(clean_Y)), len(attacks))
-				# Add equal amount of data per attack
+				# 80:20 current : all previous attack split
+				if len(attacks) > 1:
+					current_attack = permutation[int(len(clean_Y) * 0.2):]
+					old_attacks = permutation[:int(len(clean_Y) * 0.2)]
+					attack_indices = np.array_split(old_attacks, len(attacks) - 1)
+					attack_indices.append(current_attack)
 				for i, (attack, attack_params) in enumerate(attacks):
 					attack_params['batch_size'] = clean_X[attack_indices[i]].shape[0]
 					adv_data = attack.generate_np(clean_X[attack_indices[i]], **attack_params)
