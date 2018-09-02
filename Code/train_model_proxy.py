@@ -80,16 +80,29 @@ if __name__ == '__main__':
 
 	print("== DONE! ==\n== BUILD MODEL... ==")
 
+	# Special case (CIFAR-10)
+	if args.dataset == "cifar10":
+		x_train = x_train.transpose((0, 3, 1, 2))
+		x_test = x_test.transpose((0, 3, 1, 2))
+		x_val = x_val.transpose((0, 3, 1, 2))
+
 	# build proxy model (or load if fine-tuning)
-	is_mnist = (args.dataset == "mnist")
-	proxy = cnn.proxy(n_classes=10, mnist=is_mnist, learning_rate=args.learning_rate)
 	if args.mode == "finetune":
+		# Special case (CIFAR-10)
+		if args.dataset == "cifar10":
+			keras.backend.set_image_dim_ordering('th')
 		proxy = load_model(args.save_here)
 		K.set_value(proxy.optimizer.lr, args.learning_rate)
+	else:
+		is_mnist = (args.dataset == "mnist")
+		proxy = cnn.proxy(n_classes=10, mnist=is_mnist, learning_rate=args.learning_rate)
 
 	# set data augmentation
 	print("== USING REAL-TIME DATA AUGMENTATION, START TRAIN... ==")
-	datagen = dataObject.data_generator()
+	channel_mode = "channels_last"
+	if args.dataset == "cifar10":
+		channel_mode = "channels_first"
+	datagen = dataObject.data_generator(channel_mode=channel_mode)
 	datagen.fit(x_train)
 
 	# start training proxy model

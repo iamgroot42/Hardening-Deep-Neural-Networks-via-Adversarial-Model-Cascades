@@ -32,8 +32,9 @@ class Data:
 	def get_range(self):
 		return (self.clip_min, self.clip_max)
 
-	def data_generator(self, indeces=True):
+	def data_generator(self, indeces=True, channel_mode="channels_last"):
 		datagen = ImageDataGenerator(
+			data_format=channel_mode,
 			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
@@ -115,7 +116,7 @@ class SVHN(Data, object):
 		super(SVHN, self).experimental_split()
 
 
-	def data_generator(self, indeces=True):
+	def data_generator(self, indeces=True, channel_mode="channels_last"):
 		datagen = ImageDataGenerator(
 			featurewise_center=False,  # set input mean to 0 over the dataset
 			samplewise_center=False,  # set each sample mean to 0
@@ -127,7 +128,7 @@ class SVHN(Data, object):
 			height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=False,  # randomly flip images
 			vertical_flip=False,  # randomly flip images
-			data_format="channels_last", # (row, col, channel) format per image
+			data_format=channel_mode, # (row, col, channel) format per image
 			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
@@ -147,7 +148,7 @@ class CIFAR10(Data, object):
 		super(CIFAR10, self).make_val_data()
 		super(CIFAR10, self).experimental_split()
 
-	def data_generator(self, indeces=True):
+	def data_generator(self, indeces=True, channel_mode="channels_last"):
 		datagen = ImageDataGenerator(
 			featurewise_center=False,  # set input mean to 0 over the dataset
 			samplewise_center=False,  # set each sample mean to 0
@@ -159,7 +160,7 @@ class CIFAR10(Data, object):
 			height_shift_range=0.15,  # randomly shift images vertically (fraction of total height)
 			horizontal_flip=True,  # randomly flip images
 			vertical_flip=True,  # randomly flip images
-			data_format="channels_last", # (row, col, channel) format per image
+			data_format=channel_mode, # (row, col, channel) format per image
 			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
