@@ -69,9 +69,6 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_object = MadryEtAl(model, sess=session)
 		attack_params['nb_iter'] = 10
 		attack_params['eps'] = 0.3
-		if attack_type == "black":
-			attack_params['eps'] = 0.1
-			attack_params['nb_iter'] = 5
 		if harden:
 			if dataset == "mnist":
 				attack_params['eps'] = 0.3
