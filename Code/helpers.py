@@ -38,6 +38,9 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['max_iterations'] = 5
 		attack_params['initial_const'] = 1e-1
 		attack_params['learning_rate'] = 1e-1
+		if dataset == "svhn":
+			attack_params['max_iterations'] = 6
+			attack_params['binary_search_steps'] = 2
 		if attack_type == "black":
 			attack_params['max_iterations'] = 8
 			attack_params['binary_search_steps'] = 2
