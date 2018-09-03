@@ -40,3 +40,5 @@ if [ $sap == "yes" ]; then
 else
 	python ../Code/test_accuracy.py --test_prefix $temp --dataset $dataset  --model_path $modelpath
 fi
+
+rm $temp"_x.npy" $temp"_y.npy"
