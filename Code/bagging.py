@@ -52,7 +52,7 @@ class Bagging:
 			clever_wrapper = KerasModelWrapper(model)
 			for attack in attacks:
 				attack_params.append(helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), attack,
-					clever_wrapper, common.sess, harden=True, attack_type="black"))
+					clever_wrapper, common.sess, harden=True, attack_type="None"))
 		else:
 			attack_params=None
 
