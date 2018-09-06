@@ -24,13 +24,12 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['nb_iter'] = 3
 	elif attack_name == "fgsm":
 		attack_object = FastGradientMethod(model, sess=session)
-		if harden:
-			if dataset == "mnist":
+		if dataset == "mnist":
+			attack_params['eps'] = 0.3
+			if attack_type == "black":
 				attack_params['eps'] = 0.3
-				if attack_type == "black":
-					attack_params['eps'] = 0.3
-			else:
-				attack_params['eps'] = 0.1
+		else:
+			attack_params['eps'] = 0.1
 	elif attack_name == "elastic":
 		attack_object = ElasticNetMethod(model, sess=session)
 		attack_params['beta'] = 1e-2
@@ -58,7 +57,7 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_params['num_iterations'] = 1
 		attack_params['eps'] = 2.0
 		if attack_type == "black":
-			attack_params['num_iterationms'] = 3
+			attack_params['num_iterations'] = 3
 			attack_params['xi'] = 1e-4
 			attack_params['eps'] = 3.0
 		if dataset == "mnist":
@@ -72,12 +71,11 @@ def get_appropriate_attack(dataset, clip_range, attack_name, model, session, har
 		attack_object = MadryEtAl(model, sess=session)
 		attack_params['nb_iter'] = 5
 		attack_params['eps'] = 0.1
-		if harden:
-			if dataset == "mnist":
-				attack_params['eps'] = 0.3
-				attack_params['nb_iter'] = 15
-				if attack_type == "black":
-					attack_params['nb_iter'] = 20
+		if dataset == "mnist":
+			attack_params['eps'] = 0.3
+			attack_params['nb_iter'] = 15
+			if attack_type == "black":
+				attack_params['nb_iter'] = 20
 	elif attack_name == "jsma":
 		attack_object = SaliencyMapMethod(model, sess=session)
 		attack_params['gamma'] = 0.1
