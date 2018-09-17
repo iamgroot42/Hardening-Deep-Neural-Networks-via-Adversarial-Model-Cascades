@@ -13,11 +13,10 @@ Code base for full paper submission made to [AAAI,19](http://www.aaai.org/Confer
 ### Attacks present
 
 - FGSM
-- JSMA
-- Virtual
-- Carlini
-- Madry
-- Elastic
+- Momentum
+- VAP
+- PGM
+- EAP
 
 ### Setting it up
 
@@ -32,7 +31,3 @@ For example, `bash genericBagging.sh mnist PlainModel MYBAG/ ORDER no`
 For example, `bash adaptiveBagging.sh mnist PlainModel MYBAG/ ORDER no ProxyNormal`
 - For testing bagging on your own attack data, run `python ../Code/bagging.py --mode test --dataset <dataset> --model_dir <model_bag_directory> --data_x <data_X> --data_y <data_Y>  --predict_mode <voting/weighted>`
 
-
-### Cached models
-
-Models may be downloaded from [here](https://drive.google.com/file/d/1DFfdrf_rhspL6B9HEltDOSoizRUJFWMw/view?usp=sharing)
