@@ -72,7 +72,7 @@ def residual_network(n_classes=10, stack_n=5, mnist=False, get_logits=False):
 	x = GlobalAveragePooling2D()(x)
 
 	# input: 64 output: 10
-	logits = Dense(n_classes,activation='softmax',kernel_initializer="he_normal",
+	logits = Dense(n_classes,kernel_initializer="he_normal",
 			  kernel_regularizer=regularizers.l2(weight_decay))(x)
 
 	output = Activation('softmax')(logits)
