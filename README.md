@@ -1,6 +1,4 @@
 # Hardening Deep Neural Networks _via_ Adversarial Model Cascades 
-Code base for full paper submission made to [AAAI,19](http://www.aaai.org/Conferences/conferences.php)
-
 
 ### Working
 
@@ -13,7 +11,6 @@ Code base for full paper submission made to [AAAI,19](http://www.aaai.org/Confer
 ### Attacks present
 
 - FGSM
-- Momentum
 - VAP
 - PGM
 - EAP
