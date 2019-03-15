@@ -28,7 +28,6 @@ if __name__ == '__main__':
 	batch_size, epochs = args.batch_size, args.epochs
 	assert(len(args.save_here) > 0, "Provide a path to save model")
 	print("========================================\nMODEL: Proxy Model")
-	print("BATCH SIZE: {:3d}".format(batch_size))
 	print("EPOCHS: {:3d}".format(epochs))
 	print("DATASET: {:}".format(args.dataset))
 	global num_classes
@@ -71,8 +70,7 @@ if __name__ == '__main__':
 		attack_params = []
 		clever_wrapper = KerasModelWrapper(proxy)
 		for attack in attacks:
-			attack_params.append(helpers.get_appropriate_attack(args.dataset, dataObject.get_range(), attack,
-				clever_wrapper, common.sess, harden=True, attack_type="black"))
+			attack_params.append(helpers.get_appropriate_attack(args.dataset, dataObject.get_range(), attack, clever_wrapper, common.sess, harden=True, attack_type="black"))
 	else:
 		attack_params=None
 	helpers.customTrainModel(proxy, x_train, y_train, x_val, y_val, datagen, epochs, None, batch_size, attack_params)

@@ -100,9 +100,7 @@ def apply_affine_transform(x, theta=0, tx=0, ty=0, shear=0, zx=1, zy=1, row_axis
     transform_matrix = None
     if theta != 0:
         theta = np.deg2rad(theta)
-        rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
-                                    [np.sin(theta), np.cos(theta), 0],
-                                    [0, 0, 1]])
+        rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
         transform_matrix = rotation_matrix
 
     if tx != 0 or ty != 0:

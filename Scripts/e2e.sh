@@ -17,18 +17,15 @@ else
         exit
 fi
 temp=$(date -d "today" +"%s")
-# Generate attack data
 if [ $proxymodelpath == "no" ]; then
 	python ../Code/attack.py --dataset $dataset --model $modelpath --attack_name $attack --save_here $temp --mode attack
 else
 	python ../Code/attack_proxy.py --dataset $dataset --model $proxymodelpath --attack_name $attack --save_here $temp --mode attack
 fi
-# Run feature squeezing, if enabled
 if [ $fsqueeze == "yes" ]; then
 		python ../Code/feature_squeeze.py --dump_data $temp"_x.npy" --load_data $temp"_x.npy"
 fi
 if [ $sap == "yes" ]; then
-	# Run Stochastic Activation Pruning, if enabled
 	python ../Code/sap_predict.py -dx $temp"_x.npy" -dy $temp"_y.npy" -m $modelpath -f 1.0 -s 100 -d $dataset
 else
 	python ../Code/test_accuracy.py --test_prefix $temp --dataset $dataset  --model_path $modelpath

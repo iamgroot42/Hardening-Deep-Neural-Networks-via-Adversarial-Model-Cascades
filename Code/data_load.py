@@ -27,9 +27,7 @@ class Data:
 		return (self.clip_min, self.clip_max)
 
 	def data_generator(self, indeces=True, channel_mode="channels_last"):
-		datagen = ImageDataGenerator(
-			data_format=channel_mode,
-			get_normal_also=indeces) # Get indeces for unaugmented data as well
+		datagen = ImageDataGenerator(data_format=channel_mode, get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
 	def validation_split(self, X, Y, validation_split=0.1):

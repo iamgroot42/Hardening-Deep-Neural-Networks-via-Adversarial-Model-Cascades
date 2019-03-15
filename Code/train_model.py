@@ -31,7 +31,6 @@ weight_decay       = 1e-4
 if __name__ == '__main__':
 	print("========================================")
 	print("MODEL: Residual Network ({:2d} layers)".format(6*stack_n+2))
-	print("BATCH SIZE: {:3d}".format(batch_size))
 	print("WEIGHT DECAY: {:.4f}".format(weight_decay))
 	print("EPOCHS: {:3d}".format(epochs))
 	print("DATASET: {:}".format(args.dataset))
@@ -39,7 +38,6 @@ if __name__ == '__main__':
 	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
 	(x_train, y_train), (x_test, y_test) = dataObject.get_blackbox_data()
 	(x_val, y_val) = dataObject.get_validation_data()
-	print("== DONE! ==\n== BUILD MODEL... ==")
 	is_mnist = (args.dataset == "mnist")
 	if is_mnist:
 		model, cbks = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
