@@ -6,10 +6,8 @@ from keras.datasets import cifar10, mnist
 
 class Data:
 	def __init__(self, dataset, extra_X, extra_Y):
-		self.dataset = dataset
-		self.extra_X, self.extra_Y = None, None
-		self.threshold = 3000 # Total Adversarial examples
-		self.clip_min, self.clip_max = 0., 1.
+		self.extra_X, self.extra_Y, self.threshold = None, None, 3000
+		self.clip_min, self.clip_max, self.dataset = 0., 1., dataset
 		if extra_X is not None:
 			assert(extra_Y is not None)
 			self.extra_X, self.extra_Y = extra_X, extra_Y
@@ -31,20 +29,18 @@ class Data:
 		return datagen
 
 	def validation_split(self, X, Y, validation_split=0.1):
-		num_points = len(X)
-		validation_indices = np.random.choice(num_points, int(num_points * validation_split))
-		train_indices = list(set(range(num_points)) - set(validation_indices))
+		validation_indices = np.random.choice(len(X), int(len(X) * validation_split))
+		train_indices = list(set(range(len(X))) - set(validation_indices))
 		X_train, y_train = X[train_indices], Y[train_indices]
 		X_val, y_val = X[validation_indices], Y[validation_indices]
 		return X_train, y_train, X_val, y_val
 
 	def data_split(self, X, Y, these_many):
-		nb_classes = Y.shape[1]
-		these_many /= nb_classes
+		these_many /= Y.shape[1]
 		distr = {}
-		for i in range(nb_classes):
+		for i in range(Y.shape[1]):
 			distr[i] = []
-		if Y.shape[1] == nb_classes:
+		if Y.shape[1] == Y.shape[1]:
 			for i in range(len(Y)):
 				distr[np.argmax(Y[i])].append(i)
 		else:
@@ -81,7 +77,6 @@ class Data:
 	def get_validation_data(self):
 		return (self.X_val, self.Y_val)
 
-
 class SVHN(Data, object):
 	def __init__(self, extra_X=None, extra_Y=None):
 		super(SVHN, self).__init__("svhn", extra_X, extra_Y)
@@ -95,7 +90,6 @@ class SVHN(Data, object):
 		self.X_test /= 255.0
 		super(SVHN, self).make_val_data()
 		super(SVHN, self).experimental_split()
-
 
 	def data_generator(self, indeces=True, channel_mode="channels_last"):
 		datagen = ImageDataGenerator(

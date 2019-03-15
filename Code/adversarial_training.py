@@ -25,28 +25,19 @@ flags.DEFINE_string('attack_name', 'fgsm', 'Name of attack against which adversa
 flags.DEFINE_integer('stack_n', 5, 'stack number n, total layers = 6 * n + 2 (default: 5)')
 flags.DEFINE_float('eta', 1, 'Adversarial regularization')
 
-
 def main(argv=None):
-	# Initialize data object
 	dataObject = data_load.get_appropriate_data(FLAGS.dataset)(None, None)
 	datagen = dataObject.data_generator()
-	# Black-box network
 	(X_train, Y_train), (X_test, Y_test) = dataObject.get_blackbox_data()
 	(X_validation, Y_validation) = dataObject.get_validation_data()
 	datagen.fit(X_train)
-	n_classes = Y_train.shape[1]
-	is_mnist = (FLAGS.dataset=="mnist")
+	n_classes, is_mnist = Y_train.shape[1], (FLAGS.dataset=="mnist")
 	if is_mnist:
 		model, _ = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
 	else:
 		model, _ = resnet.residual_network(n_classes=n_classes, stack_n=FLAGS.stack_n, mnist=is_mnist, get_logits=False)
-	# Define attack and its parameters
-	attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name
-		,KerasModelWrapper(model), common.sess, harden=True, attack_type="None")
-	# Run adversarial training
-	helpers.customTrainModel(model, X_train, Y_train, X_validation, Y_validation, datagen,
-		FLAGS.nb_epochs, densenet.scheduler, FLAGS.batch_size, attacks=[(attack, attack_params)])
-	# Save model
+	attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name ,KerasModelWrapper(model), common.sess, harden=True, attack_type="None")
+	helpers.customTrainModel(model, X_train, Y_train, X_validation, Y_validation, datagen, FLAGS.nb_epochs, densenet.scheduler, FLAGS.batch_size, attacks=[(attack, attack_params)])
 	model.save(FLAGS.save_here)
 
 if __name__ == '__main__':

@@ -27,38 +27,27 @@ args = parser.parse_args()
 if __name__ == '__main__':
 	batch_size, epochs = args.batch_size, args.epochs
 	assert(len(args.save_here) > 0, "Provide a path to save model")
-	print("========================================\nMODEL: Proxy Model")
-	print("EPOCHS: {:3d}".format(epochs))
 	print("DATASET: {:}".format(args.dataset))
-	global num_classes
 	api_model = load_model(args.blackbox)
-	print("== GENERATING DATA FOR PROXY MODEL... ==")
 	x_data = data_load.get_proxy_data(args.dataset)
 	y_data = api_model.predict(x_data, batch_size=1024)
 	convert_to_onehot = lambda vector: np_utils.to_categorical(np.argmax(vector, axis=1), 10)
 	if not args.distill:
-		print("NOT USING PROBABILITIES RETURNED BY BLACKBOX MODEL")
 		y_data = convert_to_onehot(y_data)
 	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
 	_, (x_test, y_test) = dataObject.get_blackbox_data()
 	x_train, y_train, x_val, y_val = dataObject.validation_split(x_data, y_data, 0.1)
-	iterations         = len(x_train) // batch_size + 1
 	if args.label_smooth:
 		y_train = y_train.clip(args.label_smooth / 9., 1. - args.label_smooth)
-	print("== DONE! ==\n== BUILD MODEL... ==")
 	if args.dataset == "cifar10":
-		x_train = x_train.transpose((0, 3, 1, 2))
-		x_test = x_test.transpose((0, 3, 1, 2))
-		x_val = x_val.transpose((0, 3, 1, 2))
+		x_train, x_test, x_val = x_train.transpose((0, 3, 1, 2)), x_test.transpose((0, 3, 1, 2)), x_val.transpose((0, 3, 1, 2))
 	if args.mode == "finetune":
 		if args.dataset == "cifar10":
 			keras.backend.set_image_dim_ordering('th')
 		proxy = load_model(args.save_here)
 		K.set_value(proxy.optimizer.lr, args.learning_rate)
 	else:
-		is_mnist = (args.dataset == "mnist")
-		proxy = cnn.proxy(n_classes=10, mnist=is_mnist, learning_rate=args.learning_rate)
-	print("== USING REAL-TIME DATA AUGMENTATION, START TRAIN... ==")
+		proxy = cnn.proxy(n_classes=10, mnist=(args.dataset == "mnist"), learning_rate=args.learning_rate)
 	channel_mode = "channels_last"
 	if args.dataset == "cifar10":
 		channel_mode = "channels_first"
@@ -74,6 +63,5 @@ if __name__ == '__main__':
 	else:
 		attack_params=None
 	helpers.customTrainModel(proxy, x_train, y_train, x_val, y_val, datagen, epochs, None, batch_size, attack_params)
-	print("== SAVING AND EVALUATING MODEL ==")
 	proxy.save(args.save_here)
 	print("Test accuracy %f" % (proxy.evaluate(x_test, y_test)[1]))

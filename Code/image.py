@@ -124,8 +124,7 @@ def apply_affine_transform(x, theta=0, tx=0, ty=0, shear=0, zx=1, zy=1, row_axis
             transform_matrix = np.dot(transform_matrix, zoom_matrix)
     if transform_matrix is not None:
         h, w = x.shape[row_axis], x.shape[col_axis]
-        transform_matrix = transform_matrix_offset_center(
-            transform_matrix, h, w)
+        transform_matrix = transform_matrix_offset_center(transform_matrix, h, w)
         x = np.rollaxis(x, channel_axis, 0)
         final_affine_matrix = transform_matrix[:2, :2]
         final_offset = transform_matrix[:2, 2]
@@ -228,18 +227,15 @@ class ImageDataGenerator(object):
                  featurewise_std_normalization=False,
                  samplewise_std_normalization=False,
                  zca_whitening=False,
-                 zca_epsilon=1e-6,
-                 rotation_range=0,
+                 zca_epsilon=1e-6, rotation_range=0,
                  width_shift_range=0., height_shift_range=0.,
-                 brightness_range=None,
-                 shear_range=0., zoom_range=0.,
+                 brightness_range=None, shear_range=0., zoom_range=0.,
                  channel_shift_range=0., fill_mode='nearest',
                  cval=0., horizontal_flip=False,
                  vertical_flip=False,
                  rescale=None, preprocessing_function=None,
                  data_format='channels_last',
-                 validation_split=0.0,
-                 dtype='float32', get_normal_also=False):
+                 validation_split=0.0, dtype='float32', get_normal_also=False):
         self.featurewise_center = featurewise_center
         self.samplewise_center = samplewise_center
         self.featurewise_std_normalization = featurewise_std_normalization
@@ -265,8 +261,7 @@ class ImageDataGenerator(object):
             raise ValueError(
                 '`data_format` should be `"channels_last"` '
                 '(channel after row and column) or '
-                '`"channels_first"` (channel before row and column). '
-                'Received: %s' % data_format)
+                '`"channels_first"` (channel before row and column). Received: %s' % data_format)
         self.data_format = data_format
         if data_format == 'channels_first':
             self.channel_axis = 1
@@ -309,8 +304,7 @@ class ImageDataGenerator(object):
             shuffle=shuffle, sample_weight=sample_weight,
             seed=seed, data_format=self.data_format,
             save_to_dir=save_to_dir,
-            save_prefix=save_prefix,
-            save_format=save_format,
+            save_prefix=save_prefix, save_format=save_format,
             subset=subset, get_normal_also=self.get_normal_also)
 
     def flow_from_directory(self, directory,
@@ -324,10 +318,8 @@ class ImageDataGenerator(object):
             classes=classes, class_mode=class_mode,
             data_format=self.data_format,
             batch_size=batch_size, shuffle=shuffle, seed=seed,
-            save_to_dir=save_to_dir,
-            save_prefix=save_prefix,
-            save_format=save_format,
-            follow_links=follow_links,
+            save_to_dir=save_to_dir, save_prefix=save_prefix,
+            save_format=save_format, follow_links=follow_links,
             subset=subset, interpolation=interpolation)
 
     def standardize(self, x):

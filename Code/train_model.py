@@ -21,18 +21,8 @@ parser.add_argument('-s','--smooth', type=float, default=0, help='Amount of labe
 parser.add_argument('-g','--save_here', type=str, default="", metavar='STRING', help='path where trained model should be saved')
 args = parser.parse_args()
 
-stack_n            = args.stack_n
-layers             = 6 * stack_n + 2
-batch_size         = args.batch_size
-epochs             = args.epochs
-iterations         = 50000 // batch_size + 1
-weight_decay       = 1e-4
-
 if __name__ == '__main__':
-	print("========================================")
-	print("MODEL: Residual Network ({:2d} layers)".format(6*stack_n+2))
-	print("WEIGHT DECAY: {:.4f}".format(weight_decay))
-	print("EPOCHS: {:3d}".format(epochs))
+	print("MODEL: Residual Network ({:2d} layers)".format(6 * args.stack_n + 2))
 	print("DATASET: {:}".format(args.dataset))
 	global num_classes
 	dataObject = data_load.get_appropriate_data(args.dataset)(None, None)
@@ -42,15 +32,13 @@ if __name__ == '__main__':
 	if is_mnist:
 		model, cbks = lenet.lenet_network(n_classes=10, is_mnist=is_mnist)
 	else:
-		model, cbks = resnet.residual_network(n_classes=10, stack_n=stack_n, mnist=is_mnist)
+		model, cbks = resnet.residual_network(n_classes=10, stack_n=args.stack_n, mnist=is_mnist)
 	print(model.summary())
-	print("== USING REAL-TIME DATA AUGMENTATION, START TRAIN... ==")
 	datagen = dataObject.data_generator(indeces=False)
 	datagen.fit(x_train)
 	if args.smooth > 0:
 		y_train = y_train.clip(args.smooth / 9., 1. - args.smooth)
-	generator = datagen.flow(x_train, y_train, batch_size=batch_size)
-	model.fit_generator(generator, steps_per_epoch=iterations, epochs=epochs, callbacks=cbks, validation_data=(x_val, y_val))
-	print("== SAVING AND EVALUATING MODEL ==")
+	generator = datagen.flow(x_train, y_train, batch_size=args.batch_size)
+	model.fit_generator(generator, steps_per_epoch=50000 // args.batch_size + 1, epochs=args.epochs, callbacks=cbks, validation_data=(x_val, y_val))
 	model.save(args.save_here)
 	print(model.evaluate(x_test, y_test))
