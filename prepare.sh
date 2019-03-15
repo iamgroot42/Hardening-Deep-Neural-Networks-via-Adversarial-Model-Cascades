@@ -27,13 +27,3 @@ wget https://www.dropbox.com/s/2n0sj9j3okaocvl/UnlabelledData.tar.gz?dl=1 -O Unl
 tar -zxvf UnlabelledData.tar.gz
 rm UnlabelledData.tar.gz
 mv ProxyUnlabelledData UnlabelledData
-
-# MNIST Models
-# wget https://www.dropbox.com/s/8q1u7wdcqybzcde/MNISTModels.tar.gz?dl=1 -O MNISTModels.tar.gz
-# tar -zxvf MNISTModels.tar.gz
-# rm MNISTModels.tar.gz
-
-# SVHN Models
-# wget https://www.dropbox.com/s/eue9d8y1da893mg/SVHNModels.tar.gz?dl=1 -O SVHNModels.tar.gz
-# tar -zxvf SVHNModels.tar.gz
-# rm SVHNModels.tar.gz

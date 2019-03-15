@@ -1,14 +1,11 @@
 import common
 import keras
-
 from tensorflow.python.platform import app
 from keras.models import load_model
-
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.platform import flags
 from cleverhans.utils_keras import KerasModelWrapper
-
 import data_load, helpers
 
 FLAGS = flags.FLAGS
@@ -25,7 +22,6 @@ def main(argv=None):
 	# Initialize data object
 	dataObject = data_load.get_appropriate_data(FLAGS.dataset)(None, None)
 	datagen = dataObject.data_generator()
-
 	# Load attack data
 	atack_X, attack_Y = None, None
 	if FLAGS.mode == "harden":
@@ -36,22 +32,17 @@ def main(argv=None):
 		raise Exception("Invalid mode specified!")
 		exit()
 	n_classes = attack_Y.shape[1]
-
 	# Switch to TH mode if cifar10 (models trained in TH)
 	if FLAGS.dataset == "cifar10":
 		keras.backend.set_image_dim_ordering('th')
 		attack_X = attack_X.transpose((0, 3, 1, 2))
-
 	# Load model
 	model = load_model(FLAGS.model)
-
 	# Single attack mode
 	if not FLAGS.multiattacks:
-
 		# Define attack and its parameters
 		attack, attack_params = helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), FLAGS.attack_name
 			,KerasModelWrapper(model), common.sess, harden=True, attack_type="black")
-
 		# Generate attack data in batches
 		perturbed_X = helpers.performBatchwiseAttack(attack_X, attack, attack_params, FLAGS.batch_size)
 	else:
@@ -63,7 +54,6 @@ def main(argv=None):
 		for attack in attacks:
 			attack_params.append(helpers.get_appropriate_attack(FLAGS.dataset, dataObject.get_range(), attack,
 				clever_wrapper, common.sess, harden=True, attack_type="black"))
-
 		attack_Y_shuffled = []
 		perturbed_X = []
 		# Add equal amount of data per attack
@@ -74,14 +64,11 @@ def main(argv=None):
 			attack_Y_shuffled.append(attack_Y[attack_indices[i]])
 		perturbed_X = np.vstack(perturbed_X)
 		attack_Y = np.vstack(attack_Y)
-
 	# Calculate attack success rate (1 - classification rate)
 	fooled_rate = 1 - model.evaluate(perturbed_X, attack_Y, batch_size=FLAGS.batch_size)[1]
 	print("\nError on adversarial examples: %f" % (fooled_rate))
-
 	if FLAGS.dataset == "cifar10":
 		perturbed_X = perturbed_X.transpose((0, 2, 3, 1))
-
 	# Save examples if specified
 	if FLAGS.save_here:
 		np.save(FLAGS.save_here + "_x.npy", perturbed_X)

@@ -1,26 +1,20 @@
 import common
-
 from keras.utils import np_utils
 import numpy as np
 from image import ImageDataGenerator
 from keras.datasets import cifar10, mnist
 
-
 class Data:
 	def __init__(self, dataset, extra_X, extra_Y):
 		self.dataset = dataset
-		self.extra_X = None
-		self.extra_Y = None
+		self.extra_X, self.extra_Y = None, None
 		self.threshold = 3000 # Total Adversarial examples
-		self.clip_min = 0.
-		self.clip_max = 1.
+		self.clip_min, self.clip_max = 0., 1.
 		if extra_X is not None:
 			assert(extra_Y is not None)
-			self.extra_X = extra_X
-			self.extra_Y = extra_Y
+			self.extra_X, self.extra_Y = extra_X, extra_Y
 
 	def make_val_data(self):
-		# Class balanced: 30% validation, 70% test
 		assert(self.X_test is not None and self.Y_test is not None)
 		self.X_val, self.Y_val, self.X_test, self.Y_test = self.data_split(self.X_test, self.Y_test, these_many=int(0.3 * len(self.X_test)))
 
@@ -58,16 +52,11 @@ class Data:
 		else:
 			for i in range(len(Y)):
 				distr[Y[i][0]].append(i)
-		X_bm_ret = []
-		Y_bm_ret = []
-		X_pm_ret = []
-		Y_pm_ret = []
-		# Calculate minimum number of points per class
+		X_bm_ret, Y_bm_ret, X_pm_ret, Y_pm_ret = [], [], [], []
 		n_points = min([len(distr[i]) for i in distr.keys()])
 		for key in distr.keys():
 			st = np.random.choice(distr[key], n_points, replace=False)
-			bm = st[:these_many]
-			pm = st[these_many:]
+			bm, pm = st[:these_many], st[these_many:]
 			X_bm_ret.append(X[bm])
 			Y_bm_ret.append(Y[bm])
 			X_pm_ret.append(X[pm])
@@ -79,14 +68,10 @@ class Data:
 		return X_bm_ret, Y_bm_ret, X_pm_ret, Y_pm_ret
 
 	def experimental_split(self):
-		# Extract training and test data for blackbox from original training data
 		self.blackbox_Xtrain, self.blackbox_Ytrain = self.X_train, self.Y_train
-
-		# Add additonal data if present:
 		if self.extra_X is not None:
 			self.blackbox_Xtrain = np.concatenate((self.blackbox_Xtrain, self.extra_X))
 			self.blackbox_Ytrain = np.concatenate((self.blackbox_Ytrain, self.extra_Y))
-
 		self.attack_X, self.attack_Y, self.blackbox_Xtest, self.blackbox_Ytest = self.data_split(self.X_test, self.Y_test, int(0.3 * len(self.X_test)))
 
 	def get_blackbox_data(self):
@@ -102,12 +87,10 @@ class Data:
 class SVHN(Data, object):
 	def __init__(self, extra_X=None, extra_Y=None):
 		super(SVHN, self).__init__("svhn", extra_X, extra_Y)
-		# the data, shuffled and split between train and test sets
 		self.X_train, self.Y_train = np.load("../Code/SVHN/SVHNx_tr.npy"), np.load("../Code/SVHN/SVHNy_tr.npy")
 		self.X_test, self.Y_test = np.load("../Code/SVHN/SVHNx_te.npy"), np.load("../Code/SVHN/SVHNy_te.npy")
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
-		# convert class vectors to binary class matrices
 		self.Y_train = np_utils.to_categorical(self.Y_train - 1, 10)
 		self.Y_test = np_utils.to_categorical(self.Y_test - 1, 10)
 		self.X_train /= 255.0
@@ -132,17 +115,14 @@ class SVHN(Data, object):
 			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
-
 class CIFAR10(Data, object):
 	def __init__(self, extra_X=None, extra_Y=None):
 		super(CIFAR10, self).__init__("cifar10", extra_X, extra_Y)
-		# the data, shuffled and split between train and test sets
 		(self.X_train, self.Y_train), (self.X_test, self.Y_test) = cifar10.load_data()
 		self.X_train = self.X_train.astype('float32')
 		self.X_test = self.X_test.astype('float32')
 		self.X_test /= 255
 		self.X_train /= 255
-		# convert class vectors to binary class matrices
 		self.Y_train = np_utils.to_categorical(self.Y_train, 10)
 		self.Y_test = np_utils.to_categorical(self.Y_test, 10)
 		super(CIFAR10, self).make_val_data()
@@ -164,11 +144,9 @@ class CIFAR10(Data, object):
 			get_normal_also=indeces) # Get indeces for unaugmented data as well
 		return datagen
 
-
 class MNIST(Data, object):
 	def __init__(self, extra_X=None, extra_Y=None):
 		super(MNIST, self).__init__("mnist", extra_X, extra_Y)
-		# the data, shuffled and split between train and test sets
 		(self.X_train, self.Y_train), (self.X_test, self.Y_test) = mnist.load_data()
 		self.X_train = self.X_train.reshape(self.X_train.shape[0], 28, 28, 1)
 		self.X_test = self.X_test.reshape(self.X_test.shape[0], 28, 28, 1)
@@ -176,34 +154,22 @@ class MNIST(Data, object):
 		self.X_test = self.X_test.astype('float32')
 		self.X_train /= 255
 		self.X_test /= 255
-		# convert class vectors to binary class matrices
 		self.Y_train = np_utils.to_categorical(self.Y_train, 10)
 		self.Y_test = np_utils.to_categorical(self.Y_test, 10)
 		super(MNIST, self).make_val_data()
 		super(MNIST, self).experimental_split()
 
-
 def get_appropriate_data(dataset):
-	dataset_mapping = {
-		"mnist": MNIST,
-		"cifar10": CIFAR10,
-		"svhn": SVHN
-	}
+	dataset_mapping = { "mnist": MNIST, "cifar10": CIFAR10, "svhn": SVHN }
 	if dataset.lower() in dataset_mapping:
 		return dataset_mapping[dataset.lower()]
 	return None
 
-
 def get_proxy_data(dataset):
 	X = None
-	path = {
-		"mnist": "MNIST/data.npy",
-		"cifar10": "CIFAR10new/data.npy",
-		"svhn": "SVHN/data.npy"
-	}
+	path = { "mnist": "MNIST/data.npy", "cifar10": "CIFAR10new/data.npy", "svhn": "SVHN/data.npy" }
 	if dataset.lower() in path:
 		data = np.load("../Code/SVHN/UnlabelledData/" + path[dataset.lower()])
 		data = data.transpose((0, 2, 3, 1))
 		return data
 	return None
-
