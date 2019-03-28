@@ -1,5 +1,8 @@
 # Hardening Deep Neural Networks _via_ Adversarial Model Cascades 
 
+Official code repository for our publication [Hardening Deep Neural Networks via Adversarial Model Cascades](http://precog.iiitd.edu.in/pubs/Hardening_Deep_Neural_Networks_IJCNN.pdf), accepted at [IJCNN'19](https://www.ijcnn.org/). A short blog summarizing the paper can be found [here](http://precog.iiitd.edu.in/blog/2019/03/13/hardening-deep-neural-networks-via-adversarial-model-cascades/).
+
+
 ### Working
 
 - Adversary gets hold of unlabelled data (not overlapping with target)
