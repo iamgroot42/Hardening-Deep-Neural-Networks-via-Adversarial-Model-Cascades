@@ -31,3 +31,19 @@ For example, `bash genericBagging.sh mnist PlainModel MYBAG/ ORDER no`
 For example, `bash adaptiveBagging.sh mnist PlainModel MYBAG/ ORDER no ProxyNormal`
 - For testing bagging on your own attack data, run `python ../Code/bagging.py --mode test --dataset <dataset> --model_dir <model_bag_directory> --data_x <data_X> --data_y <data_Y>  --predict_mode <voting/weighted>`
 
+
+### Cite this work
+You are encouraged to cite the following paper if you use AMC for academic research.
+
+```
+@INPROCEEDINGS{8851970,
+  author={D. {Vijaykeerthy} and A. {Suri} and S. {Mehta} and P. {Kumaraguru}},
+  booktitle={2019 International Joint Conference on Neural Networks (IJCNN)},
+  title={Hardening Deep Neural Networks via Adversarial Model Cascades},
+  year={2019},
+  pages={1-8},
+  doi={10.1109/IJCNN.2019.8851970},
+  ISSN={},
+  month={July}
+}
+```
