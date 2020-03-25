@@ -1,6 +1,6 @@
 backports.functools-lru-cache==1.4
 backports.weakref==1.0rc1
-bleach==3.1.1
+bleach==3.1.2
 -e git+http://github.com/tensorflow/cleverhans.git@5405feb406e8172f68fb83afb7221c19128dbc5b#egg=cleverhans
 cycler==0.10.0
 enum34==1.1.6
