@@ -26,6 +26,6 @@ PyYAML>=4.2b1
 scipy==1.0.0
 six==1.11.0
 subprocess32==3.2.7
-tensorflow-gpu==1.2.0
+tensorflow-gpu==2.5.1
 tensorflow-tensorboard==0.4.0rc3
 Werkzeug==0.15.3
